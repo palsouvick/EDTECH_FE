@@ -1,0 +1,34 @@
+/**
+ * Regenerates src/fixtures/catalog.js from the backend's seed catalogue, so the
+ * offline funnel shows exactly the categories, subjects and topics the API serves.
+ *
+ *   npm run fixtures:catalog
+ *
+ * Dev-only tool; the app bundle never imports anything from ../backend.
+ */
+const fs = require('node:fs');
+const path = require('node:path');
+
+const source = path.resolve(__dirname, '../../backend/db/seed/catalog.js');
+const target = path.resolve(__dirname, '../src/fixtures/catalog.js');
+
+const catalog = require(source);
+const slim = catalog.map((c) => ({
+  code: c.code,
+  name: c.name,
+  conductingBody: c.conducting_body,
+  exams: c.exams.map((e) => ({ code: e.code, name: e.name })),
+  subjects: c.subjects.map((s) => ({
+    code: s.code,
+    name: s.name,
+    topics: s.topics.map((t) => ({ code: t.code, name: t.name })),
+  })),
+}));
+
+const header = `/**
+ * Offline catalogue (VITE_USE_FIXTURES=true). GENERATED from backend/db/seed/catalog.js
+ * by \`npm run fixtures:catalog\`; edit the backend file, then regenerate.
+ */
+`;
+fs.writeFileSync(target, `${header}export const catalogFixture = ${JSON.stringify(slim, null, 2)};\n`);
+console.log(`wrote ${path.relative(process.cwd(), target)}: ${slim.length} categories`);

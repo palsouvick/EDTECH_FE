@@ -1,0 +1,188 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', 'Noto Sans Bengali', 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+ * Language switching without React re-renders.
+ *
+ * Every localized block renders one slot per source language. Each slot lists
+ * the UI languages it serves in data-l (e.g. data-l="en hi" when Hindi falls
+ * back to English). The active language is an attribute on <html>, so a switch
+ * is a single attribute write: no remount, KaTeX is not re-typeset, and
+ * accordion state is untouched.
+ * ------------------------------------------------------------------------- */
+html[data-ui-lang='en'] [data-l]:not([data-l~='en']),
+html[data-ui-lang='bn'] [data-l]:not([data-l~='bn']),
+html[data-ui-lang='hi'] [data-l]:not([data-l~='hi']) {
+  display: none !important;
+}
+
+/* "EN" badge on content that is not yet translated into the active language. */
+.fallback-badge {
+  display: none;
+}
+html[data-ui-lang='en'] [data-fallback-for~='en'] > .fallback-badge,
+html[data-ui-lang='bn'] [data-fallback-for~='bn'] > .fallback-badge,
+html[data-ui-lang='hi'] [data-fallback-for~='hi'] > .fallback-badge {
+  display: inline-flex;
+}
+
+/* Bengali and Devanagari need taller line boxes for matras and conjuncts.
+ * Attribute selectors, not :lang(): :lang() matches every descendant, which
+ * would override KaTeX's own fonts on each glyph span. These match only the
+ * slot elements; KaTeX spans inside still inherit from .katex. */
+:not(html)[lang='bn'] {
+  font-family: 'Noto Sans Bengali', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.75;
+}
+:not(html)[lang='hi'] {
+  font-family: 'Noto Sans Devanagari', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.75;
+}
+
+/* The language hook owns scroll correction during a switch. */
+html.lang-switching,
+html.lang-switching body {
+  overflow-anchor: none;
+}
+
+/* Older browsers (Chrome < 108, Safari < 15.4) have no dvh: fall back to vh. */
+@supports not (height: 100dvh) {
+  .min-h-dvh {
+    min-height: 100vh;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200;
+  }
+}
+
+@layer components {
+  /* Compact Markdown typography for concept notes. */
+  .md-body > * + * {
+    margin-top: 0.6em;
+  }
+  .md-body strong {
+    @apply font-semibold text-slate-900 dark:text-white;
+  }
+  .md-body ul {
+    @apply list-disc pl-5;
+  }
+  .md-body ol {
+    @apply list-decimal pl-5;
+  }
+  .md-body code {
+    @apply rounded bg-slate-100 px-1 py-0.5 text-[0.9em] dark:bg-slate-800;
+  }
+  .md-inline > p {
+    display: inline;
+  }
+  /* Long display formulas scroll inside their card, never the page. */
+  .md-body .katex-display,
+  .formula-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.25rem 0;
+  }
+  .katex {
+    font-size: 1.08em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Practice Arena micro-animations. All are decorative: reduced-motion users
+ * get the same state changes without movement.
+ * ------------------------------------------------------------------------- */
+@keyframes arena-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes arena-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes arena-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+@keyframes arena-burst {
+  from {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(-34px) scale(0.3);
+  }
+}
+@keyframes arena-check-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.arena-enter {
+  animation: arena-enter 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.arena-pop {
+  animation: arena-pop 420ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.arena-shake {
+  animation: arena-shake 380ms ease-in-out;
+}
+.arena-burst-particle {
+  animation: arena-burst 650ms cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+.arena-check-draw path {
+  stroke-dasharray: 24;
+  animation: arena-check-draw 320ms 80ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-enter,
+  .arena-pop,
+  .arena-shake,
+  .arena-check-draw path {
+    animation: none;
+  }
+  .arena-burst-particle {
+    display: none;
+  }
+}
