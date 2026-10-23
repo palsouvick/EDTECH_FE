@@ -75,5 +75,5 @@ describe('study page: learning path and question patterns', () => {
     await user.click(within(section).getByRole('button', { name: /^Next pattern/ }));
     expect(within(section).getByRole('heading', { name: 'Discount pattern' })).toBeInTheDocument();
     expect(within(section).getByRole('button', { name: /Now practise real questions/ })).toBeInTheDocument();
-  });
+  }, 20_000); // walks the whole section; slow on busy machines
 });

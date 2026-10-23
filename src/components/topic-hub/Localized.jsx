@@ -11,7 +11,15 @@ const UI_LANGS = ['en', 'bn'];
 const REMARK_PLUGINS = [remarkMath];
 // strict:'ignore' so editor typos degrade to red source text instead of breaking the page.
 const REHYPE_PLUGINS = [[rehypeKatex, { throwOnError: false, strict: 'ignore' }]];
-const INLINE_COMPONENTS = { p: ({ children }) => children };
+// Links in content are sources (e.g. a current-affairs question's PIB release):
+// open them in a new tab so the student keeps their place in practice.
+const Anchor = ({ href, children }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-500 dark:text-indigo-400">
+    {children}
+  </a>
+);
+const BLOCK_COMPONENTS = { a: Anchor };
+const INLINE_COMPONENTS = { p: ({ children }) => children, a: Anchor };
 
 /**
  * Group UI languages by the content language that will serve them:
@@ -47,7 +55,7 @@ export const MathMarkdown = memo(function MathMarkdown({ source, inline = false 
   }
   return (
     <div className="md-body">
-      <ReactMarkdown remarkPlugins={REMARK_PLUGINS} rehypePlugins={REHYPE_PLUGINS}>
+      <ReactMarkdown remarkPlugins={REMARK_PLUGINS} rehypePlugins={REHYPE_PLUGINS} components={BLOCK_COMPONENTS}>
         {source}
       </ReactMarkdown>
     </div>

@@ -6,6 +6,7 @@ import { practiceBank } from '../fixtures/practiceQuestions';
 import { createFixturePracticeSource } from '../lib/practiceSource';
 import { progressStore } from '../hooks/useStudyProgress';
 import { languageStore } from '../hooks/useLanguagePreference';
+import { MemoryRouter } from 'react-router-dom';
 
 const TOPIC = { en: 'Profit, Loss & Discount', bn: 'লাভ, ক্ষতি ও ছাড়' };
 
@@ -22,7 +23,11 @@ function setup(sourceOverrides = {}) {
   const source = { ...createFixturePracticeSource(practiceBank, { latencyMs: 0 }), ...sourceOverrides };
   const onLaunchMock = vi.fn();
   const user = userEvent.setup();
-  render(<PracticeArena source={source} topicName={TOPIC} onLaunchMock={onLaunchMock} />);
+  render(
+    <MemoryRouter>
+      <PracticeArena source={source} topicName={TOPIC} onLaunchMock={onLaunchMock} />
+    </MemoryRouter>,
+  );
   return { user, onLaunchMock, source };
 }
 
@@ -190,7 +195,11 @@ describe('PracticeArena', () => {
     const six = practiceBank.find((q) => q.options.length === 3);
     const source = createFixturePracticeSource([six], { latencyMs: 0 });
     const user = userEvent.setup();
-    render(<PracticeArena source={source} topicName={TOPIC} />);
+    render(
+      <MemoryRouter>
+        <PracticeArena source={source} topicName={TOPIC} />
+      </MemoryRouter>,
+    );
     await screen.findByText(six.stem.en);
     expect(options()).toHaveLength(3);
     await user.keyboard('d4');

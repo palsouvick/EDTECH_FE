@@ -10,6 +10,7 @@ import { useWidth } from '../components/analytics/charts';
 import { Localized } from '../components/topic-hub/Localized';
 import { FlameIcon } from '../components/topic-hub/icons';
 import FunnelLayout, { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
+import { REVISION } from '../lib/revisionCopy';
 
 const card = 'rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800';
 const SERIES = '#4f46e5'; // indigo-600: the one series on this page
@@ -144,6 +145,18 @@ export default function PerformancePage() {
             <Tile label={PERF.today} value={s.attemptedToday} />
             <Tile label={PERF.streak} value={s.streakDays} icon={<FlameIcon width={24} height={24} className="text-orange-500" aria-hidden="true" />} />
           </div>
+
+          <Link
+            to="/revision"
+            className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 p-4 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+          >
+            <span className="text-3xl" aria-hidden="true">📌</span>
+            <span className="min-w-0 flex-1">
+              <Localized value={REVISION.title} className="block text-lg font-bold" />
+              <Localized value={REVISION.sub} className="block text-sm text-white/90" />
+            </span>
+            <span aria-hidden="true" className="text-2xl">→</span>
+          </Link>
 
           {!s.practiceAttempts && !s.mocksTaken && (
             <div className={`${card} text-center`}>
