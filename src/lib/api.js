@@ -17,6 +17,7 @@ export class ApiError extends Error {
 
 /** Unwraps the backend envelope: { success, data } | { success: false, error }. */
 export async function request(path, { method = 'GET', body, signal, headers } = {}) {
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
   let res;
   try {
     res = await fetch(`${BASE}${path}`, {
@@ -25,11 +26,11 @@ export async function request(path, { method = 'GET', body, signal, headers } = 
       credentials: 'include',
       headers: {
         Accept: 'application/json',
-        ...(body && { 'Content-Type': 'application/json' }),
+        ...(body && !isFormData && { 'Content-Type': 'application/json' }),
         ...(DEV_USER && { 'x-user-id': DEV_USER }),
         ...headers,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
     });
   } catch (err) {
     if (err.name === 'AbortError') throw err;

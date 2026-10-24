@@ -154,7 +154,7 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
           </div>
           <Localized value={PATTERNS.tried(tried, patterns.length)} className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-sm font-bold ring-1 ring-white/30" />
         </div>
-        <div className="relative -mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]" role="tablist" aria-label={PATTERNS.title.en}>
+        <div className="relative -mx-1 mt-4 flex flex-wrap gap-2 px-1 pb-1" role="tablist" aria-label={PATTERNS.title.en}>
           {patterns.map((x, i) => {
             const r = results[x.key];
             return (
@@ -164,14 +164,14 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
                 role="tab"
                 aria-selected={i === active}
                 onClick={() => setActive(i)}
-                className={`flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors ${
+                className={`flex min-h-10 max-w-full min-w-0 items-center gap-1.5 whitespace-normal rounded-full px-3.5 py-2 text-left text-sm font-semibold transition-colors ${
                   i === active ? 'bg-white text-indigo-700 shadow' : 'bg-white/15 text-white ring-1 ring-white/25 hover:bg-white/25'
                 }`}
               >
-                <span aria-hidden="true">{x.emoji}</span>
-                <Localized value={x.name} />
+                <span aria-hidden="true" className="shrink-0">{x.emoji}</span>
+                <Localized value={x.name} className="min-w-0 [overflow-wrap:anywhere]" />
                 {r != null && (
-                  <span className={`grid size-4 place-items-center rounded-full text-white ${r ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+                  <span className={`grid size-4 shrink-0 place-items-center rounded-full text-white ${r ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                     <CheckIcon width={10} height={10} strokeWidth={3.5} />
                   </span>
                 )}
