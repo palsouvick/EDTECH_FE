@@ -11,6 +11,8 @@ import { Localized } from '../components/topic-hub/Localized';
 import { FlameIcon } from '../components/topic-hub/icons';
 import FunnelLayout, { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
 import { REVISION } from '../lib/revisionCopy';
+import ReviseTodayCard from '../components/review/ReviseTodayCard';
+import InsightsPanel from '../components/review/InsightsPanel';
 
 const card = 'rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800';
 const SERIES = '#4f46e5'; // indigo-600: the one series on this page
@@ -145,6 +147,9 @@ export default function PerformancePage() {
             <Tile label={PERF.today} value={s.attemptedToday} />
             <Tile label={PERF.streak} value={s.streakDays} icon={<FlameIcon width={24} height={24} className="text-orange-500" aria-hidden="true" />} />
           </div>
+
+          <ReviseTodayCard />
+          <InsightsPanel />
 
           <Link
             to="/revision"

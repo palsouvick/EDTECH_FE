@@ -175,7 +175,8 @@ function Hero({ subject, chapters }) {
 
 /** /learn/:subject: Learn Basics, with Math | English tabs and the chosen subject's chapters. */
 export default function SubjectPage() {
-  const { subject: slug } = useParams();
+  // /learn has no subject segment: it shows the Math tab.
+  const { subject: slug = 'math' } = useParams();
   const subject = subjectCodeFromSlug(slug);
   const source = useDataSource();
   const [query, setQuery] = useState('');

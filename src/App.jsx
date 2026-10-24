@@ -20,6 +20,11 @@ import QuizPage from './pages/learn/QuizPage';
 import AdminPage from './pages/AdminPage';
 import AdminLogin from './pages/AdminLogin';
 import BookmarksPage from './pages/BookmarksPage';
+import RevisePage from './pages/RevisePage';
+import MistakesPage from './pages/MistakesPage';
+import MasteryPage from './pages/MasteryPage';
+import ChallengePage from './pages/ChallengePage';
+import LeaderboardPage from './pages/LeaderboardPage';
 import CookieConsent from './components/auth/CookieConsent';
 
 const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
@@ -31,7 +36,7 @@ const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
  * nothing defaults to a hard-coded topic.
  *
  *   /                                       Home: pick Math or English
- *   /learn                                  Learn Basics: opens the Math tab
+ *   /learn                                  Learn Basics, Math tab (same page as /learn/math)
  *   /learn/:subject                         Math | English tabs, with that subject's chapters
  *   /learn/:subject/:chapter                lesson (basic -> advanced) + level quizzes
  *   /learn/:subject/:chapter/quiz/:level    quiz (beginner | intermediate | advanced), then answer review
@@ -46,6 +51,11 @@ const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
  *   /login, /register                       accounts (?next= returns to the page that sent the student)
  *   /me                                     My performance (signed-in only)
  *   /revision                               My revision list: bookmarked questions (signed-in only)
+ *   /revise                                 Revise today: spaced-repetition queue of mistakes + bookmarks (signed-in)
+ *   /mistakes                               Mistake notebook: still wrong / fixed (signed-in)
+ *   /mastery                                Mastery map: every chapter as a coloured tile (signed-in)
+ *   /challenge                              Daily challenge: same 5 mixed questions for everyone
+ *   /leaderboard                            Weekly leaderboard, opt-in only (signed-in)
  */
 export function AppRoutes() {
   return (
@@ -53,7 +63,8 @@ export function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/tips" element={<TipsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/learn" element={<Navigate to="/learn/math" replace />} />
+      {/* Rendered directly, not redirected: a <Navigate> paints one empty frame first. */}
+      <Route path="/learn" element={<SubjectPage />} />
       <Route path="/learn/:subject" element={<SubjectPage />} />
       <Route path="/learn/:subject/:chapter" element={<ChapterPage />} />
       <Route path="/learn/:subject/:chapter/quiz/:level" element={<QuizPage />} />
@@ -71,6 +82,11 @@ export function AppRoutes() {
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route path="/me" element={<PerformancePage />} />
       <Route path="/revision" element={<BookmarksPage />} />
+      <Route path="/revise" element={<RevisePage />} />
+      <Route path="/mistakes" element={<MistakesPage />} />
+      <Route path="/mastery" element={<MasteryPage />} />
+      <Route path="/challenge" element={<ChallengePage />} />
+      <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

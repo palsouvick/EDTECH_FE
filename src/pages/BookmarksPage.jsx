@@ -5,6 +5,7 @@ import { useDataSource } from '../app/DataSourceContext';
 import { loginPath } from '../components/auth/AccountButton';
 import PageShell from '../components/navigation/PageShell';
 import OptionButton from '../components/practice/OptionButton';
+import AnswerExplanation from '../components/review/AnswerExplanation';
 import { Localized } from '../components/topic-hub/Localized';
 import { REVISION } from '../lib/revisionCopy';
 import { paths } from '../lib/routes';
@@ -71,30 +72,7 @@ function RevisionCard({ item, onRemove }) {
             as="p"
             className={`font-bold ${result.isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}
           />
-          {result.trapForSelected && (
-            <div className="rounded-xl bg-rose-50 p-3 text-sm text-rose-950 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-100 dark:ring-rose-500/30">
-              <Localized value={REVISION.whyWrong} as="p" className="font-bold" />
-              <Localized value={result.trapForSelected} markdown as="div" className="mt-1" />
-            </div>
-          )}
-          {result.explanation?.items?.length > 0 && (
-            <div className="rounded-xl bg-indigo-50/70 p-4 ring-1 ring-indigo-100 dark:bg-indigo-500/5 dark:ring-indigo-500/20">
-              <Localized value={REVISION.explanation} as="p" className="font-bold text-indigo-900 dark:text-indigo-200" />
-              <ol className="mt-2 space-y-2">
-                {result.explanation.items.map((s, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white">{i + 1}</span>
-                    <Localized value={s} markdown as="div" className="min-w-0 flex-1 text-slate-700 dark:text-slate-200" />
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-          {result.shortcut && (
-            <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-100 dark:ring-amber-500/30">
-              ⚡ <Localized value={REVISION.shortcut} className="font-bold" />: <Localized value={result.shortcut} markdown inline />
-            </div>
-          )}
+          <AnswerExplanation steps={result.explanation?.items} shortcut={result.shortcut} trap={result.trapForSelected} />
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-sm text-rose-600">{error.message}</p>}

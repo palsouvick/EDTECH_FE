@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { REVISION } from '../../lib/revisionCopy';
+import { REVIEW } from '../../lib/reviewCopy';
+import { MASTERY } from '../../lib/motivationCopy';
 import { useOptionalAuth } from '../../app/AuthContext';
 import { AUTH } from '../../lib/i18n';
 import { NAV } from '../../lib/homeCopy';
@@ -91,6 +93,18 @@ function AccountControl({ auth, className = '' }) {
           </div>
           <Link role="menuitem" to="/me" className={item} onClick={() => setOpen(false)}>
             <Localized value={AUTH.myPerformance} />
+          </Link>
+          <Link role="menuitem" to="/mastery" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">🗺️ </span>
+            <Localized value={MASTERY.title} />
+          </Link>
+          <Link role="menuitem" to="/revise" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">🔁 </span>
+            <Localized value={REVIEW.title} />
+          </Link>
+          <Link role="menuitem" to="/mistakes" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">📒 </span>
+            <Localized value={REVIEW.notebook} />
           </Link>
           <Link role="menuitem" to="/revision" className={item} onClick={() => setOpen(false)}>
             <span aria-hidden="true">📌 </span>

@@ -32,6 +32,10 @@ export default function StudyPage() {
   const category = categoryFromSlug(params.category);
   const subject = codeFromSlug(params.subject);
   const topic = codeFromSlug(params.topicSlug);
+  const [searchParams] = useSearchParams();
+  // ?pattern=successive_change (from "My performance"): open that pattern, and with
+  // ?practice=N also limit the practice questions to it.
+  const pattern = /^[a-z0-9_]{1,60}$/.test(searchParams.get('pattern') || '') ? searchParams.get('pattern') : null;
   const route = useMemo(() => ({ category, subject, topic }), [category, subject, topic]);
   const valid = Boolean(category && subject && topic);
 
@@ -39,7 +43,6 @@ export default function StudyPage() {
   const { lang, setLang } = useLanguagePreference();
   const navigate = useNavigate();
   // ?practice=15 (from the result dashboard's weak-topic link): open at the arena with that goal.
-  const [searchParams] = useSearchParams();
   const practiceGoal = (() => {
     const n = Number(searchParams.get('practice'));
     return Number.isInteger(n) && n >= 1 && n <= 100 ? n : undefined;
@@ -62,7 +65,11 @@ export default function StudyPage() {
   const patternsRes = useResource(valid && topicEntry ? `patterns:${subject}.${topic}` : null, () => source.getTopicPatterns({ subject, topic }));
   const patterns = patternsRes.data?.patterns ?? [];
 
-  const practiceSource = useMemo(() => (valid ? source.practiceSource(route) : null), [source, route, valid]);
+  const drillPattern = practiceGoal && pattern ? pattern : null;
+  const practiceSource = useMemo(
+    () => (valid ? source.practiceSource(drillPattern ? { ...route, pattern: drillPattern } : route) : null),
+    [source, route, valid, drillPattern],
+  );
   const [arenaActive, setArenaActive] = useState(false);
   const [patternsActive, setPatternsActive] = useState(false);
   // null = closed; otherwise the question count to preselect.
@@ -182,12 +189,12 @@ export default function StudyPage() {
               ctaHidden={arenaActive || patternsActive}
               afterTitle={<LearningPath hasNotes={Boolean(summary?.formulas?.length)} hasPatterns={patterns.length > 0} onJump={jumpTo} onMock={() => openMockSetup()} />}
             />
-            {patterns.length > 0 && <QuestionPatterns subject={subject} topic={topic} patterns={patterns} onPractice={startPractice} onActiveChange={setPatternsActive} />}
+            {patterns.length > 0 && <QuestionPatterns subject={subject} topic={topic} patterns={patterns} initialPattern={pattern} onPractice={startPractice} onActiveChange={setPatternsActive} />}
             {/* "Start practice" scrolls here. The hub's CTA bar steps aside while the arena is on screen. */}
             <div id="practice-questions" className="mx-auto max-w-3xl scroll-mt-28 px-4">
               {/* key: a new topic starts a fresh session (counters, cursor, milestones). */}
               <PracticeArena
-                key={`${category}:${subject}:${topic}`}
+                key={`${category}:${subject}:${topic}:${drillPattern ?? ''}`}
                 source={practiceSource}
                 topicName={topicEntry.name}
                 onLaunchMock={openMockSetup}

@@ -7,6 +7,9 @@ import { FEATURES, HOME, STEPS } from '../lib/homeCopy';
 import { LEARN } from '../lib/learnCopy';
 import { learnPaths, paths } from '../lib/routes';
 import PageShell from '../components/navigation/PageShell';
+import ReviseTodayCard from '../components/review/ReviseTodayCard';
+import DailyChallengeCard from '../components/review/DailyChallengeCard';
+import StudentHome from './StudentHome';
 import { Localized } from '../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../components/topic-hub/icons';
 
@@ -82,7 +85,7 @@ function LearnBasicsSection() {
   );
 }
 
-/** "/": what the site is, Learn Basics, how it works, then the exam families. */
+/** "/": a signed-in student's dashboard (StudentHome); for visitors, what the site is, Learn Basics, how it works and the exam families. */
 export default function HomePage() {
   const auth = useOptionalAuth();
   const { hash } = useLocation();
@@ -91,6 +94,11 @@ export default function HomePage() {
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [hash]);
+
+  // Signed-in students get their own home: today's plan, not the marketing page.
+  // A link to a section (/#learn-basics) still opens the full page.
+  if (auth?.status === 'loading') return <PageShell className="max-w-6xl pt-10"><div className="h-64 animate-pulse rounded-3xl bg-slate-200/60 motion-reduce:animate-none dark:bg-slate-800/60" aria-busy="true" /></PageShell>;
+  if (auth?.user && !hash) return <StudentHome user={auth.user} />;
 
   return (
     <PageShell padded={false}>
@@ -120,6 +128,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Signed-in students with a revision queue: the daily habit comes first. */}
+      <ReviseTodayCard className="mx-auto max-w-6xl px-4 pb-6" />
+      <DailyChallengeCard className="mx-auto max-w-6xl px-4 pb-10" />
 
       <section className="mx-auto max-w-6xl px-4 pb-14">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">

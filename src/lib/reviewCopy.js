@@ -1,0 +1,53 @@
+/** Copy for the daily revision queue and the mistake notebook. English + Bengali. */
+const t = (en, bn) => ({ en, bn });
+
+export const REVIEW = Object.freeze({
+  title: t('Revise today', 'আজকের রিভিশন'),
+  sub: t(
+    'Questions you got wrong or bookmarked come back after 1, 3, 7 and 21 days. Get one right twice in a row and it is mastered.',
+    'যে প্রশ্ন ভুল করেছ বা বুকমার্ক করেছ, সেগুলো 1, 3, 7 ও 21 দিন পরে আবার আসে। টানা দু-বার ঠিক করলেই সেটা আয়ত্ত হয়ে যায়।',
+  ),
+  dueCount: (n) => t(`${n} to revise today`, `আজ ${n}টি রিভিশন`),
+  start: t('Start revision', 'রিভিশন শুরু করো'),
+  allCaughtUp: t('All caught up! 🎉', 'সব রিভিশন শেষ! 🎉'),
+  nextOn: (d) => t(`Next revision: ${d}`, `পরের রিভিশন: ${d}`),
+  emptyNew: t(
+    'Nothing to revise yet. Questions you get wrong while practising will show up here the next day.',
+    'এখনও রিভিশনের কিছু নেই। অনুশীলনে যে প্রশ্ন ভুল করবে, পরের দিন সেগুলো এখানে আসবে।',
+  ),
+  progress: (i, n) => t(`${i} of ${n}`, `${n}টির মধ্যে ${i}`),
+  reasonMistake: t('Your mistake', 'তোমার ভুল'),
+  reasonBookmark: t('Bookmarked', 'বুকমার্ক করা'),
+  reasonBoth: t('Mistake · bookmarked', 'ভুল · বুকমার্ক করা'),
+  wrongTimes: (n) => t(`Wrong ${n}×`, `${n} বার ভুল`),
+  toMaster: (s, n) => t(`${s} of ${n} right to master`, `আয়ত্তের জন্য ${n}টির মধ্যে ${s}টি ঠিক`),
+  check: t('Check answer', 'উত্তর মেলাও'),
+  mastered: t('Mastered! It leaves your queue. 🏆', 'আয়ত্ত হয়ে গেছে! এটা তালিকা থেকে বেরিয়ে গেল। 🏆'),
+  rightAgain: (d) => t(`Right! It comes back on ${d} to make sure.`, `ঠিক! পাকা করতে এটা আবার আসবে ${d}।`),
+  wrongAgain: t('Not yet. It comes back tomorrow; read the explanation.', 'এখনও হয়নি। কাল আবার আসবে; ব্যাখ্যাটা পড়ো।'),
+  explanation: t('Explanation', 'ব্যাখ্যা'),
+  shortcut: t('Shortcut', 'শর্টকাট'),
+  whyWrong: t('Why your choice is wrong', 'তোমার উত্তর কেন ভুল'),
+  next: t('Next question', 'পরের প্রশ্ন'),
+  finish: t('Finish', 'শেষ করো'),
+  doneTitle: t('Revision done for today! 🎉', 'আজকের রিভিশন শেষ! 🎉'),
+  doneLine: (m, r) => t(`${m} mastered · ${r} scheduled again`, `${m}টি আয়ত্ত · ${r}টি আবার আসবে`),
+  openNotebook: t('Open mistake notebook', 'ভুলের খাতা খোলো'),
+
+  notebook: t('Mistake notebook', 'ভুলের খাতা'),
+  notebookSub: t(
+    'Every question you got wrong: your answer, the right one, and why. Fixed ones move to "Fixed" once you get them right twice in revision.',
+    'যত প্রশ্ন ভুল করেছ সব এখানে: তোমার উত্তর, সঠিক উত্তর আর কেন। রিভিশনে টানা দু-বার ঠিক করলে সেটা "ঠিক হয়ে গেছে"-তে চলে যায়।',
+  ),
+  stillWrong: t('Still wrong', 'এখনও ভুল'),
+  fixed: t('Fixed', 'ঠিক হয়ে গেছে'),
+  all: t('All chapters', 'সব অধ্যায়'),
+  yourAnswer: t('Your answer', 'তোমার উত্তর'),
+  correctAnswer: t('Correct answer', 'সঠিক উত্তর'),
+  source: { practice: t('Practice', 'অনুশীলন'), learn: t('Learn Basics quiz', 'বেসিক শেখো কুইজ'), mock: t('Mock test', 'মক টেস্ট'), review: t('Revision', 'রিভিশন') },
+  lastWrong: (d) => t(`Last wrong ${d}`, `শেষ ভুল ${d}`),
+  dueOn: (d) => t(`Next revision ${d}`, `পরের রিভিশন ${d}`),
+  more: t('Load more', 'আরও দেখাও'),
+  notebookEmpty: t('No mistakes here. Keep practising! 💪', 'এখানে কোনো ভুল নেই। অনুশীলন চালিয়ে যাও! 💪'),
+  bookmarks: t('Bookmarked questions', 'বুকমার্ক করা প্রশ্ন'),
+});

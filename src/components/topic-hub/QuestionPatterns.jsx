@@ -129,8 +129,8 @@ function TryIt({ tryIt, onAnswered }) {
  * solve it, step through a solved example, then answer a fresh one.
  * Which patterns were tried (and got right) is remembered per chapter.
  */
-export default function QuestionPatterns({ subject, topic, patterns, onPractice, onActiveChange }) {
-  const [active, setActive] = useState(0);
+export default function QuestionPatterns({ subject, topic, patterns, initialPattern, onPractice, onActiveChange }) {
+  const [active, setActive] = useState(() => Math.max(0, patterns.findIndex((p) => p.key === initialPattern)));
   // The page's fixed CTA bar steps aside while the student reads here, as it does for the arena.
   const ref = useRef(null);
   const inView = useInView(ref);

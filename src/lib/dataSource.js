@@ -26,6 +26,14 @@ import { practiceBank } from '../fixtures/practiceQuestions';
  *   listBookmarks({ subject?, topic?, offset })   -> revision list: { total, hasMore, groups, items }
  *   verifyAnswer({ questionId, selectedOptionId }) -> verify-answer payload (answer + explanation)
  *   setBookmark(questionId, on)                    -> bookmark / remove
+ *   getReviewSummary()                             -> { dueToday, active, mastered, mistakesActive, nextDueAt }
+ *   getReviewDue()                                 -> { items } today's revision queue (no answers)
+ *   answerReview({ questionId, selectedOptionId }) -> verify payload + { review: { status, streak, nextDueAt } }
+ *   getMistakes({ status, subject?, topic?, offset }) -> mistake notebook page
+ *   getInsights()                                  -> { mastery, counts, weakPatterns, badges, streak }
+ *   getLeaderboard() / setLeaderboardOptIn(optIn)  -> weekly opt-in leaderboard
+ *   getChallenge()                                 -> today's daily challenge { day, questions, done }
+ *   submitChallenge({ answers })                   -> { results, score, firstAttempt }
  *   listLearnSubjects()                           -> { subjects }   Learn section: Math, English
  *   getLearnSubject(subject)                      -> { subject, chapters }
  *   getLearnChapter(subject, topic)               -> { subject, topic, title, lesson, levels, previous, next }
@@ -66,6 +74,17 @@ export function createHttpDataSource() {
       request(`/practice/bookmarks?${new URLSearchParams({ offset: String(offset), ...(subject && { subject }), ...(topic && { topic }) })}`),
     verifyAnswer: (body) => request('/practice/verify-answer', { method: 'POST', body }),
     setBookmark: (questionId, on) => request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' }),
+    // tz = minutes east of UTC, so "today" follows the student's clock.
+    getReviewSummary: () => request(`/review/summary?tz=${-new Date().getTimezoneOffset()}`),
+    getReviewDue: () => request(`/review/due?tz=${-new Date().getTimezoneOffset()}`),
+    answerReview: (body) => request('/review/answer', { method: 'POST', body }),
+    getInsights: () => request(`/me/insights?tz=${-new Date().getTimezoneOffset()}`),
+    getLeaderboard: () => request('/me/leaderboard'),
+    setLeaderboardOptIn: (optIn) => request('/me/leaderboard', { method: 'PUT', body: { optIn } }),
+    getChallenge: () => request(`/challenge/today?tz=${-new Date().getTimezoneOffset()}`),
+    submitChallenge: ({ answers }) => request('/challenge/today', { method: 'POST', body: { tz: -new Date().getTimezoneOffset(), answers } }),
+    getMistakes: ({ status = 'active', subject, topic, offset = 0 } = {}) =>
+      request(`/review/mistakes?${new URLSearchParams({ status, offset: String(offset), ...(subject && { subject }), ...(topic && { topic }) })}`),
     listLearnSubjects: () => request('/learn/subjects'),
     getLearnSubject: (subject) => request(`/learn/subjects/${subject}`),
     getLearnChapter: (subject, topic) => request(`/learn/subjects/${subject}/chapters/${topic}`),
@@ -311,6 +330,16 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     listBookmarks: () => wait({ total: 0, hasMore: false, groups: [], items: [] }),
     verifyAnswer: learnOffline,
     setBookmark: () => wait({}),
+    // Offline fixtures keep no revision queue.
+    getReviewSummary: () => wait({ dueToday: 0, active: 0, mastered: 0, mistakesActive: 0, nextDueAt: null, masterAfter: 2 }),
+    getReviewDue: () => wait({ items: [], masterAfter: 2 }),
+    answerReview: learnOffline,
+    getMistakes: () => wait({ counts: { active: 0, mastered: 0 }, total: 0, hasMore: false, groups: [], items: [] }),
+    getInsights: () => wait({ mastery: [], counts: {}, weakPatterns: [], badges: [], allBadges: 9, streak: { days: 0, freezes: 0, protectedDays: [], freezeEvery: 7 } }),
+    getLeaderboard: () => wait({ optedIn: false, top: [], me: null, participants: 0 }),
+    setLeaderboardOptIn: (optIn) => wait({ optedIn: optIn, top: [], me: null, participants: 0 }),
+    getChallenge: learnOffline,
+    submitChallenge: learnOffline,
     listLearnSubjects: learnOffline,
     getLearnSubject: learnOffline,
     getLearnChapter: learnOffline,

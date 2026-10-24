@@ -134,7 +134,8 @@ describe('learn', () => {
     const nav = screen.getAllByRole('navigation', { name: 'Site' })[0];
     expect(within(nav).queryByRole('link', { name: /^Math/ })).toBeNull();
     await user.click(within(nav).getByRole('link', { name: /^Learn Basics/ }));
-    expect(path()).toBe('/learn/math');
+    // Rendered in place (no redirect), so there is no empty frame before the page appears.
+    expect(path()).toBe('/learn');
     const tabs = screen.getByRole('navigation', { name: 'Subject' });
     expect(within(tabs).getByRole('link', { name: /Math/ })).toHaveAttribute('aria-current', 'page');
     // The new page renders its own header: look the menu up again.
