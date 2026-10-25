@@ -32,6 +32,7 @@ export const COOKIE = Object.freeze({
 export const NAV = Object.freeze({
   home: t('Home', 'হোম', 'होम'),
   learn: t('Learn Basics', 'বেসিক শেখো', 'Learn Basics'),
+  vocabulary: t('Vocabulary Mastery', 'শব্দভান্ডার অনুশীলন', 'Vocabulary Mastery'),
   exams: t('Exams', 'পরীক্ষা', 'परीक्षाएँ'),
   how: t('How it works', 'কীভাবে কাজ করে', 'कैसे काम करता है'),
   tips: t('Study tips', 'পড়ার টিপস', 'अध्ययन टिप्स'),

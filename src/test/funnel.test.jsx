@@ -62,7 +62,7 @@ describe('selection funnel', () => {
     expect(path()).toBe('/exams/wbpsc');
     const quant = await screen.findByRole('link', { name: /Quantitative Aptitude/ });
     expect(quant).toHaveTextContent('12 questions');
-    expect(quant).toHaveTextContent('9 topics');
+    expect(quant).toHaveTextContent('15 topics');
     expect(screen.getByRole('link', { name: /General Studies/ })).toHaveTextContent('7 topics'); // + West Bengal GK
 
     // Names and counts follow the study language.
@@ -75,7 +75,7 @@ describe('selection funnel', () => {
     expect(path()).toBe('/exams/wbpsc/quant');
     const pl = (await screen.findByRole('heading', { name: 'Profit, Loss & Discount' })).closest('li');
     expect(pl).toHaveTextContent('Easy');
-    expect(pl).toHaveTextContent('10 PYQs');
+    expect(pl).toHaveTextContent('0 PYQs');
     expect(pl).toHaveTextContent('12 questions');
     const pct = screen.getByRole('heading', { name: 'Percentage' }).closest('li');
     expect(within(pct).getByText('Coming soon').closest('[aria-disabled]')).toHaveAttribute('aria-disabled', 'true');
@@ -118,6 +118,26 @@ describe('selection funnel', () => {
     renderAt('/exams/wb-post/quant/profit-loss');
     await screen.findByRole('heading', { name: /Profit, Loss & Discount/, level: 1 });
     expect(crumbs().getByRole('link', { name: /^WB Post Office/ })).toHaveAttribute('href', '/exams/wb-post');
+  });
+
+  it('WBPSC English topics can be searched and filtered without claiming unverified syllabus coverage', async () => {
+    const user = renderAt('/exams/wbpsc/english');
+    await screen.findByText('WBPSC English practice');
+    expect(screen.getByText(/topic-level official syllabus mapping is not yet verified/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Grammar skills' })).toBeInTheDocument();
+
+    const search = screen.getByRole('searchbox', { name: /Search topics and subtopics/i });
+    await user.type(search, 'tenses');
+    expect(screen.getByRole('heading', { name: 'Grammar' })).toBeInTheDocument();
+    await user.click(screen.getByText(/Grammar subtopics/));
+    expect(screen.getByText('Tenses')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Reading Comprehension' })).not.toBeInTheDocument();
+
+    await user.clear(search);
+    await user.selectOptions(screen.getByLabelText('Content filter'), 'supplementary');
+    await user.click(screen.getAllByText(/Practice subtopics/)[0]);
+    expect(screen.getAllByText('Supplementary').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: 'Reading Comprehension' })).not.toBeInTheDocument();
   });
 });
 

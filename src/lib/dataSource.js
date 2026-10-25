@@ -3,6 +3,7 @@ import { createFixturePracticeSource, createHttpPracticeSource } from './practic
 import { catalogFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
 import { practiceBank } from '../fixtures/practiceQuestions';
+import { vocabularyFixture } from '../fixtures/vocabulary';
 
 /**
  * Everything the pages read, behind one interface, so pages never know
@@ -39,6 +40,8 @@ import { practiceBank } from '../fixtures/practiceQuestions';
  *   getLearnChapter(subject, topic)               -> { subject, topic, title, lesson, levels, previous, next }
  *   createLearnQuiz({ subject, topic, level, exclude }) -> quiz (questions without answers)
  *   checkLearnQuiz({ subject, topic, answers })   -> { results, score }
+ *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
+ *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
  */
 export function createHttpDataSource() {
   const lang = (language) => `language=${encodeURIComponent(language)}`;
@@ -90,6 +93,21 @@ export function createHttpDataSource() {
     getLearnChapter: (subject, topic) => request(`/learn/subjects/${subject}/chapters/${topic}`),
     createLearnQuiz: (body) => request('/learn/quiz', { method: 'POST', body }),
     checkLearnQuiz: (body) => request('/learn/quiz/check', { method: 'POST', body }),
+    listVocabularyWords: (params = {}) => request(`/vocabulary/words?${new URLSearchParams(params)}`),
+    getVocabularyWordOfDay: () => request(`/vocabulary/word-of-day?tz=${-new Date().getTimezoneOffset()}`),
+    getVocabularyProgressSummary: () => request('/vocabulary/progress/summary'),
+    setVocabularyTarget: (dailyTarget) => request('/vocabulary/progress/settings', {
+      method: 'PUT',
+      body: { dailyTarget, timezoneOffsetMin: -new Date().getTimezoneOffset() },
+    }),
+    setVocabularyWordState: (wordId, state, value) => request(`/vocabulary/progress/words/${wordId}`, {
+      method: 'PATCH',
+      body: { state, value },
+    }),
+    getVocabularyReview: (type = 'due') => request(`/vocabulary/progress/review?${new URLSearchParams({ type })}`),
+    answerVocabularyReview: (body) => request('/vocabulary/progress/review', { method: 'POST', body }),
+    createVocabularyPracticeSession: (body) => request('/vocabulary/practice/sessions', { method: 'POST', body }),
+    answerVocabularyPractice: (token, body) => request(`/vocabulary/practice/sessions/${token}/answers`, { method: 'POST', body }),
   };
 }
 
@@ -297,6 +315,19 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
   const wait = (v) => new Promise((r) => setTimeout(() => r(v), latencyMs));
   const notFound = (what) => Promise.reject(new ApiError(404, 'NOT_FOUND', `${what} not found`));
   const FIXTURE_TOPIC = 'quant.profit_loss';
+  const vocabularySessions = new Map();
+  const readVocabularyProgress = () => {
+    try {
+      return JSON.parse(localStorage.getItem('edtech:vocabulary-progress') || '{}');
+    } catch {
+      return {};
+    }
+  };
+  const writeVocabularyProgress = (value) => localStorage.setItem('edtech:vocabulary-progress', JSON.stringify(value));
+  const withVocabularyProgress = (entry) => ({
+    ...entry,
+    progress: readVocabularyProgress()[entry.id] || null,
+  });
 
   const bankStats = (language) => {
     const usable = practiceBank.filter((q) => q.stem[language] && q.options.every((o) => o.text[language]));
@@ -345,6 +376,146 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getLearnChapter: learnOffline,
     createLearnQuiz: learnOffline,
     checkLearnQuiz: learnOffline,
+    async listVocabularyWords({ q = '', category, difficulty, status, offset = 0, limit = 20 } = {}) {
+      const query = q.normalize('NFKC').trim().toLocaleLowerCase();
+      const progress = readVocabularyProgress();
+      const signedIn = Boolean(localStorage.getItem(FIXTURE_USER_KEY));
+      let words = vocabularyFixture.filter((word) => (
+        (!query || word.word.toLocaleLowerCase().includes(query) || word.meaningBn.includes(query))
+        && (!category || word.categories.includes(category))
+        && (!difficulty || word.difficulty === difficulty)
+      ));
+      if (status) {
+        if (!signedIn && status !== 'new') words = [];
+        else if (status === 'new') words = words.filter((word) => !progress[word.id]?.learned);
+        else words = words.filter((word) => progress[word.id]?.[status]);
+      }
+      return wait({
+        words: words.slice(offset, offset + limit).map(withVocabularyProgress),
+        total: words.length,
+        offset,
+        limit,
+        categories: [...new Set(vocabularyFixture.flatMap((word) => word.categories))].sort(),
+      });
+    },
+    getVocabularyWordOfDay: () => {
+      const day = new Date().toISOString().slice(0, 10);
+      const index = Math.floor(Date.now() / 86_400_000) % vocabularyFixture.length;
+      return wait({ day, word: withVocabularyProgress(vocabularyFixture[index]) });
+    },
+    getVocabularyProgressSummary: () => {
+      const progress = Object.values(readVocabularyProgress());
+      const dailyTarget = Number(localStorage.getItem('edtech:vocabulary-target') || 10);
+      return wait({
+        day: new Date().toISOString().slice(0, 10),
+        dailyTarget,
+        learnedToday: progress.filter((entry) => entry.learnedToday).length,
+        questionsAnsweredToday: 0,
+        questionsCorrectToday: 0,
+        learned: progress.filter((entry) => entry.learned).length,
+        difficult: progress.filter((entry) => entry.difficult).length,
+        favourite: progress.filter((entry) => entry.favourite).length,
+        due: progress.filter((entry) => entry.learned && entry.nextReviewAt && new Date(entry.nextReviewAt) <= new Date()).length,
+        missed: progress.filter((entry) => entry.missCount > 0).length,
+        totalPublished: vocabularyFixture.length,
+      });
+    },
+    setVocabularyTarget: (dailyTarget) => {
+      localStorage.setItem('edtech:vocabulary-target', String(dailyTarget));
+      return wait({ dailyTarget, timezoneOffsetMin: -new Date().getTimezoneOffset() });
+    },
+    setVocabularyWordState: (wordId, state, value) => {
+      const progress = readVocabularyProgress();
+      const next = { ...(progress[wordId] || { learned: false, difficult: false, favourite: false, missCount: 0 }) };
+      next[state] = value;
+      if (state === 'learned' && value && !next.learnedToday) {
+        next.learnedToday = true;
+        next.nextReviewAt = new Date(Date.now() + 86_400_000).toISOString();
+      }
+      progress[wordId] = next;
+      writeVocabularyProgress(progress);
+      return wait(next);
+    },
+    getVocabularyReview: (type = 'due') => {
+      const progress = readVocabularyProgress();
+      const words = vocabularyFixture.filter((word) => (
+        type === 'due'
+          ? progress[word.id]?.learned && progress[word.id]?.nextReviewAt && new Date(progress[word.id].nextReviewAt) <= new Date()
+          : progress[word.id]?.missCount > 0
+      )).map(withVocabularyProgress);
+      return wait({ words });
+    },
+    answerVocabularyReview: ({ wordId, known }) => {
+      const progress = readVocabularyProgress();
+      const current = progress[wordId] || {};
+      const intervalDays = known ? ((current.reviewStreak || 0) > 0 ? 3 : 1) : 1;
+      const next = {
+        ...current,
+        reviewStreak: known ? (current.reviewStreak || 0) + 1 : 0,
+        missCount: (current.missCount || 0) + (known ? 0 : 1),
+        difficult: known ? current.difficult : true,
+        nextReviewAt: new Date(Date.now() + intervalDays * 86_400_000).toISOString(),
+      };
+      progress[wordId] = next;
+      writeVocabularyProgress(progress);
+      return wait({ known, intervalDays, nextReviewAt: next.nextReviewAt, word: withVocabularyProgress(vocabularyFixture.find((word) => word.id === wordId)) });
+    },
+    createVocabularyPracticeSession: ({ mode, count = 10 }) => {
+      const questions = vocabularyFixture.slice(0, count).map((word, index) => {
+        const answer = mode === 'synonym' ? word.synonyms[0]
+          : mode === 'antonym' ? word.antonyms[0]
+            : ['fill_blank', 'identify'].includes(mode) ? word.word
+              : mode === 'context' ? word.exampleEn : word.meaningBn;
+        const blank = word.exampleEn.replace(new RegExp(`\\b${word.word}\\b`, 'i'), '_____');
+        const values = mode === 'synonym' ? vocabularyFixture.map((entry) => entry.synonyms[0])
+          : mode === 'antonym' ? vocabularyFixture.map((entry) => entry.antonyms[0])
+            : ['fill_blank', 'identify'].includes(mode) ? vocabularyFixture.map((entry) => entry.word)
+              : mode === 'context' ? vocabularyFixture.map((entry) => entry.exampleEn)
+                : vocabularyFixture.map((entry) => entry.meaningBn);
+        const options = [...new Set([answer, ...values.filter((value) => value !== answer)])].slice(0, 4)
+          .map((text, optionIndex) => ({ optionId: `vopt_${optionIndex}_${String(index).padStart(6, '0')}`, text }));
+        return {
+          questionId: `question_${String(index).padStart(12, '0')}`,
+          index,
+          mode,
+          prompt: mode === 'context' ? `Which sentence best demonstrates “${word.word}”?`
+            : mode === 'fill_blank' ? `Complete the sentence: ${blank}`
+              : mode === 'identify' ? `Which word completes this sentence and matches “${word.definitionEn}”? ${blank}`
+                : mode === 'match' ? `Match “${word.word}” to its Bengali meaning.`
+                  : mode === 'synonym' || mode === 'antonym' ? `Choose a ${mode} of “${word.word}”.`
+                    : `What does “${word.word}” mean?`,
+          options,
+        };
+      }).filter((question) => question.options.length === 4);
+      const sessionToken = `fixture_${Math.random().toString(36).slice(2).padEnd(40, '0')}`;
+      vocabularySessions.set(sessionToken, questions);
+      return wait({ sessionToken, mode, questions });
+    },
+    answerVocabularyPractice: (token, { questionId, selectedOptionId }) => {
+      const question = vocabularySessions.get(token)?.find((entry) => entry.questionId === questionId);
+      if (!question) return notFound('Practice question');
+      const word = vocabularyFixture[Number(questionId.slice(-12))];
+      const answer = question.mode === 'synonym' ? word.synonyms[0]
+        : question.mode === 'antonym' ? word.antonyms[0]
+          : ['fill_blank', 'identify'].includes(question.mode) ? word.word
+            : question.mode === 'context' ? word.exampleEn : word.meaningBn;
+      const correctOptionId = question.options.find((entry) => entry.text === answer)?.optionId;
+      return wait({
+        questionId,
+        selectedOptionId,
+        isCorrect: selectedOptionId === correctOptionId,
+        correctOptionId,
+        explanation: {
+          definitionEn: word.definitionEn,
+          meaningBn: word.meaningBn,
+          explanationBn: word.explanationBn,
+          exampleEn: word.exampleEn,
+          exampleBn: word.exampleBn,
+          synonyms: word.synonyms,
+          antonyms: word.antonyms,
+        },
+      });
+    },
     listCategories: (language) =>
       wait({
         language,
@@ -381,7 +552,23 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
         subject: { code: s.code, name: s.name },
         topics: s.topics.map((t) => {
           const st = topicStats(s.code, t.code, language);
-          return { ...t, ...st, difficulty: level(st.avgDifficulty), hasSummary: `${s.code}.${t.code}` === FIXTURE_TOPIC };
+          return {
+            ...t,
+            ...st,
+            verifiedPyqCount: 0,
+            wbcsPyqCount: 0,
+            otherWbpscPyqCount: 0,
+            adaptedPyqCount: 0,
+            originalPracticeCount: 0,
+            unclassifiedCount: 0,
+            subtopics: (t.subtopics || []).map((subtopic) => ({
+              ...subtopic,
+              questionCount: 0,
+              verifiedPyqCount: 0,
+            })),
+            difficulty: level(st.avgDifficulty),
+            hasSummary: `${s.code}.${t.code}` === FIXTURE_TOPIC,
+          };
         }),
       });
     },

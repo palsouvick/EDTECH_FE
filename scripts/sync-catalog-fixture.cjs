@@ -21,7 +21,16 @@ const slim = catalog.map((c) => ({
   subjects: c.subjects.map((s) => ({
     code: s.code,
     name: s.name,
-    topics: s.topics.map((t) => ({ code: t.code, name: t.name })),
+    topics: s.topics.map((t) => ({
+      code: t.code,
+      name: t.name,
+      syllabusStatus: t.syllabus_status || 'UNVERIFIED',
+      subtopics: (t.subtopics || []).map((subtopic) => ({
+        code: subtopic.code,
+        name: subtopic.name,
+        syllabusStatus: subtopic.syllabus_status || 'UNVERIFIED',
+      })),
+    })),
   })),
 }));
 

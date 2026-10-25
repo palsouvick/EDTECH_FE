@@ -6,6 +6,7 @@ const ITEMS = [
   { key: 'home', to: '/', end: true, label: NAV.home },
   { key: 'exams', to: '/exams', label: NAV.exams },
   { key: 'learn', to: '/learn', label: NAV.learn },
+  { key: 'vocabulary', to: '/vocabulary', label: NAV.vocabulary },
   { key: 'tips', to: '/tips', label: NAV.tips },
   { key: 'progress', to: '/me', label: NAV.progress },
 ];
