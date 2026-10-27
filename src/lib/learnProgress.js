@@ -8,6 +8,7 @@ import { preferencesAllowed } from './consent';
  */
 export const LEARN_STORAGE_KEY = 'edtech:learn';
 const MAX_SEEN = 500;
+const MAX_RECENT_PATTERNS = 30;
 
 function readAll() {
   try {
@@ -31,17 +32,29 @@ const keyOf = (subject, topic, level) => `${subject}.${topic}.${level}`;
 
 export function levelProgress(subject, topic, level) {
   const p = readAll()[keyOf(subject, topic, level)];
-  return { seen: Array.isArray(p?.seen) ? p.seen : [], best: p?.best ?? null };
+  return {
+    seen: Array.isArray(p?.seen) ? p.seen : [],
+    fingerprints: Array.isArray(p?.fingerprints) ? p.fingerprints : [],
+    patterns: Array.isArray(p?.patterns) ? p.patterns : [],
+    best: p?.best ?? null,
+  };
 }
 
 /** After a quiz: remember its questions as seen (restarting the cycle if asked) and keep the best score. */
-export function recordQuiz(subject, topic, level, { questionIds, restarted, correct, total }) {
+export function recordQuiz(subject, topic, level, { questionIds, fingerprints = [], patterns = [], restarted, correct, total }) {
   const all = readAll();
   const k = keyOf(subject, topic, level);
   const prev = all[k] || {};
   const seen = [...(restarted ? [] : prev.seen || []), ...questionIds].slice(-MAX_SEEN);
+  const recentFingerprints = [...(restarted ? [] : prev.fingerprints || []), ...fingerprints].slice(-MAX_SEEN);
+  const recentPatterns = [...(restarted ? [] : prev.patterns || []), ...patterns].slice(-MAX_RECENT_PATTERNS);
   const better = !prev.best || correct / total > prev.best.correct / prev.best.total;
-  all[k] = { seen, best: better ? { correct, total } : prev.best };
+  all[k] = {
+    seen,
+    fingerprints: recentFingerprints,
+    patterns: recentPatterns,
+    best: better ? { correct, total } : prev.best,
+  };
   writeAll(all);
 }
 

@@ -124,6 +124,20 @@ function ReviewItem({ question, result, n }) {
           </ol>
         </div>
       )}
+      {(question.patternName || question.difficultyLabel) && (
+        <div className="mt-3 flex flex-wrap gap-2 text-sm">
+          {question.patternName && (
+            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <Localized value={question.patternName} />
+            </span>
+          )}
+          {question.difficultyLabel && (
+            <span className="rounded-full bg-violet-100 px-3 py-1 font-medium text-violet-800 dark:bg-violet-500/15 dark:text-violet-200">
+              <Localized value={question.difficultyLabel} />
+            </span>
+          )}
+        </div>
+      )}
       {result.shortcut && (
         <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-100 dark:ring-amber-500/30">
           <span aria-hidden="true">⚡ </span>
@@ -225,8 +239,16 @@ export default function QuizPage() {
     setConfirming(false);
     setDeadline(null);
     timeSpent.current = {};
+    const progress = levelProgress(subject, topic, level);
     source
-      .createLearnQuiz({ subject, topic, level, exclude: levelProgress(subject, topic, level).seen })
+      .createLearnQuiz({
+        subject,
+        topic,
+        level,
+        exclude: progress.seen,
+        excludeFingerprints: progress.fingerprints,
+        recentPatterns: progress.patterns,
+      })
       .then((q) => {
         if (!alive) return;
         setQuiz(q);
@@ -272,6 +294,8 @@ export default function QuizPage() {
         });
         recordQuiz(subject, topic, level, {
           questionIds: quiz.questions.map((q) => q.questionId),
+          fingerprints: quiz.questions.map((q) => q.fingerprint).filter(Boolean),
+          patterns: quiz.questions.map((q) => q.pattern).filter(Boolean),
           restarted: quiz.restarted,
           correct: res.score.correct,
           total: res.score.total,

@@ -173,7 +173,12 @@ describe('learn', () => {
     expect(screen.getByText('Right')).toBeInTheDocument();
     expect(screen.getByText('Wrong')).toBeInTheDocument();
     expect(screen.getByText('Because 2.')).toBeInTheDocument();
-    expect(levelProgress('quant', 'percentage', 'beginner')).toEqual({ seen: ['q1', 'q2'], best: { correct: 1, total: 2 } });
+    expect(levelProgress('quant', 'percentage', 'beginner')).toEqual({
+      seen: ['q1', 'q2'],
+      fingerprints: [],
+      patterns: [],
+      best: { correct: 1, total: 2 },
+    });
 
     await user.click(screen.getByRole('button', { name: /Try again with new questions/ }));
     await screen.findByText('Question number 3?');
