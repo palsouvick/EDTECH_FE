@@ -158,6 +158,7 @@ function QuizCards({ subject, topic, levels }) {
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
                 {!empty && <Localized value={LEARN.qCount(info.questionCount)} className={`rounded-full px-2 py-0.5 ${tone.chip}`} />}
+                {!empty && info.borrowed && <Localized value={LEARN.borrowedChip} className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200" />}
                 <Localized
                   value={info?.timed ? LEARN.timed(Math.round(info.timeLimitSec / 60)) : LEARN.noTimer}
                   className={`rounded-full px-2 py-0.5 ${tone.chip}`}

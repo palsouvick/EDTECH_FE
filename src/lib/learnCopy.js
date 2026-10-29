@@ -83,6 +83,17 @@ export const LEARN = Object.freeze({
   timeLeft: t('Time left', 'বাকি সময়'),
   timeUp: t('Time is up! Your answers were submitted.', 'সময় শেষ! তোমার উত্তর জমা হয়ে গেছে।'),
   newCycle: t('You have seen every question at this level, so some come again.', 'এই স্তরের সব প্রশ্ন দেখা হয়ে গেছে, তাই কিছু প্রশ্ন আবার আসছে।'),
+  borrowed: t(
+    'This level does not have enough questions of its own yet, so this quiz also includes questions from the level below.',
+    'এই স্তরে এখনও যথেষ্ট প্রশ্ন নেই, তাই এই কুইজে নিচের স্তরের কিছু প্রশ্নও আছে।',
+  ),
+  borrowedChip: t('Includes easier questions', 'সহজ প্রশ্নও আছে'),
+  outsideClerkship: t('Not in the WBPSC Clerkship syllabus', 'WBPSC ক্লার্কশিপ সিলেবাসের বাইরে'),
+  hardNotReady: t(
+    'The Advanced question bank for this chapter is still being prepared. Please try the Intermediate quiz for now.',
+    'এই অধ্যায়ের অ্যাডভান্সড প্রশ্নভান্ডার এখনও তৈরি হচ্ছে। আপাতত ইন্টারমিডিয়েট কুইজটি দাও।',
+  ),
+  backToChapter: t('Back to the chapter', 'অধ্যায়ে ফিরে যাও'),
   loadingQuiz: t('Getting your questions…', 'প্রশ্ন আনা হচ্ছে…'),
   checking: t('Checking your answers…', 'উত্তর মেলানো হচ্ছে…'),
 

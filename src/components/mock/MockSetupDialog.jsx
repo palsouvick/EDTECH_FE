@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AUTH, MOCK, markingLabel, minutesLabel, onlyAvailable, perQuestionLabel, startWith } from '../../lib/i18n';
+import { AUTH, MOCK, minutesLabel, onlyAvailable, perQuestionLabel, startWith } from '../../lib/i18n';
 import { languageStore } from '../../hooks/useLanguagePreference';
 import Dialog from '../practice/Dialog';
 import { Localized } from '../topic-hub/Localized';
@@ -12,7 +12,6 @@ const OVERALL_MINUTES = [10, 15, 20, 30, 45, 60, 90, 120];
 const PER_QUESTION_SECONDS = [30, 45, 60, 90];
 // Roughly SSC / Banking prelims pace.
 const DEFAULT_MINUTES = { 10: 10, 25: 20, 50: 45, 100: 90 };
-const MARKING = { positive: 1, negative: 0.25 };
 
 function Chips({ label, value, options, onChange, render }) {
   return (
@@ -114,7 +113,6 @@ export default function MockSetupDialog({ open, onClose, onStart, initialCount =
         perQuestionSeconds: timerMode === 'perQuestion' ? seconds : undefined,
         allowPause,
         language,
-        markingScheme: MARKING,
       });
     } catch (err) {
       setError(err);
@@ -200,7 +198,7 @@ export default function MockSetupDialog({ open, onClose, onStart, initialCount =
           render={(l) => <span lang={l}>{l === 'en' ? 'English' : 'বাংলা'}</span>}
         />
 
-        <Localized value={markingLabel(MARKING.positive, MARKING.negative)} as="p" className="text-xs text-slate-500 dark:text-slate-400" />
+        <Localized value={MOCK.markingFromExam} as="p" className="text-xs text-slate-500 dark:text-slate-400" />
       </div>
 
       {error && (

@@ -1,6 +1,6 @@
 import { ApiError, request } from './api';
 import { createFixturePracticeSource, createHttpPracticeSource } from './practiceSource';
-import { catalogFixture } from '../fixtures/catalog';
+import { catalogFixture, markingFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
 import { practiceBank } from '../fixtures/practiceQuestions';
 import { vocabularyFixture } from '../fixtures/vocabulary';
@@ -191,7 +191,9 @@ function createFixtureMockApi(wait) {
           perQuestionTimer: Boolean(p.perQuestionTimer),
           perQuestionLimitSec: p.perQuestionTimer ? p.perQuestionSeconds : null,
           allowPause: Boolean(p.allowPause),
-          markingScheme: p.markingScheme,
+          // Like the server, offline mocks never take marks from the caller: they use the
+          // category's official marking, resolved by the server's rules at fixture build time.
+          markingScheme: markingFixture[p.category]?.[p.subject] ?? { positive: 1, negative: 0, basis: 'PRACTICE', examCode: null, sourceUrl: null },
         },
         startedAt: new Date(now).toISOString(),
         expiresAt: new Date(now + (p.allowPause ? 72 * 3600_000 : timeLimitMinutes * 60_000)).toISOString(),

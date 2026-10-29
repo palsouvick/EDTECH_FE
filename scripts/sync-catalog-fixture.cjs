@@ -13,6 +13,15 @@ const source = path.resolve(__dirname, '../../backend/db/seed/catalog.js');
 const target = path.resolve(__dirname, '../src/fixtures/catalog.js');
 
 const catalog = require(source);
+// Offline mocks follow the server's marking rules (backend/src/services/markingScheme.js).
+const { resolveMarking } = require(path.resolve(__dirname, '../../backend/src/services/markingScheme.js'));
+const marking = Object.fromEntries(catalog.map((c) => [
+  c.code,
+  Object.fromEntries(c.subjects.map((s) => {
+    const m = resolveMarking({ category: c.code, subject: s.code });
+    return [s.code, { positive: m.positive, negative: m.negative, basis: m.basis, examCode: m.examCode, sourceUrl: m.sourceUrl }];
+  })),
+]));
 const slim = catalog.map((c) => ({
   code: c.code,
   name: c.name,
@@ -39,5 +48,10 @@ const header = `/**
  * by \`npm run fixtures:catalog\`; edit the backend file, then regenerate.
  */
 `;
-fs.writeFileSync(target, `${header}export const catalogFixture = ${JSON.stringify(slim, null, 2)};\n`);
+fs.writeFileSync(
+  target,
+  `${header}export const catalogFixture = ${JSON.stringify(slim, null, 2)};\n\n`
+    + `// Default mock marking per category and subject, exactly as the server resolves it.\n`
+    + `export const markingFixture = ${JSON.stringify(marking, null, 2)};\n`,
+);
 console.log(`wrote ${path.relative(process.cwd(), target)}: ${slim.length} categories`);

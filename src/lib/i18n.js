@@ -223,6 +223,11 @@ export const pyqsCount = (n) => ({ en: `${n} ${n === 1 ? 'PYQ' : 'PYQs'}`, bn: `
 /** Mock test (CBT) strings. */
 export const MOCK = Object.freeze({
   mockTest: { en: 'Mock Test', bn: 'মক টেস্ট', hi: 'मॉक टेस्ट' },
+  markingFromExam: {
+    en: 'Marks and negative marking follow the official exam pattern, shown once the test starts.',
+    bn: 'নম্বর ও নেগেটিভ মার্কিং সরকারি পরীক্ষার প্যাটার্ন অনুযায়ী; টেস্ট শুরু হলে দেখানো হবে।',
+    hi: 'अंक और नकारात्मक अंकन आधिकारिक परीक्षा पैटर्न के अनुसार हैं; टेस्ट शुरू होने पर दिखेंगे।',
+  },
   setupTitle: { en: 'Set up your mock test', bn: 'মক টেস্ট সাজিয়ে নিন', hi: 'अपना मॉक टेस्ट सेट करें' },
   questionCount: { en: 'Number of questions', bn: 'প্রশ্নের সংখ্যা', hi: 'प्रश्नों की संख्या' },
   scope: { en: 'Questions from', bn: 'প্রশ্ন আসবে', hi: 'प्रश्न कहाँ से' },

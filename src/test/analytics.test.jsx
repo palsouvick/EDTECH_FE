@@ -70,7 +70,7 @@ describe('buildRetrySet', () => {
 async function takeFixtureMock(source) {
   const session = await source.createMock({
     category: 'SSC', subject: 'quant', topicIds: ['profit_loss'], questionCount: 10, timeLimitMinutes: 10,
-    language: 'en', markingScheme: { positive: 2, negative: 0.5 },
+    language: 'en', // SSC Quant: the official +2 / -0.5 (marks are never taken from the caller)
   });
   const bank = new Map(practiceBank.map((q) => [q.questionId, q]));
   const responses = session.questions.map((q, i) => {

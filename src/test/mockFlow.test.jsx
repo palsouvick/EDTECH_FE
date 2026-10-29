@@ -94,7 +94,7 @@ describe('mock test (CBT) flow', () => {
     await user.click(within(confirm).getByRole('button', { name: /^Submit/ }));
 
     await screen.findByText('Performance analysis', {}, { timeout: 5000 }); // the analytics dashboard
-    expect(screen.getByText(/\/ 10/)).toBeInTheDocument(); // score out of 10
+    expect(screen.getByText(/\/ 20/)).toBeInTheDocument(); // 10 questions x the official SSC +2 marks
     expect(await examStore.get(mockPath.split('/').pop())).toBeNull(); // local copy cleared after submit
     expect(Object.keys(localStorage).some((k) => k.includes('edtech:timer:mock:'))).toBe(false);
   }, 30_000);
@@ -102,7 +102,7 @@ describe('mock test (CBT) flow', () => {
   async function startEngine(overrides, questionCount = 2) {
     const session = await source.createMock({
       category: 'SSC', subject: 'quant', topicIds: ['profit_loss'], questionCount: 10, language: 'en',
-      timeLimitMinutes: 10, markingScheme: { positive: 1, negative: 0.25 }, ...overrides.create,
+      timeLimitMinutes: 10, ...overrides.create,
     });
     const exam = createExamState(session, { examName: { en: 'Test' } });
     exam.questions = exam.questions.slice(0, questionCount);

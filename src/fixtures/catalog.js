@@ -3370,3 +3370,127 @@ export const catalogFixture = [
     ]
   }
 ];
+
+// Default mock marking per category and subject, exactly as the server resolves it.
+export const markingFixture = {
+  "SSC": {
+    "quant": {
+      "positive": 2,
+      "negative": 0.5,
+      "basis": "OFFICIAL",
+      "examCode": "SSC_CGL",
+      "sourceUrl": "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_cgl_2025.pdf"
+    },
+    "reasoning": {
+      "positive": 2,
+      "negative": 0.5,
+      "basis": "OFFICIAL",
+      "examCode": "SSC_CGL",
+      "sourceUrl": "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_cgl_2025.pdf"
+    },
+    "english": {
+      "positive": 2,
+      "negative": 0.5,
+      "basis": "OFFICIAL",
+      "examCode": "SSC_CGL",
+      "sourceUrl": "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_cgl_2025.pdf"
+    },
+    "gs": {
+      "positive": 2,
+      "negative": 0.5,
+      "basis": "OFFICIAL",
+      "examCode": "SSC_CGL",
+      "sourceUrl": "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_cgl_2025.pdf"
+    }
+  },
+  "BANK": {
+    "quant": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "IBPS_CLERK",
+      "sourceUrl": "https://www.ibps.in/wp-content/uploads/CRP-CSA-PRE-XVI-IH-Eng-2026.pdf"
+    },
+    "reasoning": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "IBPS_CLERK",
+      "sourceUrl": "https://www.ibps.in/wp-content/uploads/CRP-CSA-PRE-XVI-IH-Eng-2026.pdf"
+    },
+    "english": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "IBPS_CLERK",
+      "sourceUrl": "https://www.ibps.in/wp-content/uploads/CRP-CSA-PRE-XVI-IH-Eng-2026.pdf"
+    },
+    "gs": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "PRACTICE",
+      "examCode": null,
+      "sourceUrl": null
+    }
+  },
+  "WBPSC": {
+    "quant": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "WBPSC_CLERKSHIP",
+      "sourceUrl": "https://psc.wb.gov.in/Download?param1=Clerkship2024-SchemeSyllabus.pdf&param2=advertisement"
+    },
+    "reasoning": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "OFFICIAL_NO_NEGATIVE",
+      "examCode": "WBCS",
+      "sourceUrl": "https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement"
+    },
+    "english": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "WBPSC_CLERKSHIP",
+      "sourceUrl": "https://psc.wb.gov.in/Download?param1=Clerkship2024-SchemeSyllabus.pdf&param2=advertisement"
+    },
+    "gs": {
+      "positive": 1,
+      "negative": 0.25,
+      "basis": "OFFICIAL",
+      "examCode": "WBPSC_CLERKSHIP",
+      "sourceUrl": "https://psc.wb.gov.in/Download?param1=Clerkship2024-SchemeSyllabus.pdf&param2=advertisement"
+    }
+  },
+  "WB_POST": {
+    "quant": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "PRACTICE",
+      "examCode": null,
+      "sourceUrl": null
+    },
+    "reasoning": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "PRACTICE",
+      "examCode": null,
+      "sourceUrl": null
+    },
+    "english": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "PRACTICE",
+      "examCode": null,
+      "sourceUrl": null
+    },
+    "gs": {
+      "positive": 1,
+      "negative": 0,
+      "basis": "PRACTICE",
+      "examCode": null,
+      "sourceUrl": null
+    }
+  }
+};

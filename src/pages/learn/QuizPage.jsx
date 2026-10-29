@@ -131,6 +131,11 @@ function ReviewItem({ question, result, n }) {
               <Localized value={question.patternName} />
             </span>
           )}
+          {question.inClerkshipSyllabus === false && (
+            <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+              <Localized value={LEARN.outsideClerkship} />
+            </span>
+          )}
           {question.difficultyLabel && (
             <span className="rounded-full bg-violet-100 px-3 py-1 font-medium text-violet-800 dark:bg-violet-500/15 dark:text-violet-200">
               <Localized value={question.difficultyLabel} />
@@ -286,6 +291,7 @@ export default function QuizPage() {
         const res = await source.checkLearnQuiz({
           subject,
           topic,
+          quizToken: quiz.quizToken,
           answers: quiz.questions.map((q) => ({
             questionId: q.questionId,
             selectedOptionId: answers[q.questionId] ?? null,
@@ -368,12 +374,21 @@ export default function QuizPage() {
       <div className="mt-6">
         {phase === 'loading' && <Localized value={LEARN.loadingQuiz} as="p" role="status" className="animate-pulse rounded-2xl bg-white p-8 text-center text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" />}
         {phase === 'checking' && <Localized value={LEARN.checking} as="p" role="status" className="animate-pulse rounded-2xl bg-white p-8 text-center text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800" />}
-        {phase === 'error' && <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />}
+        {phase === 'error' && error?.code === 'HARD_POOL_NOT_READY' && (
+          <div role="status" className="rounded-2xl bg-amber-50 p-6 text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/30">
+            <Localized value={LEARN.hardNotReady} as="p" className="font-semibold" />
+            <Link to={learnPaths.chapter(subject, topic)} className="mt-3 inline-flex min-h-11 items-center font-semibold underline">
+              <Localized value={LEARN.backToChapter} />
+            </Link>
+          </div>
+        )}
+        {phase === 'error' && error?.code !== 'HARD_POOL_NOT_READY' && <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />}
         {phase === 'done' && (
           <Results subject={subject} topic={topic} level={level} quiz={quiz} outcome={outcome} timedOut={timedOut} onRetry={() => { window.scrollTo({ top: 0 }); setAttempt((n) => n + 1); }} />
         )}
         {phase === 'running' && question && (
           <>
+            {quiz.borrowed && <Localized value={LEARN.borrowed} as="p" role="note" className="mb-4 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/30" />}
             {quiz.restarted && <Localized value={LEARN.newCycle} as="p" className="mb-4 rounded-xl bg-sky-50 px-4 py-2 text-sm text-sky-900 ring-1 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-500/30" />}
             <div className="mb-3 flex items-center justify-between gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
               <Localized value={LEARN.questionOf(index + 1, total)} />

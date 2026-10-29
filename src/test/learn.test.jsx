@@ -8,6 +8,7 @@ import { createFixtureDataSource } from '../lib/dataSource';
 import { clearResourceCache } from '../hooks/useResource';
 import { languageStore } from '../hooks/useLanguagePreference';
 import { levelProgress, recordQuiz, rememberChapter } from '../lib/learnProgress';
+import { ApiError } from '../lib/api';
 
 const t = (en, bn) => ({ en, bn });
 const levels = [
@@ -58,7 +59,7 @@ function stubSource() {
     createLearnQuiz: vi.fn(async ({ level }) => {
       const base = draw;
       draw += 2;
-      return { level, timed: level === 'advanced', timeLimitSec: level === 'advanced' ? 120 : null, restarted: false, questions: [question(base + 1), question(base + 2)] };
+      return { level, timed: level === 'advanced', timeLimitSec: level === 'advanced' ? 120 : null, restarted: false, quizToken: `token-${base}`, questions: [question(base + 1), question(base + 2)] };
     }),
     checkLearnQuiz: vi.fn(async ({ answers }) => {
       const results = answers.map((a) => {
@@ -195,6 +196,41 @@ describe('learn', () => {
     await user.click(within(dialog).getByRole('button', { name: /^Finish now/ }));
     expect(await screen.findByText('You got 0 out of 2 right')).toBeInTheDocument();
     expect(source.checkLearnQuiz.mock.calls[0][0].answers.every((a) => a.selectedOptionId === null)).toBe(true);
+    // The server only marks questions listed in the token it issued with the quiz.
+    expect(source.checkLearnQuiz.mock.calls[0][0].quizToken).toMatch(/^token-\d+$/);
+  });
+
+  it('a level that borrows easier questions says so, and Hard-bank review shows syllabus scope', async () => {
+    const source = stubSource();
+    const make = source.createLearnQuiz;
+    source.createLearnQuiz = vi.fn(async (args) => {
+      const quiz = await make(args);
+      return {
+        ...quiz,
+        borrowed: true,
+        questions: quiz.questions.map((q) => ({ ...q, patternName: t('Election with invalid votes', 'অবৈধ ভোটসহ নির্বাচন'), inClerkshipSyllabus: false })),
+      };
+    });
+    const { user } = renderAt('/learn/math/percentage/quiz/intermediate', source);
+    expect(await screen.findByText(/also includes questions from the level below/)).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /right 1/ }));
+    await user.click(screen.getByRole('button', { name: /Next/ }));
+    await user.click(screen.getByRole('radio', { name: /right 2/ }));
+    await user.click(screen.getByRole('button', { name: /Finish and see answers/ }));
+    expect(await screen.findByText('You got 2 out of 2 right')).toBeInTheDocument();
+    expect(screen.getAllByText('Election with invalid votes').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not in the WBPSC Clerkship syllabus').length).toBe(2);
+  });
+
+  it('an Advanced Hard bank that is not ready shows a clear message, not easier questions', async () => {
+    const source = stubSource();
+    source.createLearnQuiz = vi.fn(async () => {
+      throw new ApiError(422, 'HARD_POOL_NOT_READY', 'not ready');
+    });
+    renderAt('/learn/math/percentage/quiz/advanced', source);
+    expect(await screen.findByText(/Advanced question bank for this chapter is still being prepared/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Back to the chapter/ })).toHaveAttribute('href', '/learn/math/percentage');
+    expect(screen.queryByText('Question number 1?')).toBeNull();
   });
 
   it('advanced quiz is timed and submits itself when time runs out', async () => {

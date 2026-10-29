@@ -30,6 +30,38 @@ beforeEach(() => {
 });
 
 describe('Vocabulary Mastery', () => {
+  it('labels unreviewed Bengali meanings, hides the label once reviewed, and shows related words and the CMU credit', async () => {
+    const base = createFixtureDataSource({ latencyMs: 0 });
+    const source = {
+      ...base,
+      listVocabularyWords: async (params) => {
+        const result = await base.listVocabularyWords(params);
+        return {
+          ...result,
+          words: result.words.map((w, i) => ({
+            ...w,
+            bengaliReview: { status: i === 0 ? 'PENDING' : 'REVIEWED', reviewedAt: i === 0 ? null : '2026-10-29T00:00:00Z' },
+            ...(i === 0 && {
+              pronunciation: '/əˈbʌndənt/',
+              pronunciationSource: 'CMUDICT',
+              nearSynonyms: ['lavish'],
+              confusables: [{ word: 'Abandon', noteEn: 'Different words.', noteBn: 'আলাদা শব্দ।' }],
+            }),
+          })),
+        };
+      },
+    };
+    renderVocabulary(source);
+    const card = (await screen.findByRole('heading', { name: 'Abundant' })).closest('article');
+    expect(within(card).getByText('Bengali meaning pending review')).toBeInTheDocument();
+    expect(within(card).getByText('lavish')).toBeInTheDocument();
+    expect(within(card).getByText(/Often confused with Abandon/)).toBeInTheDocument();
+    expect(within(card).getByText('/əˈbʌndənt/')).toHaveAttribute('title', expect.stringMatching(/CMU Pronouncing Dictionary/));
+    const reviewed = screen.getByRole('heading', { name: 'Benevolent' }).closest('article');
+    expect(within(reviewed).queryByText('Bengali meaning pending review')).toBeNull();
+    expect(screen.getByText(/Carnegie Mellon University, BSD licence/)).toBeInTheDocument();
+  }, 15000);
+
   it('browses and filters bilingual word cards by English word and Bengali meaning', async () => {
     const { user } = renderVocabulary();
     await screen.findByRole('heading', { name: 'Abundant' });

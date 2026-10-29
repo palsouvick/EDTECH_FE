@@ -3,8 +3,10 @@ import { NavLink, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext';
 import { request } from '../lib/api';
 import AdminQuestionImport from './AdminQuestionImport';
+import AdminVocabularyReview from './AdminVocabularyReview';
 
-const TABS = ['overview', 'review', 'reports', 'bulk-upload'];
+const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review'];
+const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review' };
 const STATUSES = ['IN_REVIEW', 'DRAFT', 'PUBLISHED', 'ARCHIVED'];
 const btn = 'min-h-9 rounded-lg px-3 text-xs font-semibold';
 const tx = (v) => v?.en || v?.bn || v?.hi || '';
@@ -284,7 +286,7 @@ export default function AdminPage() {
           </div>
           <nav className="flex flex-wrap justify-end gap-1" aria-label="Admin sections">
             {TABS.map((t) => (
-              <NavLink key={t} to={t === 'overview' ? '/admin' : `/admin/${t}`} end className={() => `${btn} inline-flex items-center capitalize ${t === tab ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`}>{t === 'bulk-upload' ? 'Bulk upload' : t}</NavLink>
+              <NavLink key={t} to={t === 'overview' ? '/admin' : `/admin/${t}`} end className={() => `${btn} inline-flex items-center capitalize ${t === tab ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`}>{TAB_LABELS[t] ?? t}</NavLink>
             ))}
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-300">
@@ -294,11 +296,12 @@ export default function AdminPage() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">
-        {tab !== 'overview' && <h1 className="mb-6 text-2xl font-bold capitalize text-slate-900 dark:text-white">{tab}</h1>}
+        {tab !== 'overview' && <h1 className="mb-6 text-2xl font-bold capitalize text-slate-900 dark:text-white">{TAB_LABELS[tab] ?? tab}</h1>}
         {tab === 'overview' && <Overview />}
         {tab === 'review' && <Review />}
         {tab === 'reports' && <Reports />}
         {tab === 'bulk-upload' && <AdminQuestionImport />}
+        {tab === 'bengali-review' && <AdminVocabularyReview />}
       </main>
     </div>
   );

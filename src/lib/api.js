@@ -1,7 +1,8 @@
 const BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 
 // Dev builds only: identify as a test student, since local backends run without the
-// auth stack. Production backends ignore this header (NODE_ENV=production).
+// auth stack. The backend honours this header only with NODE_ENV=development (or test)
+// and ALLOW_DEV_USER_HEADER=true; every other backend ignores it.
 const DEV_USER = import.meta.env.DEV ? import.meta.env.VITE_DEV_USER_ID : undefined;
 /** True when requests carry the dev test-student header, so features work without logging in. */
 export const HAS_DEV_USER = Boolean(DEV_USER);

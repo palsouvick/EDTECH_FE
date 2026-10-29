@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useOptionalAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import PageShell from '../components/navigation/PageShell';
+import BengaliReviewNote, { CMU_CREDIT } from '../components/vocabulary/BengaliReviewNote';
 
 const MODES = [
   ['meaning', 'Meaning'],
@@ -31,9 +32,10 @@ function WordCard({ word, onState, busy, signedIn }) {
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{word.word}</h2>
           <p className="mt-1 text-lg font-semibold text-indigo-700 dark:text-indigo-300">{word.meaningBn}</p>
+          <BengaliReviewNote review={word.bengaliReview} className="mt-1" />
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{word.partOfSpeech} · {titleCase(word.difficulty)}</p>
         </div>
-        {word.pronunciation && <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">{word.pronunciation}</span>}
+        {word.pronunciation && <span title={word.pronunciationSource === 'CMUDICT' ? CMU_CREDIT : undefined} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">{word.pronunciation}</span>}
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{word.definitionEn}</p>
       {word.explanationBn && <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{word.explanationBn}</p>}
@@ -45,6 +47,16 @@ function WordCard({ word, onState, busy, signedIn }) {
         <p className="text-sm"><strong className="text-slate-900 dark:text-white">Synonyms: </strong><span className="text-slate-600 dark:text-slate-300">{word.synonyms.join(', ') || '—'}</span></p>
         <p className="text-sm"><strong className="text-slate-900 dark:text-white">Antonyms: </strong><span className="text-slate-600 dark:text-slate-300">{word.antonyms.join(', ') || '—'}</span></p>
       </div>
+      {word.nearSynonyms?.length > 0 && (
+        <p className="mt-2 text-sm"><strong className="text-slate-900 dark:text-white">Similar meaning (not always interchangeable): </strong><span className="text-slate-600 dark:text-slate-300">{word.nearSynonyms.join(', ')}</span></p>
+      )}
+      {word.confusables?.length > 0 && (
+        <ul className="mt-2 space-y-1 text-sm">
+          {word.confusables.map((c) => (
+            <li key={c.word}><strong className="text-slate-900 dark:text-white">Often confused with {c.word}: </strong><span className="text-slate-600 dark:text-slate-300">{c.noteEn}</span> <span lang="bn" className="text-slate-500 dark:text-slate-400">{c.noteBn}</span></li>
+          ))}
+        </ul>
+      )}
       {word.collocations?.length > 0 && (
         <p className="mt-2 text-sm"><strong className="text-slate-900 dark:text-white">Common usage: </strong><span className="text-slate-600 dark:text-slate-300">{word.collocations.join(' · ')}</span></p>
       )}
@@ -318,6 +330,7 @@ export default function VocabularyPage() {
               <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">Word of the Day · {wordOfDay?.word ? 'Daily rotation' : 'Loading'}</p>
               <h2 id="word-of-day-title" className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">{wordOfDay?.word || (wordOfDayLoaded ? 'No published words yet' : 'Preparing your word…')}</h2>
               {wordOfDay && <p className="mt-1 text-lg font-semibold text-indigo-700 dark:text-indigo-300">{wordOfDay.meaningBn}</p>}
+              {wordOfDay && <BengaliReviewNote review={wordOfDay.bengaliReview} />}
             </div>
             {wordOfDay && signedIn && <button type="button" className={secondary} onClick={() => updateWord(wordOfDay, 'learned', !wordOfDay.progress?.learned)}>{wordOfDay.progress?.learned ? 'Learned ✓' : 'Mark learned'}</button>}
           </div>
@@ -384,7 +397,7 @@ export default function VocabularyPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Tap to {flashVisible ? 'hide' : 'reveal'}</p>
             <button type="button" className="mt-3 min-h-40 w-full rounded-2xl text-left" onClick={() => setFlashVisible((visible) => !visible)} aria-label={flashVisible ? 'Hide flashcard answer' : 'Reveal flashcard answer'}>
               <span className="block text-3xl font-extrabold text-slate-900 dark:text-white">{words[flashIndex % words.length].word}</span>
-              {flashVisible ? <span className="mt-4 block space-y-2 text-slate-700 dark:text-slate-200"><span className="block text-lg font-semibold">{words[flashIndex % words.length].meaningBn}</span><span className="block">{words[flashIndex % words.length].definitionEn}</span><span className="block italic">{words[flashIndex % words.length].exampleEn}</span></span> : <span className="mt-4 block text-sm text-slate-500">Think of the meaning, then reveal the answer.</span>}
+              {flashVisible ? <span className="mt-4 block space-y-2 text-slate-700 dark:text-slate-200"><span className="block text-lg font-semibold">{words[flashIndex % words.length].meaningBn}</span><BengaliReviewNote review={words[flashIndex % words.length].bengaliReview} /><span className="block">{words[flashIndex % words.length].definitionEn}</span><span className="block italic">{words[flashIndex % words.length].exampleEn}</span></span> : <span className="mt-4 block text-sm text-slate-500">Think of the meaning, then reveal the answer.</span>}
             </button>
           </div>}
           <div className="mt-4 flex justify-between"><button type="button" className={secondary} onClick={() => { setFlashIndex((i) => Math.max(0, i - 1)); setFlashVisible(false); }}>Previous</button><button type="button" className={primary} onClick={() => { setFlashIndex((i) => (i + 1) % Math.max(1, words.length)); setFlashVisible(false); }}>Next card</button></div>
@@ -408,7 +421,7 @@ export default function VocabularyPage() {
             })}</div>
             {answer && <div role="status" className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-slate-800 dark:bg-emerald-950/40 dark:text-slate-100">
               <p className="font-bold">{answer.isCorrect ? 'Correct!' : 'Review this word'}</p>
-              <p className="mt-1">{answer.explanation.definitionEn}</p><p className="mt-1">{answer.explanation.meaningBn}</p><p className="mt-2 italic">{answer.explanation.exampleEn}</p><p className="mt-1">{answer.explanation.exampleBn}</p>
+              <p className="mt-1">{answer.explanation.definitionEn}</p><p className="mt-1">{answer.explanation.meaningBn}</p><BengaliReviewNote review={answer.explanation.bengaliReview} /><p className="mt-2 italic">{answer.explanation.exampleEn}</p><p className="mt-1">{answer.explanation.exampleBn}</p>
               <p className="mt-2"><strong>Synonyms:</strong> {answer.explanation.synonyms.join(', ')} · <strong>Antonyms:</strong> {answer.explanation.antonyms.join(', ')}</p>
             </div>}
             <div className="mt-5 flex justify-end">{answer
@@ -433,6 +446,7 @@ export default function VocabularyPage() {
       )}
 
       <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">Exam-relevance labels are evidence-based. Unsourced entries are shown as general practice, not verified PYQs.</p>
+      <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">{CMU_CREDIT}</p>
     </PageShell>
   );
 }
