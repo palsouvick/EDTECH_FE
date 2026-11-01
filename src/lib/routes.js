@@ -44,6 +44,8 @@ export const paths = {
 export const LEARN_SUBJECTS = Object.freeze([
   { slug: 'math', code: 'quant' },
   { slug: 'english', code: 'english' },
+  // General Knowledge: /learn/gk is the card dashboard, /learn/gk/<card> a card's facts and quizzes.
+  { slug: 'gk', code: 'gs' },
 ]);
 export const QUIZ_LEVEL_CODES = Object.freeze(['beginner', 'intermediate', 'advanced']);
 

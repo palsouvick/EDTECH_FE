@@ -40,6 +40,10 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getLearnChapter(subject, topic)               -> { subject, topic, title, lesson, levels, previous, next }
  *   createLearnQuiz({ subject, topic, level, exclude }) -> quiz (questions without answers)
  *   checkLearnQuiz({ subject, topic, answers })   -> { results, score }
+ *   getLearnProgress() / putLearnProgress(entries) -> { progress } the signed-in student's Learn progress
+ *   getGkCards()                                  -> { signedIn, cards } GK dashboard (real counts; progress when signed in)
+ *   listGkFacts({ card, subtopic, q, difficulty, exam, year, month, offset, limit }) -> { facts, pagination }
+ *   getGkCurrentAffairsMonths()                   -> { months }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
  */
@@ -93,6 +97,11 @@ export function createHttpDataSource() {
     getLearnChapter: (subject, topic) => request(`/learn/subjects/${subject}/chapters/${topic}`),
     createLearnQuiz: (body) => request('/learn/quiz', { method: 'POST', body }),
     checkLearnQuiz: (body) => request('/learn/quiz/check', { method: 'POST', body }),
+    getLearnProgress: () => request('/learn/progress'),
+    putLearnProgress: (entries) => request('/learn/progress', { method: 'PUT', body: { entries } }),
+    getGkCards: () => request('/gk/cards'),
+    listGkFacts: (params = {}) => request(`/gk/facts?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))}`),
+    getGkCurrentAffairsMonths: () => request('/gk/current-affairs/months'),
     listVocabularyWords: (params = {}) => request(`/vocabulary/words?${new URLSearchParams(params)}`),
     getVocabularyWordOfDay: () => request(`/vocabulary/word-of-day?tz=${-new Date().getTimezoneOffset()}`),
     getVocabularyProgressSummary: () => request('/vocabulary/progress/summary'),
@@ -378,6 +387,9 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getLearnChapter: learnOffline,
     createLearnQuiz: learnOffline,
     checkLearnQuiz: learnOffline,
+    getGkCards: learnOffline,
+    listGkFacts: learnOffline,
+    getGkCurrentAffairsMonths: learnOffline,
     async listVocabularyWords({ q = '', category, difficulty, status, offset = 0, limit = 20 } = {}) {
       const query = q.normalize('NFKC').trim().toLocaleLowerCase();
       const progress = readVocabularyProgress();

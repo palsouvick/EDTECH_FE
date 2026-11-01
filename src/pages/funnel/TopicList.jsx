@@ -8,6 +8,14 @@ import { categoryFromSlug, codeFromSlug, paths } from '../../lib/routes';
 import { Localized } from '../../components/topic-hub/Localized';
 import FunnelLayout, { CardGridSkeleton, LoadError } from './FunnelLayout';
 
+// Whether a chapter is named in an official syllabus of this category's exams.
+const SYLLABUS_LABELS = {
+  SYLLABUS: { en: 'In official syllabus', bn: 'সরকারি সিলেবাসে আছে' },
+  SUPPLEMENTARY: { en: 'Supplementary', bn: 'সহায়ক বিষয়' },
+  UNVERIFIED: { en: 'Mapping unverified', bn: 'সিলেবাস মেলানো হয়নি' },
+};
+const SYLLABUS_SOURCE = { en: 'Official syllabus', bn: 'সরকারি সিলেবাস' };
+
 const LEVELS = { EASY: 1, MODERATE: 2, HARD: 3 };
 const LEVEL_COLOR = { EASY: 'bg-emerald-500', MODERATE: 'bg-amber-500', HARD: 'bg-rose-500' };
 const ENGLISH_GROUPS = [
@@ -149,16 +157,31 @@ export default function TopicList() {
               <li key={t.code} className="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <Localized value={t.name} as="h3" className="text-[17px] font-semibold leading-snug text-slate-900 dark:text-white" />
-                  {isWbpscEnglish && (
+                  {(isWbpscEnglish || t.syllabusStatus === 'SYLLABUS' || (subject === 'gs' && t.syllabusStatus === 'SUPPLEMENTARY')) && (
                     <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                      t.syllabusStatus === 'SUPPLEMENTARY'
-                        ? 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200'
-                        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      t.syllabusStatus === 'SYLLABUS'
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+                        : t.syllabusStatus === 'SUPPLEMENTARY'
+                          ? 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                     }`}>
-                      {t.syllabusStatus === 'SUPPLEMENTARY' ? 'Supplementary' : 'Mapping unverified'}
+                      <Localized value={SYLLABUS_LABELS[t.syllabusStatus] ?? SYLLABUS_LABELS.UNVERIFIED} />
                     </span>
                   )}
                 </div>
+                {t.syllabusNote && (
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    <Localized value={t.syllabusNote} />
+                    {t.syllabusSourceUrl && (
+                      <>
+                        {' '}
+                        <a href={t.syllabusSourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
+                          <Localized value={SYLLABUS_SOURCE} />
+                        </a>
+                      </>
+                    )}
+                  </p>
+                )}
                 <div className="mt-2">
                   <DifficultyBadge level={t.difficulty} />
                 </div>

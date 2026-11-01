@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useDataSource } from './DataSourceContext';
+import { syncLearnProgress } from '../lib/learnProgress';
 
 const AuthContext = createContext(null);
 
@@ -44,6 +45,12 @@ export function AuthProvider({ children }) {
       setState({ status: 'ready', user: null });
     }
   }, [source]);
+
+  // Signed in: bring this device's Learn progress and the account's copy together.
+  const userId = state.user?.id;
+  useEffect(() => {
+    if (userId) syncLearnProgress(source);
+  }, [userId, source]);
 
   const value = useMemo(() => ({ ...state, login, register, logout }), [state, login, register, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

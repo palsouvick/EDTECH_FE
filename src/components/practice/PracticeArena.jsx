@@ -14,6 +14,7 @@ import FeedbackPanel from './FeedbackPanel';
 import MilestoneDialog from './MilestoneDialog';
 import OptionButton, { OPTION_LETTERS } from './OptionButton';
 import PyqBadge from './PyqBadge';
+import SourceCheckBadge from './SourceCheckBadge';
 import ReportDialog from './ReportDialog';
 
 /** Bottom edge of the sticky quick-nav, if the page has one. */
@@ -175,6 +176,7 @@ export default function PracticeArena({ source, topicName, onLaunchMock, onActiv
               <Localized value={questionNumber(state.index + 1)} />
             </h2>
             <PyqBadge refs={question.pyq} />
+            <SourceCheckBadge check={question.sourceCheck} />
           </div>
 
           {/* Also the accessible name of the option group; CSS-hidden language slots are excluded from it. */}

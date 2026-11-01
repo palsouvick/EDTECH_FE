@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useInView } from '../../hooks/useInView';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { PATTERNS } from '../../lib/patternsCopy';
+import { learnPaths } from '../../lib/routes';
 import OptionButton from '../practice/OptionButton';
 import { Localized } from './Localized';
 import { ArrowRightIcon, CheckIcon } from './icons';
@@ -129,7 +131,7 @@ function TryIt({ tryIt, onAnswered }) {
  * solve it, step through a solved example, then answer a fresh one.
  * Which patterns were tried (and got right) is remembered per chapter.
  */
-export default function QuestionPatterns({ subject, topic, patterns, initialPattern, onPractice, onActiveChange }) {
+export default function QuestionPatterns({ subject, topic, patterns, initialPattern, onPractice, onActiveChange, learnPractice = false }) {
   const [active, setActive] = useState(() => Math.max(0, patterns.findIndex((p) => p.key === initialPattern)));
   // The page's fixed CTA bar steps aside while the student reads here, as it does for the arena.
   const ref = useRef(null);
@@ -137,7 +139,8 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
   useEffect(() => onActiveChange?.(inView), [inView, onActiveChange]);
   const [results, setResults] = usePersistentState(`patterns:${subject}.${topic}`, {});
   const p = patterns[active];
-  const tried = patterns.filter((x) => results[x.key] != null).length;
+  const practicePatterns = patterns.filter((x) => x.tryIt);
+  const tried = practicePatterns.filter((x) => results[x.key] != null).length;
   const isLast = active === patterns.length - 1;
 
   return (
@@ -152,7 +155,7 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
             </h2>
             <Localized value={PATTERNS.sub} as="p" className="mt-1 max-w-xl text-sm leading-relaxed text-indigo-50" />
           </div>
-          <Localized value={PATTERNS.tried(tried, patterns.length)} className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-sm font-bold ring-1 ring-white/30" />
+          <Localized value={PATTERNS.tried(tried, practicePatterns.length)} className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-sm font-bold ring-1 ring-white/30" />
         </div>
         <div className="relative -mx-1 mt-4 flex flex-wrap gap-2 px-1 pb-1" role="tablist" aria-label={PATTERNS.title.en}>
           {patterns.map((x, i) => {
@@ -198,6 +201,24 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
           <Localized value={p.spot} markdown as="div" className="mt-1.5 text-slate-700 dark:text-slate-200" />
         </div>
 
+        {p.typicalWording && (
+          <div className={`${box} bg-amber-50 ring-1 ring-amber-100 dark:bg-amber-500/5 dark:ring-amber-500/20`}>
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+              <span aria-hidden="true">💬 </span>
+              <Localized value={PATTERNS.typicalWording} />
+            </p>
+            <Localized value={p.typicalWording} markdown as="div" className="mt-1.5 text-slate-700 dark:text-slate-200" />
+          </div>
+        )}
+
+        {(p.difficulty || p.syllabusNote) && (
+          <div className="flex flex-wrap gap-2 text-xs font-semibold">
+            {p.difficulty && <Localized value={PATTERNS.difficulty(p.difficulty)} className="rounded-full bg-violet-100 px-3 py-1 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200" />}
+            {p.syllabusNote && <Localized value={p.syllabusNote} className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200" />}
+            {p.examTags?.map((tag) => <Localized key={tag.en} value={tag} className="rounded-full bg-sky-100 px-3 py-1 text-sky-900 dark:bg-sky-500/15 dark:text-sky-200" />)}
+          </div>
+        )}
+
         <div className={`${box} bg-slate-50 ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800`}>
           <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             <span aria-hidden="true">🛠️ </span>
@@ -206,8 +227,33 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
           <Steps steps={p.method} tone="slate" />
         </div>
 
-        <WorkedExample example={p.example} />
-        <TryIt tryIt={p.tryIt} onAnswered={(ok) => setResults((r) => ({ ...r, [p.key]: ok }))} />
+        {(p.examples ?? [
+          p.example,
+          ...(p.tryIt ? [{
+            question: p.tryIt.question,
+            steps: p.tryIt.explanation,
+            answer: p.tryIt.options[p.tryIt.correct],
+          }] : []),
+        ]).map((example, i) => <WorkedExample key={i} example={example} />)}
+        {p.formula && (
+          <div className={`${box} bg-indigo-50 ring-1 ring-indigo-100 dark:bg-indigo-500/5 dark:ring-indigo-500/20`}>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300"><Localized value={PATTERNS.formula} /></p>
+            <Localized value={p.formula} markdown as="div" className="mt-1.5 font-medium text-slate-800 dark:text-slate-100" />
+          </div>
+        )}
+        {p.shortcut && (
+          <div className={`${box} bg-emerald-50 ring-1 ring-emerald-100 dark:bg-emerald-500/5 dark:ring-emerald-500/20`}>
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300"><Localized value={PATTERNS.shortcut} /></p>
+            <Localized value={p.shortcut} markdown as="div" className="mt-1.5 text-slate-700 dark:text-slate-200" />
+          </div>
+        )}
+        {p.trap && (
+          <div className={`${box} bg-rose-50 ring-1 ring-rose-100 dark:bg-rose-500/5 dark:ring-rose-500/20`}>
+            <p className="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300"><Localized value={PATTERNS.commonTrap} /></p>
+            <Localized value={p.trap} markdown as="div" className="mt-1.5 text-slate-700 dark:text-slate-200" />
+          </div>
+        )}
+        {p.tryIt && <TryIt tryIt={p.tryIt} onAnswered={(ok) => setResults((r) => ({ ...r, [p.key]: ok }))} />}
 
         <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-between dark:border-slate-800">
           <button
@@ -219,7 +265,7 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
             ← <Localized value={PATTERNS.prev} />
           </button>
           {isLast ? (
-            <button type="button" onClick={onPractice} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 font-semibold text-white hover:bg-emerald-500">
+            onPractice && <button type="button" onClick={onPractice} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 font-semibold text-white hover:bg-emerald-500">
               ✍️ <Localized value={PATTERNS.toPractice} />
               <ArrowRightIcon />
             </button>
@@ -230,7 +276,23 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
             </button>
           )}
         </div>
-        {tried === patterns.length && <Localized value={PATTERNS.allDone} as="p" className="text-center font-semibold text-emerald-700 dark:text-emerald-300" />}
+        {learnPractice && (p.practiceLevels?.length || p.registryLinked || p.practiceKey || ['two_together', 'efficiency'].includes(p.key)) && (
+          <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+            <Localized value={PATTERNS.practiceByLevel} as="p" className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-200" />
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(p.practiceLevels ?? (p.registryLinked ? ['advanced'] : ['beginner', 'intermediate', 'advanced'])).map((level) => (
+                <Link
+                  key={level}
+                  to={`${learnPaths.quiz('quant', topic, level)}?pattern=${encodeURIComponent(p.practiceKey ?? p.key)}`}
+                  className="flex min-h-10 items-center justify-center rounded-lg bg-indigo-50 px-3 text-sm font-semibold text-indigo-800 ring-1 ring-indigo-100 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/30"
+                >
+                  <Localized value={PATTERNS.difficulty(level)} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+        {practicePatterns.length > 0 && tried === practicePatterns.length && <Localized value={PATTERNS.allDone} as="p" className="text-center font-semibold text-emerald-700 dark:text-emerald-300" />}
       </article>
     </section>
   );

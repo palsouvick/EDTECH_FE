@@ -4,9 +4,11 @@ import { useAuth } from '../app/AuthContext';
 import { request } from '../lib/api';
 import AdminQuestionImport from './AdminQuestionImport';
 import AdminVocabularyReview from './AdminVocabularyReview';
+import AdminGkContent from './AdminGkContent';
+import QuestionEditor from '../components/admin/QuestionEditor';
 
-const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review'];
-const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review' };
+const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review', 'gk-content'];
+const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review', 'gk-content': 'GK content' };
 const STATUSES = ['IN_REVIEW', 'DRAFT', 'PUBLISHED', 'ARCHIVED'];
 const btn = 'min-h-9 rounded-lg px-3 text-xs font-semibold';
 const tx = (v) => v?.en || v?.bn || v?.hi || '';
@@ -206,6 +208,7 @@ function Review() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [editing, setEditing] = useState(null);
 
   const load = useCallback(() => {
     const qs = new URLSearchParams({ status, page: String(page), limit: '10' });
@@ -228,10 +231,15 @@ function Review() {
       </div>
       {error && <p role="alert" className="mb-3 text-sm text-rose-600">{error}</p>}
       <div className="space-y-3">
-        {data?.questions.map((x) => <QuestionCard key={x.id} q={x} onStatus={setQuestionStatus} />)}
+        {data?.questions.map((x) => (
+          <QuestionCard key={x.id} q={x} onStatus={setQuestionStatus}>
+            <button type="button" className={`${btn} bg-indigo-600 text-white`} onClick={() => setEditing(x.id)}>Edit</button>
+          </QuestionCard>
+        ))}
         {data && data.questions.length === 0 && <p className="text-slate-500">Nothing in this queue.</p>}
       </div>
       <Pager p={data?.pagination} setPage={setPage} />
+      {editing && <QuestionEditor id={editing} onClose={() => setEditing(null)} onSaved={load} />}
     </div>
   );
 }
@@ -302,6 +310,7 @@ export default function AdminPage() {
         {tab === 'reports' && <Reports />}
         {tab === 'bulk-upload' && <AdminQuestionImport />}
         {tab === 'bengali-review' && <AdminVocabularyReview />}
+        {tab === 'gk-content' && <AdminGkContent />}
       </main>
     </div>
   );

@@ -9,6 +9,7 @@ import { Localized } from '../topic-hub/Localized';
 import { TimerIcon } from '../topic-hub/icons';
 import OptionButton from '../practice/OptionButton';
 import PyqBadge from '../practice/PyqBadge';
+import SourceCheckBadge from '../practice/SourceCheckBadge';
 import Dialog from '../practice/Dialog';
 import QuestionPalette, { StatusChip } from './QuestionPalette';
 import TestAnalyticsDashboard from '../analytics/TestAnalyticsDashboard';
@@ -324,6 +325,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
                   <Localized value={questionOfLabel(current + 1, entries.length)} />
                 </h2>
                 <PyqBadge refs={q.pyq} />
+                <SourceCheckBadge check={q.sourceCheck} />
               </div>
               <div id="mock-stem" className="text-lg font-medium leading-relaxed text-slate-900 sm:text-xl dark:text-white">
                 <Localized value={q.stem} as="div" markdown />

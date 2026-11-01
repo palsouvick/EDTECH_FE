@@ -15,6 +15,8 @@ import HomePage from './pages/HomePage';
 import TipsPage from './pages/TipsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import SubjectPage from './pages/learn/SubjectPage';
+import GkDashboardPage from './pages/learn/GkDashboardPage';
+import GkChapterPage from './pages/learn/GkChapterPage';
 import ChapterPage from './pages/learn/ChapterPage';
 import QuizPage from './pages/learn/QuizPage';
 import AdminPage from './pages/AdminPage';
@@ -66,6 +68,8 @@ export function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPage />} />
       {/* Rendered directly, not redirected: a <Navigate> paints one empty frame first. */}
       <Route path="/learn" element={<SubjectPage />} />
+      <Route path="/learn/gk" element={<GkDashboardPage />} />
+      <Route path="/learn/gk/:chapter" element={<GkChapterPage />} />
       <Route path="/learn/:subject" element={<SubjectPage />} />
       <Route path="/learn/:subject/:chapter" element={<ChapterPage />} />
       <Route path="/learn/:subject/:chapter/quiz/:level" element={<QuizPage />} />

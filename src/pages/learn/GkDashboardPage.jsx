@@ -1,0 +1,117 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useDataSource } from '../../app/DataSourceContext';
+import { useOptionalAuth } from '../../app/AuthContext';
+import { GK } from '../../lib/gkCopy';
+import { toSlug } from '../../lib/routes';
+import PageShell from '../../components/navigation/PageShell';
+import { Localized } from '../../components/topic-hub/Localized';
+import { ArrowRightIcon } from '../../components/topic-hub/icons';
+import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
+import { SubjectTabs } from './SubjectPage';
+
+export const gkCardPath = (code) => `/learn/gk/${toSlug(code)}`;
+
+/** Progress line: only real attempts of the signed-in student; nothing is shown for guests. */
+function CardProgress({ progress, signedIn }) {
+  if (!signedIn) return null;
+  if (!progress?.questionsAttempted) return <Localized value={GK.notStarted} as="p" className="text-xs font-medium text-slate-500 dark:text-slate-400" />;
+  const pct = progress.accuracy ?? 0;
+  return (
+    <div>
+      <Localized value={GK.progressLine(progress.questionsAttempted, progress.accuracy)} as="p" className="text-xs font-semibold text-slate-600 dark:text-slate-300" />
+      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" role="progressbar" aria-label={GK.yourProgress.en} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.max(pct, 2)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function GkCard({ card, signedIn }) {
+  return (
+    <Link
+      to={gkCardPath(card.code)}
+      className="group flex h-full flex-col rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 motion-reduce:transition-none dark:bg-slate-900 dark:ring-slate-800"
+    >
+      <div className="flex items-start gap-3">
+        <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-500/10">{card.emoji}</span>
+        <div className="min-w-0">
+          <Localized value={card.title} as="h2" className="text-lg font-extrabold leading-snug text-slate-900 dark:text-white" />
+          <Localized value={card.description} as="p" className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300" />
+        </div>
+      </div>
+      <dl className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+        <div className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-200">
+          <dt className="sr-only">Facts</dt>
+          <dd><Localized value={GK.facts(card.factCount)} /></dd>
+        </div>
+        <div className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <dt className="sr-only">Questions</dt>
+          <dd><Localized value={GK.questions(card.questionCount)} /></dd>
+        </div>
+      </dl>
+      {card.questionCount > 0 && (
+        <Localized value={GK.sourceVerifiedQuestions(card.sourceVerifiedQuestionCount, card.questionCount)} as="p" className="mt-2 text-xs text-slate-500 dark:text-slate-400" />
+      )}
+      {card.crossListedFactCount > 0 && <Localized value={GK.alsoTagged(card.crossListedFactCount)} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />}
+      <div className="mt-auto space-y-3 pt-4">
+        <CardProgress progress={card.progress} signedIn={signedIn} />
+        <span className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white group-hover:bg-indigo-500">
+          <Localized value={GK.open} />
+          <ArrowRightIcon className="transition-transform group-hover:translate-x-1" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/** /learn/gk: the GK dashboard, one card per area, with real counts and the student's own progress. */
+export default function GkDashboardPage() {
+  const source = useDataSource();
+  const auth = useOptionalAuth();
+  const userKey = auth?.user?.id ?? 'guest';
+  // Not cached for the session: progress changes after every quiz.
+  const [state, setState] = useState({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  useEffect(() => {
+    let alive = true;
+    setState((s) => (s.status === 'ready' ? s : { status: 'loading' }));
+    source.getGkCards().then(
+      (data) => alive && setState({ status: 'ready', data }),
+      (error) => alive && setState({ status: 'error', error }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [source, userKey, attempt]);
+  const { status, data, error } = state;
+
+  return (
+    <PageShell className="max-w-6xl pb-16 pt-6 sm:pt-8">
+      <section className="rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-600 p-6 text-white shadow-xl shadow-emerald-500/20 sm:p-8">
+        <Localized value={GK.pageTitle} as="h1" className="text-3xl font-extrabold tracking-tight sm:text-4xl" />
+        <Localized value={GK.heroSub} as="p" className="mt-3 max-w-3xl leading-relaxed text-emerald-50" />
+        {status === 'ready' && !data.signedIn && <Localized value={GK.signInForProgress} as="p" className="mt-3 text-sm font-semibold text-white/90" />}
+      </section>
+
+      <div className="mt-8">
+        <SubjectTabs subject="gs" />
+      </div>
+
+      <div className="mt-6">
+        {status === 'loading' && <CardGridSkeleton count={6} height="h-64" />}
+        {status === 'error' && <LoadError error={error} onRetry={retry} />}
+        {status === 'ready' && (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {data.cards.map((c) => (
+              <li key={c.code}>
+                <GkCard card={c} signedIn={data.signedIn} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </PageShell>
+  );
+}

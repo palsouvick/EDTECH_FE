@@ -14,6 +14,7 @@ import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 const SUBJECT_TABS = [
   { code: 'quant', emoji: '🔢', title: { en: 'Math', bn: 'গণিত' } },
   { code: 'english', emoji: '🔤', title: { en: 'English', bn: 'ইংরেজি' } },
+  { code: 'gs', emoji: '🌏', title: { en: 'GK', bn: 'সাধারণ জ্ঞান' } },
 ];
 
 // One colour per card, cycling, so a long grid stays easy to scan.
@@ -173,6 +174,30 @@ function Hero({ subject, chapters }) {
   );
 }
 
+/** Math | English | GK tabs: links, so each subject has its own URL and Back works. */
+export function SubjectTabs({ subject }) {
+  return (
+    <nav aria-label={LEARN.subjectTabs.en} className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-slate-200/70 p-1 sm:w-auto dark:bg-slate-800">
+      {SUBJECT_TABS.map((s) => {
+        const active = s.code === subject;
+        return (
+          <Link
+            key={s.code}
+            to={learnPaths.subject(s.code)}
+            aria-current={active ? 'page' : undefined}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-indigo-500 sm:min-w-36 sm:px-6 sm:text-lg ${
+              active ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+            }`}
+          >
+            <span aria-hidden="true">{s.emoji}</span>
+            <Localized value={s.title} />
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 /** /learn/:subject: Learn Basics, with Math | English tabs and the chosen subject's chapters. */
 export default function SubjectPage() {
   // /learn has no subject segment: it shows the Math tab.
@@ -194,25 +219,7 @@ export default function SubjectPage() {
       <Hero subject={subject} chapters={status === 'ready' ? data.chapters : null} />
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Subject tabs: links, so each subject has its own URL and Back works. */}
-        <nav aria-label={LEARN.subjectTabs.en} className="grid w-full grid-cols-2 gap-1 rounded-2xl bg-slate-200/70 p-1 sm:w-auto dark:bg-slate-800">
-          {SUBJECT_TABS.map((s) => {
-            const active = s.code === subject;
-            return (
-              <Link
-                key={s.code}
-                to={learnPaths.subject(s.code)}
-                aria-current={active ? 'page' : undefined}
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-indigo-500 sm:min-w-44 sm:text-lg ${
-                  active ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-                }`}
-              >
-                <span aria-hidden="true">{s.emoji}</span>
-                <Localized value={s.title} />
-              </Link>
-            );
-          })}
-        </nav>
+        <SubjectTabs subject={subject} />
         <label className="relative block sm:w-72">
           <span className="sr-only">{LEARN.searchLabel[lang] ?? LEARN.searchLabel.en}</span>
           <span aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>

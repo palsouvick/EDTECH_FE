@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import { LEARN, QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
-import { levelProgress, recordQuiz } from '../../lib/learnProgress';
+import { levelProgress, pushLevel, recordQuiz } from '../../lib/learnProgress';
+import { useOptionalAuth } from '../../app/AuthContext';
+import SourceCheckBadge from '../../components/practice/SourceCheckBadge';
 import { QUIZ_LEVEL_CODES, codeFromSlug, learnPaths, subjectCodeFromSlug } from '../../lib/routes';
 import PageShell from '../../components/navigation/PageShell';
 import OptionButton, { OPTION_LETTERS } from '../../components/practice/OptionButton';
@@ -38,6 +40,11 @@ function useCountdown(deadline, onExpire) {
 function QuestionCard({ question, selected, onSelect }) {
   return (
     <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800">
+      {question.sourceCheck && (
+        <div className="mb-3">
+          <SourceCheckBadge check={question.sourceCheck} />
+        </div>
+      )}
       <Localized value={question.stem} markdown as="div" className="text-lg font-medium leading-relaxed text-slate-900 dark:text-white" />
       {question.media?.map((m) => (
         <img key={m.url} src={m.url} alt={m.alt?.en ?? ''} className="mt-3 max-h-72 max-w-full rounded-lg" />
@@ -70,7 +77,10 @@ function ReviewItem({ question, result, n }) {
     <li className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-bold text-slate-500">#{n}</span>
-        <Localized value={badge[1]} className={`rounded-full px-3 py-0.5 text-sm font-bold ${badge[0]}`} />
+        <span className="flex flex-wrap items-center justify-end gap-2">
+          <SourceCheckBadge check={question.sourceCheck} />
+          <Localized value={badge[1]} className={`rounded-full px-3 py-0.5 text-sm font-bold ${badge[0]}`} />
+        </span>
       </div>
       <Localized value={question.stem} markdown as="div" className="mt-2 font-medium leading-relaxed text-slate-900 dark:text-white" />
       <ul className="mt-4 space-y-2">
@@ -214,10 +224,14 @@ function Results({ subject, topic, level, quiz, outcome, timedOut, onRetry }) {
 /** /learn/:subject/:chapter/quiz/:level: answer every question, then review them all. */
 export default function QuizPage() {
   const { subject: slug, chapter, level } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedPattern = searchParams.get('pattern');
+  const pattern = /^[a-z0-9_]{1,60}$/.test(requestedPattern || '') ? requestedPattern : undefined;
   const subject = subjectCodeFromSlug(slug);
   const topic = codeFromSlug(chapter);
   const valid = subject && topic && QUIZ_LEVEL_CODES.includes(level);
   const source = useDataSource();
+  const signedIn = Boolean(useOptionalAuth()?.user);
 
   const [attempt, setAttempt] = useState(0);
   const [phase, setPhase] = useState('loading'); // loading | running | checking | done | error
@@ -250,6 +264,7 @@ export default function QuizPage() {
         subject,
         topic,
         level,
+        ...(pattern && { pattern }),
         exclude: progress.seen,
         excludeFingerprints: progress.fingerprints,
         recentPatterns: progress.patterns,
@@ -269,7 +284,7 @@ export default function QuizPage() {
     return () => {
       alive = false;
     };
-  }, [valid, source, subject, topic, level, attempt]);
+  }, [valid, source, subject, topic, level, pattern, attempt]);
 
   const noteTime = useCallback(() => {
     const q = quiz?.questions[index];
@@ -306,6 +321,7 @@ export default function QuizPage() {
           correct: res.score.correct,
           total: res.score.total,
         });
+        if (signedIn) pushLevel(source, subject, topic, level);
         setOutcome(res);
         setPhase('done');
       } catch (e) {
