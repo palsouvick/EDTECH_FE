@@ -287,6 +287,35 @@ describe('learn', () => {
     expect(screen.getByText('Completed')).toBeInTheDocument();
   }, 20000);
 
+  it('loads solved question patterns for the Simple & Compound Interest lesson', async () => {
+    const source = stubSource();
+    const interestLesson = {
+      ...timeWorkLesson,
+      topic: 'interest',
+      title: t('Simple & Compound Interest', 'সরল ও চক্রবৃদ্ধি সুদ'),
+    };
+    source.getLearnChapter = async (_subject, topic) => ({
+      subject: { code: 'quant' },
+      topic,
+      title: interestLesson.title,
+      lesson: interestLesson,
+      levels,
+      previous: null,
+      next: null,
+    });
+    source.getTopicPatterns = vi.fn(async () => ({
+      patterns: [{ ...timeWorkPattern, key: 'find_simple_interest', name: t('Find simple interest', 'সরল সুদ নির্ণয়') }],
+    }));
+
+    const { user } = renderAt('/learn/math/interest', source);
+    expect(await screen.findByRole('heading', { name: /^Simple & Compound Interest/, level: 1 })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Question Patterns/ }));
+
+    expect(await screen.findByRole('heading', { name: 'Find simple interest' })).toBeInTheDocument();
+    expect(source.getTopicPatterns).toHaveBeenCalledWith({ subject: 'quant', topic: 'interest' });
+    expect(screen.queryByText('Question patterns are loading.')).toBeNull();
+  });
+
   it('an expanded non-Time & Work Math lesson uses the guided sections and bookmarks', async () => {
     const { user } = renderAt('/learn/math/algebra');
     expect(await screen.findByRole('heading', { name: /^Algebra/, level: 1 })).toBeInTheDocument();

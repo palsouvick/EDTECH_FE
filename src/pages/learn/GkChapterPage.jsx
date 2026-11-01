@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
+import { useOptionalAuth } from '../../app/AuthContext';
 import { useResource } from '../../hooks/useResource';
 import { useLanguagePreference } from '../../hooks/useLanguagePreference';
 import { GK } from '../../lib/gkCopy';
@@ -8,17 +9,29 @@ import { QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
 import { codeFromSlug, learnPaths } from '../../lib/routes';
 import { rememberChapter } from '../../lib/learnProgress';
 import PageShell from '../../components/navigation/PageShell';
+import PracticeArena from '../../components/practice/PracticeArena';
+import GkMockDialog from '../../components/gk/GkMockDialog';
 import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
+import { CompletionBar, GK_REVISION_PATH } from './GkDashboardPage';
 
 const PAGE = 20;
 const card = 'rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800';
 const chip = (on) => `min-h-10 rounded-full px-3.5 text-sm font-semibold ring-1 transition-colors ${on ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700'}`;
+const select = 'min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-950';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const BN_MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-const fmtDate = (iso) => (iso ? new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : null);
+// Exam categories a practice set can be drawn from (each question lists the categories it serves).
+const EXAM_TYPES = [
+  { code: 'WBPSC', label: { en: 'WBPSC (Clerkship, WBCS, Misc)', bn: 'WBPSC (ক্লার্কশিপ, WBCS, মিসলেনিয়াস)' } },
+  { code: 'SSC', label: { en: 'SSC', bn: 'SSC' } },
+  { code: 'BANK', label: { en: 'Banking', bn: 'ব্যাংকিং' } },
+  { code: 'WB_POST', label: { en: 'WB Post Office', bn: 'পশ্চিমবঙ্গ ডাক বিভাগ' } },
+];
+const fmtDate = (iso) => (iso ? new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : null);
 const fmtMilestone = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? fmtDate(d) : d);
+const txt = (v, lang) => v?.[lang] ?? v?.en ?? '';
 
 function useDebounced(value, ms) {
   const [v, setV] = useState(value);
@@ -29,8 +42,50 @@ function useDebounced(value, ms) {
   return v;
 }
 
+/** The signed-in student's buttons on a fact: bookmark, "I knew this", "Revise again". */
+function FactActions({ fact, onChange }) {
+  const source = useDataSource();
+  const [busy, setBusy] = useState(false);
+  const mine = fact.mine;
+  const act = async (fn) => {
+    setBusy(true);
+    try {
+      onChange({ ...fact, mine: { ...mine, ...(await fn()) } });
+    } catch {
+      /* the button simply stays as it was; nothing is claimed */
+    } finally {
+      setBusy(false);
+    }
+  };
+  const btn = 'inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold ring-1 disabled:opacity-60';
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={busy}
+        aria-pressed={mine.bookmarked}
+        onClick={() => act(() => source.setGkFactBookmark(fact.code, !mine.bookmarked))}
+        className={`${btn} ${mine.bookmarked ? 'bg-amber-100 text-amber-900 ring-amber-300 dark:bg-amber-500/15 dark:text-amber-200' : 'bg-white text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700'}`}
+      >
+        <span aria-hidden="true">{mine.bookmarked ? '★' : '☆'}</span>
+        <Localized value={mine.bookmarked ? GK.bookmarked : GK.bookmark} />
+      </button>
+      <button type="button" disabled={busy} onClick={() => act(() => source.reviewGkFact(fact.code, 'known'))} className={`${btn} bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/30`}>
+        <span aria-hidden="true">✓</span>
+        <Localized value={GK.knewIt} />
+      </button>
+      <button type="button" disabled={busy} onClick={() => act(() => source.reviewGkFact(fact.code, 'again'))} className={`${btn} bg-rose-50 text-rose-800 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/30`}>
+        <span aria-hidden="true">↻</span>
+        <Localized value={GK.reviseAgain} />
+      </button>
+      {mine.status === 'mastered' && <Localized value={GK.mastered} className="text-xs font-bold text-emerald-700 dark:text-emerald-300" />}
+      {mine.status === 'learning' && mine.dueAt && <Localized value={GK.nextReview(fmtDate(mine.dueAt))} className="text-xs text-slate-500 dark:text-slate-400" />}
+    </div>
+  );
+}
+
 /** One fact: statement first, then the detail a student can open. Labels never claim more than the data says. */
-export function FactCard({ fact }) {
+export function FactCard({ fact, onChange }) {
   const [open, setOpen] = useState(false);
   const verified = fact.verification.status === 'VERIFIED';
   return (
@@ -104,17 +159,19 @@ export function FactCard({ fact }) {
           </div>
         </div>
       )}
+      {fact.mine && onChange && <FactActions fact={fact} onChange={onChange} />}
     </li>
   );
 }
 
-function FactList({ cardInfo }) {
+function FactList({ cardInfo, signedIn }) {
   const source = useDataSource();
   const { lang } = useLanguagePreference();
   const [subtopic, setSubtopic] = useState('');
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [month, setMonth] = useState('');
+  const [mine, setMine] = useState('');
   const q = useDebounced(query.trim(), 300);
   const months = useResource(cardInfo.dated ? 'gk:ca-months' : null, () => source.getGkCurrentAffairsMonths());
   const [state, setState] = useState({ status: 'loading', facts: [], total: 0 });
@@ -122,8 +179,8 @@ function FactList({ cardInfo }) {
 
   const filters = useMemo(() => {
     const [year, m] = month ? month.split('-').map(Number) : [];
-    return { card: cardInfo.code, subtopic: subtopic || undefined, q: q || undefined, difficulty: difficulty || undefined, year, month: m };
-  }, [cardInfo.code, subtopic, q, difficulty, month]);
+    return { card: cardInfo.code, subtopic: subtopic || undefined, q: q || undefined, difficulty: difficulty || undefined, year, month: m, mine: (signedIn && mine) || undefined };
+  }, [cardInfo.code, subtopic, q, difficulty, month, mine, signedIn]);
 
   // New filters: start again from the first page.
   useEffect(() => {
@@ -148,12 +205,23 @@ function FactList({ cardInfo }) {
     }
   }, [source, filters, state.facts.length]);
 
+  const replaceFact = useCallback((f) => setState((s) => ({ ...s, facts: s.facts.map((x) => (x.id === f.id ? f : x)) })), []);
   const subtopics = cardInfo.subtopics.filter((s) => s.factCount > 0);
-  const placeholder = GK.searchPlaceholder[lang] ?? GK.searchPlaceholder.en;
 
   return (
-    <section aria-labelledby="gk-read" className="mt-8">
-      <Localized value={GK.readTitle} as="h2" id="gk-read" className="text-xl font-bold text-slate-900 dark:text-white" />
+    <section aria-labelledby="gk-read" className="mt-10">
+      <h2 id="gk-read" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={GK.readTitle} /></h2>
+      {signedIn ? (
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={GK.show.en}>
+          {[['', GK.allFacts], ['bookmarked', GK.myBookmarks], ['due', GK.dueNow], ['unseen', GK.notSeen]].map(([v, label]) => (
+            <button key={v || 'all'} type="button" className={chip(mine === v)} aria-pressed={mine === v} onClick={() => setMine(v)}>
+              <Localized value={label} />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <Localized value={GK.signInToSave} as="p" className="mt-2 text-sm text-slate-500 dark:text-slate-400" />
+      )}
       {subtopics.length > 1 && (
         <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Subcategory">
           <button type="button" className={chip(!subtopic)} aria-pressed={!subtopic} onClick={() => setSubtopic('')}>
@@ -168,29 +236,29 @@ function FactList({ cardInfo }) {
       )}
       <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <label className="relative block">
-          <span className="sr-only">{GK.search[lang] ?? GK.search.en}</span>
+          <span className="sr-only">{txt(GK.search, lang)}</span>
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={placeholder}
+            placeholder={txt(GK.searchPlaceholder, lang)}
             className="min-h-11 w-full rounded-xl border-0 bg-white px-4 text-base text-slate-900 ring-1 ring-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-900 dark:text-white dark:ring-slate-700"
           />
         </label>
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <Localized value={GK.difficulty} />
           <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-950">
-            <option value="">{GK.all[lang] ?? GK.all.en}</option>
-            <option value="easy">{GK.easy[lang] ?? GK.easy.en}</option>
-            <option value="medium">{GK.medium[lang] ?? GK.medium.en}</option>
-            <option value="hard">{GK.hard[lang] ?? GK.hard.en}</option>
+            <option value="">{txt(GK.all, lang)}</option>
+            <option value="easy">{txt(GK.easy, lang)}</option>
+            <option value="medium">{txt(GK.medium, lang)}</option>
+            <option value="hard">{txt(GK.hard, lang)}</option>
           </select>
         </label>
         {cardInfo.dated && (
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
             <Localized value={GK.month} />
             <select value={month} onChange={(e) => setMonth(e.target.value)} className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-950">
-              <option value="">{GK.anyMonth[lang] ?? GK.anyMonth.en}</option>
+              <option value="">{txt(GK.anyMonth, lang)}</option>
               {(months.data?.months || []).map((m) => (
                 <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
                   {lang === 'bn' ? `${BN_MONTHS[m.month - 1]} ${m.year}` : `${MONTHS[m.month - 1]} ${m.year}`} ({m.factCount})
@@ -211,7 +279,7 @@ function FactList({ cardInfo }) {
           <>
             <Localized value={GK.showing(state.facts.length, state.total)} as="p" className="mb-2 text-sm text-slate-500 dark:text-slate-400" />
             <ul className={`space-y-3 ${state.status === 'loading' ? 'opacity-60' : ''}`}>
-              {state.facts.map((f) => <FactCard key={f.id} fact={f} />)}
+              {state.facts.map((f) => <FactCard key={f.id} fact={f} onChange={signedIn ? replaceFact : undefined} />)}
             </ul>
             {state.hasMore && (
               <button
@@ -226,6 +294,144 @@ function FactList({ cardInfo }) {
           </>
         )}
       </div>
+    </section>
+  );
+}
+
+/** Questions per subcategory and the student's completion in each. */
+function TopicProgress({ cardInfo, signedIn }) {
+  const rows = cardInfo.subtopics.filter((s) => s.questionCount > 0);
+  const other = cardInfo.otherQuestions;
+  if (!rows.length && !other?.questionCount) return null;
+  const Row = ({ title, count, progress }) => (
+    <li className="rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
+      <div className="flex items-baseline justify-between gap-2">
+        <Localized value={title} className="text-sm font-semibold text-slate-800 dark:text-slate-100" />
+        <Localized value={GK.questionsShort(count)} className="shrink-0 text-xs tabular-nums text-slate-500 dark:text-slate-400" />
+      </div>
+      <div className="mt-2">
+        <CompletionBar progress={progress} total={count} signedIn={signedIn} compact />
+      </div>
+    </li>
+  );
+  return (
+    <section aria-labelledby="gk-topic-progress" className={`mt-8 ${card}`}>
+      <h2 id="gk-topic-progress" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={GK.topicProgress} /></h2>
+      <Localized value={GK.topicProgressHint} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((s) => <Row key={s.code} title={s.title} count={s.questionCount} progress={s.progress} />)}
+        {other?.questionCount > 0 && <Row title={GK.other} count={other.questionCount} progress={other.progress} />}
+      </ul>
+    </section>
+  );
+}
+
+/** Filters, then the existing one-question-at-a-time arena (answer, explanation, bookmark, report). */
+function PracticePanel({ cardInfo, onMock }) {
+  const source = useDataSource();
+  const { lang } = useLanguagePreference();
+  const [category, setCategory] = useState('WBPSC');
+  const [topic, setTopic] = useState(cardInfo.topics[0]);
+  const [subtopic, setSubtopic] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [count, setCount] = useState(null);
+  const filters = useMemo(() => ({ category, topic, subtopic: subtopic || undefined, difficulty: difficulty || undefined, verifiedOnly }), [category, topic, subtopic, difficulty, verifiedOnly]);
+
+  useEffect(() => {
+    let alive = true;
+    setCount(null);
+    source.countGkQuestions(filters).then((d) => alive && setCount(d.count), () => alive && setCount(null));
+    return () => {
+      alive = false;
+    };
+  }, [source, filters]);
+
+  const practiceSource = useMemo(() => (running ? source.practiceSource({ ...filters, subject: 'gs' }) : null), [running, source, filters]);
+  const subtopics = cardInfo.subtopics.filter((s) => s.questionCount > 0);
+
+  return (
+    <section aria-labelledby="gk-practice" className={`mt-8 ${card}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="gk-practice" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={GK.practiceOneByOne} /></h2>
+          <Localized value={GK.practiceSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+        </div>
+        <button type="button" onClick={onMock} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-500">
+          <span aria-hidden="true">⏱️</span>
+          <Localized value={GK.mockCard} />
+        </button>
+      </div>
+
+      {!running && (
+        <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <Localized value={GK.examType} />
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className={`mt-1 ${select}`}>
+                {EXAM_TYPES.map((x) => <option key={x.code} value={x.code}>{txt(x.label, lang)}</option>)}
+              </select>
+            </label>
+            {cardInfo.topics.length > 1 && (
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <Localized value={GK.chapter} />
+                <select value={topic} onChange={(e) => { setTopic(e.target.value); setSubtopic(''); }} className={`mt-1 ${select}`}>
+                  {cardInfo.topics.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                </select>
+              </label>
+            )}
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <Localized value={GK.subcategory} />
+              <select value={subtopic} onChange={(e) => setSubtopic(e.target.value)} className={`mt-1 ${select}`}>
+                <option value="">{txt(GK.all, lang)}</option>
+                {subtopics.map((s) => <option key={s.code} value={s.code}>{txt(s.title, lang)} ({s.questionCount})</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <Localized value={GK.difficulty} />
+              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className={`mt-1 ${select}`}>
+                <option value="">{txt(GK.anyLevel, lang)}</option>
+                <option value="easy">{txt(GK.easy, lang)}</option>
+                <option value="medium">{txt(GK.medium, lang)}</option>
+                <option value="hard">{txt(GK.hard, lang)}</option>
+              </select>
+            </label>
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="size-5" />
+            <Localized value={GK.verifiedOnly} />
+          </label>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={!count}
+              onClick={() => setRunning(true)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Localized value={GK.startPractice} />
+              <ArrowRightIcon />
+            </button>
+            <span aria-live="polite" className="text-sm text-slate-600 dark:text-slate-300">
+              {count == null ? '…' : count === 0 ? <Localized value={GK.noQuestions} /> : <Localized value={GK.matching(count)} />}
+            </span>
+          </div>
+        </>
+      )}
+
+      {running && practiceSource && (
+        <div className="mt-4">
+          <button type="button" onClick={() => setRunning(false)} className="mb-3 inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-indigo-700 ring-1 ring-slate-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-slate-700">
+            ← <Localized value={GK.changeFilters} />
+          </button>
+          <PracticeArena
+            key={JSON.stringify(filters)}
+            source={practiceSource}
+            topicName={cardInfo.title}
+            onLaunchMock={onMock}
+          />
+        </div>
+      )}
     </section>
   );
 }
@@ -270,8 +476,25 @@ export default function GkChapterPage() {
   const { chapter: slug } = useParams();
   const code = codeFromSlug(slug);
   const source = useDataSource();
-  const { status, data, error, retry } = useResource('gk:cards:static', () => source.getGkCards());
+  const auth = useOptionalAuth();
+  const userKey = auth?.user?.id ?? 'guest';
+  const [mockOpen, setMockOpen] = useState(false);
+  // Fresh on every visit: topic-wise progress changes after practice.
+  const [state, setState] = useState({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    source.getGkCards().then(
+      (data) => alive && setState({ status: 'ready', data }),
+      (error) => alive && setState({ status: 'error', error }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [source, userKey, attempt]);
+  const { status, data, error } = state;
   const cardInfo = status === 'ready' ? data.cards.find((c) => c.code === code || c.topics.includes(code)) : null;
+  const signedIn = Boolean(data?.signedIn);
 
   useEffect(() => {
     if (cardInfo) rememberChapter('gs', cardInfo.code, cardInfo.title);
@@ -281,31 +504,52 @@ export default function GkChapterPage() {
   if (status === 'ready' && !cardInfo) return <Navigate to="/learn/gk" replace />;
 
   return (
-    <PageShell className="max-w-4xl pb-16 pt-6 sm:pt-8">
-      <Link to="/learn/gk" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">
-        ← <Localized value={GK.back} />
-      </Link>
+    <PageShell className="max-w-5xl pb-16 pt-6 sm:pt-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link to="/learn/gk" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">
+          ← <Localized value={GK.back} />
+        </Link>
+        <Link to={GK_REVISION_PATH} className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-teal-700 hover:underline dark:text-teal-300">
+          🔁 <Localized value={GK.revisionCentre} />
+        </Link>
+      </div>
       {status === 'loading' && <CardGridSkeleton count={2} height="h-32" />}
-      {status === 'error' && <LoadError error={error} onRetry={retry} />}
+      {status === 'error' && <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />}
       {cardInfo && (
         <>
           <header className="mt-3 flex items-start gap-3">
             <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-3xl dark:bg-indigo-500/10">{cardInfo.emoji}</span>
-            <div>
+            <div className="min-w-0">
               <Localized value={cardInfo.title} as="h1" className="text-2xl font-extrabold text-slate-900 sm:text-3xl dark:text-white" />
               <Localized value={cardInfo.description} as="p" className="mt-1 text-slate-600 dark:text-slate-300" />
+              <Localized value={GK.sectionTotal(cardInfo.questionCount, cardInfo.factCount)} as="p" className="mt-1 text-sm font-bold text-indigo-700 dark:text-indigo-300" />
+              <div className="mt-2 max-w-md">
+                <CompletionBar progress={cardInfo.progress} total={cardInfo.questionCount} signedIn={signedIn} />
+              </div>
             </div>
           </header>
 
-          <FactList cardInfo={cardInfo} />
+          <TopicProgress cardInfo={cardInfo} signedIn={signedIn} />
+          {cardInfo.questionCount > 0 && <PracticePanel cardInfo={cardInfo} onMock={() => setMockOpen(true)} />}
 
-          <section aria-labelledby="gk-practice" className={`mt-10 ${card}`}>
-            <Localized value={GK.practiceTitle} as="h2" id="gk-practice" className="text-xl font-bold text-slate-900 dark:text-white" />
-            <Localized value={GK.practiceSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+          <section aria-labelledby="gk-quizzes" className={`mt-8 ${card}`}>
+            <h2 id="gk-quizzes" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={GK.practiceTitle} /></h2>
             <div className="mt-4 space-y-5">
               {cardInfo.topics.map((t) => <ChapterQuizzes key={t} topic={t} />)}
             </div>
           </section>
+
+          <FactList cardInfo={cardInfo} signedIn={signedIn} />
+
+          {mockOpen && (
+            <GkMockDialog
+              open
+              onClose={() => setMockOpen(false)}
+              topics={cardInfo.topics}
+              name={cardInfo.title}
+              topicNames={Object.fromEntries(cardInfo.topics.map((t) => [t, cardInfo.title]))}
+            />
+          )}
         </>
       )}
     </PageShell>

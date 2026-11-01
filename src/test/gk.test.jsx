@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../App';
 import { DataSourceProvider } from '../app/DataSourceContext';
+import { AuthProvider } from '../app/AuthContext';
 import { createFixtureDataSource } from '../lib/dataSource';
 import { clearResourceCache } from '../hooks/useResource';
 import { languageStore } from '../hooks/useLanguagePreference';
@@ -23,10 +24,32 @@ const card = (code, extra = {}) => ({
   bengaliPendingCount: 2,
   questionCount: 10,
   sourceVerifiedQuestionCount: 3,
-  subtopics: [{ code: 'important_firsts', title: t('Important Firsts', 'প্রথম যাঁরা'), factCount: 2 }],
+  section: 'india',
+  subtopics: [
+    { code: 'important_firsts', title: t('Important Firsts', 'প্রথম যাঁরা'), factCount: 2, questionCount: 6, progress: null },
+    { code: 'national_symbols', title: t('National Symbols', 'জাতীয় প্রতীক'), factCount: 0, questionCount: 4, progress: null },
+  ],
+  otherQuestions: { questionCount: 0, progress: null },
   progress: null,
   ...extra,
 });
+
+/** /gk/cards response: sections are computed from the cards, as the server does. */
+const SECTION_META = {
+  india: { title: t('Indian GK', 'ভারত সাধারণ জ্ঞান'), description: t('All India GK', 'সব ভারত GK') },
+  west_bengal: { title: t('West Bengal GK', 'পশ্চিমবঙ্গ সাধারণ জ্ঞান'), description: t('Separate', 'আলাদা') },
+};
+function cardsResponse(cards, signedIn = false) {
+  const sections = Object.entries(SECTION_META).map(([code, meta]) => {
+    const own = cards.filter((c) => c.section === code);
+    const sum = (k) => own.reduce((a, c) => a + c[k], 0);
+    const progress = signedIn
+      ? own.reduce((a, c) => ({ questionsAttempted: a.questionsAttempted + (c.progress?.questionsAttempted || 0), completedCorrectly: a.completedCorrectly + (c.progress?.completedCorrectly || 0), answers: 0, correctAnswers: 0, accuracy: null }), { questionsAttempted: 0, completedCorrectly: 0 })
+      : null;
+    return { code, ...meta, cards: own.map((c) => c.code), topics: own.flatMap((c) => c.topics), questionCount: sum('questionCount'), sourceVerifiedQuestionCount: sum('sourceVerifiedQuestionCount'), factCount: sum('factCount'), progress };
+  });
+  return { signedIn, sections, cards };
+}
 const fact = (code, extra = {}) => ({
   id: code,
   code,
@@ -52,7 +75,8 @@ const fact = (code, extra = {}) => ({
 function stubSource(overrides = {}) {
   return {
     ...createFixtureDataSource({ latencyMs: 0 }),
-    getGkCards: vi.fn(async () => ({ signedIn: false, cards: [card('indian_gk'), card('economy', { topics: ['economy', 'banking_awareness'] })] })),
+    getGkCards: vi.fn(async () => cardsResponse([card('indian_gk'), card('economy', { topics: ['economy', 'banking_awareness'] }), card('west_bengal_gk', { section: 'west_bengal' })])),
+    countGkQuestions: vi.fn(async ({ subtopic }) => ({ count: subtopic === 'national_symbols' ? 0 : 7 })),
     listGkFacts: vi.fn(async ({ offset = 0 }) => ({
       facts: offset === 0 ? [fact('GK-IGK-001'), fact('GK-IGK-002', { bengaliReview: 'REVIEWED' })] : [fact('GK-IGK-003')],
       pagination: { offset, limit: 20, total: 3, hasMore: offset === 0 },
@@ -101,16 +125,22 @@ describe('GK dashboard', () => {
     expect(within(igk).getByText('3 of 10 questions source-checked')).toBeInTheDocument();
     expect(within(igk).queryByRole('progressbar')).toBeNull();
     expect(screen.getByText('Sign in to keep your progress on every device.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /GK/ })).toHaveAttribute('aria-current', 'page');
+    const current = screen.getAllByRole('link').filter((l) => l.getAttribute('aria-current') === 'page');
+    // The site navigation's Learn link is current too; one current link is the GK tab.
+    expect(current.filter((l) => /\bGK\b/.test(l.textContent))).toHaveLength(1);
   });
 
   it('shows a signed-in student only their own recorded progress', async () => {
     const source = stubSource({
-      getGkCards: vi.fn(async () => ({ signedIn: true, cards: [card('indian_gk', { progress: { questionsAttempted: 4, answers: 5, correctAnswers: 3, accuracy: 60 } }), card('economy', { progress: { questionsAttempted: 0, answers: 0, correctAnswers: 0, accuracy: null } })] })),
+      getGkCards: vi.fn(async () => cardsResponse([
+        card('indian_gk', { progress: { questionsAttempted: 4, completedCorrectly: 3, answers: 5, correctAnswers: 3, accuracy: 60 } }),
+        card('economy', { progress: { questionsAttempted: 0, completedCorrectly: 0, answers: 0, correctAnswers: 0, accuracy: null } }),
+      ], true)),
     });
     renderAt('/learn/gk', source);
     expect(await screen.findByText('4 questions tried · 60% correct')).toBeInTheDocument();
-    expect(screen.getByText('Not started yet')).toBeInTheDocument();
+    expect(screen.getAllByText('3 of 10 questions answered correctly').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not started yet')).toHaveLength(2);
   });
 });
 
@@ -191,5 +221,102 @@ describe('Learn progress sync', () => {
     mergeServerProgress({ 'gs.polity.beginner': { best: { correct: 1, total: 10 }, seen: [] } });
     expect(levelProgress('gs', 'polity', 'beginner').best).toEqual({ correct: 9, total: 10 });
     await expect(syncLearnProgress({ getLearnProgress: vi.fn(async () => { throw new Error('offline'); }), putLearnProgress: vi.fn(async () => { throw new Error('offline'); }) })).resolves.toBeUndefined();
+  });
+});
+
+describe('Indian GK expansion', () => {
+  const signedInSource = (overrides = {}) => stubSource({
+    getMe: vi.fn(async () => ({ user: { id: 'u1', name: 'Student', email: 's@example.test' } })),
+    getLearnProgress: vi.fn(async () => ({ progress: {} })),
+    putLearnProgress: vi.fn(async () => ({ progress: {} })),
+    getGkCards: vi.fn(async () => cardsResponse([
+      card('indian_gk', {
+        progress: { questionsAttempted: 3, completedCorrectly: 2, answers: 3, correctAnswers: 2, accuracy: 67 },
+        subtopics: [{ code: 'important_firsts', title: t('Important Firsts', 'প্রথম যাঁরা'), factCount: 2, questionCount: 6, progress: { questionsAttempted: 3, completedCorrectly: 2, answers: 3, correctAnswers: 2, accuracy: 67 } }],
+      }),
+    ], true)),
+    listGkFacts: vi.fn(async () => ({ facts: [fact('GK-IGK-001', { mine: { bookmarked: false, status: 'new', dueAt: null, lastResult: null } })], pagination: { offset: 0, limit: 20, total: 1, hasMore: false } })),
+    setGkFactBookmark: vi.fn(async (_code, on) => ({ bookmarked: on, status: 'new', dueAt: null, lastResult: null })),
+    reviewGkFact: vi.fn(async () => ({ bookmarked: true, status: 'learning', dueAt: '2026-11-03T00:00:00.000Z', lastResult: 'known' })),
+    ...overrides,
+  });
+  const renderSignedIn = (path, source) => {
+    const user = userEvent.setup();
+    render(
+      <DataSourceProvider source={source}>
+        <AuthProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </AuthProvider>
+      </DataSourceProvider>,
+    );
+    return { user, source };
+  };
+
+  it('the dashboard shows Indian GK and West Bengal GK as separate sections with real totals', async () => {
+    renderAt('/learn/gk');
+    expect(await screen.findByRole('heading', { name: /Indian GK/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /West Bengal GK/ })).toBeInTheDocument();
+    expect(screen.getAllByText('20 questions · 4 facts').length).toBeGreaterThan(0); // two India cards of 10
+    expect(screen.getAllByRole('button', { name: /Mock test: all of this section/ }).length).toBe(2);
+  });
+
+  it('chapter: topic-wise progress, filtered practice with a live count, then the practice arena', async () => {
+    const practiceSource = vi.fn(() => createFixtureDataSource({ latencyMs: 0 }).practiceSource({ category: 'WBPSC', subject: 'gs', topic: 'indian_gk' }));
+    const { user, source } = renderAt('/learn/gk/indian-gk', stubSource({ practiceSource }));
+    expect(await screen.findByRole('heading', { name: /Topic-wise progress/ })).toBeInTheDocument();
+    expect(screen.getByText('6 Q')).toBeInTheDocument();
+    expect(await screen.findByText('7 questions match')).toBeInTheDocument();
+
+    const practice = within(screen.getByRole('region', { name: /Practise one question at a time/ }));
+    const sub = practice.getByRole('combobox', { name: /Subcategory/ });
+    await user.selectOptions(sub, 'national_symbols');
+    expect(await screen.findByText(/No questions match these filters/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Start practice/ })).toBeDisabled();
+    expect(source.countGkQuestions).toHaveBeenLastCalledWith(expect.objectContaining({ category: 'WBPSC', topic: 'indian_gk', subtopic: 'national_symbols' }));
+
+    await user.selectOptions(sub, '');
+    await user.selectOptions(practice.getByRole('combobox', { name: /Difficulty/ }), 'hard');
+    await screen.findByText('7 questions match');
+    await user.click(screen.getByRole('button', { name: /Start practice/ }));
+    expect(practiceSource).toHaveBeenCalledWith(expect.objectContaining({ category: 'WBPSC', subject: 'gs', topic: 'indian_gk', difficulty: 'hard', verifiedOnly: false }));
+    expect(screen.getByRole('button', { name: /Change filters/ })).toBeInTheDocument();
+  });
+
+  it('a signed-in student bookmarks and revises a fact; progress shows completed of total', async () => {
+    const { user, source } = renderSignedIn('/learn/gk/indian-gk', signedInSource());
+    expect((await screen.findAllByText('2 of 10 questions answered correctly')).length).toBeGreaterThan(0);
+    const bookmark = await screen.findByRole('button', { name: /Bookmark/ });
+    await user.click(bookmark);
+    expect(source.setGkFactBookmark).toHaveBeenCalledWith('GK-IGK-001', true);
+    expect(await screen.findByRole('button', { name: /Bookmarked/ })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: /I knew this/ }));
+    expect(source.reviewGkFact).toHaveBeenCalledWith('GK-IGK-001', 'known');
+    expect(await screen.findByText(/Next revision: 3 Nov 2026/)).toBeInTheDocument();
+  });
+
+  it('revision centre: guests are asked to sign in; a student sees Daily GK, due facts and bookmarks', async () => {
+    renderAt('/learn/gk/revision', stubSource({ getMe: vi.fn(async () => ({ user: null })) }));
+    expect(await screen.findByRole('heading', { name: /Revision centre/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Mistake notebook/ })).toHaveAttribute('href', '/mistakes');
+  });
+
+  it('revision centre for a signed-in student', async () => {
+    const source = signedInSource({
+      getGkDaily: vi.fn(async () => ({ day: '2026-11-01', total: 2, done: 1, items: [
+        { done: true, fact: fact('GK-IGK-001', { mine: { bookmarked: false, status: 'learning', dueAt: null, lastResult: 'known' } }) },
+        { done: false, fact: fact('GK-IGK-002', { mine: { bookmarked: false, status: 'new', dueAt: null, lastResult: null } }) },
+      ] })),
+      getGkRevision: vi.fn(async () => ({ counts: { due: 0, learning: 1, mastered: 0, bookmarked: 0 }, due: [] })),
+      listGkFacts: vi.fn(async () => ({ facts: [], pagination: { offset: 0, limit: 20, total: 0, hasMore: false } })),
+    });
+    renderSignedIn('/learn/gk/revision', source);
+    expect(await screen.findByText('1 of 2 done today')).toBeInTheDocument();
+    expect(screen.getByText('Statement GK-IGK-002')).toBeInTheDocument();
+    expect(screen.queryByText('Statement GK-IGK-001')).toBeNull(); // done today
+    expect(await screen.findByText('Nothing is due right now.')).toBeInTheDocument();
+    expect(await screen.findByText(/No bookmarked facts yet/)).toBeInTheDocument();
+    expect(source.listGkFacts).toHaveBeenCalledWith(expect.objectContaining({ mine: 'bookmarked' }));
   });
 });

@@ -17,6 +17,7 @@ import PrivacyPage from './pages/PrivacyPage';
 import SubjectPage from './pages/learn/SubjectPage';
 import GkDashboardPage from './pages/learn/GkDashboardPage';
 import GkChapterPage from './pages/learn/GkChapterPage';
+import GkRevisionPage from './pages/learn/GkRevisionPage';
 import ChapterPage from './pages/learn/ChapterPage';
 import QuizPage from './pages/learn/QuizPage';
 import AdminPage from './pages/AdminPage';
@@ -69,6 +70,7 @@ export function AppRoutes() {
       {/* Rendered directly, not redirected: a <Navigate> paints one empty frame first. */}
       <Route path="/learn" element={<SubjectPage />} />
       <Route path="/learn/gk" element={<GkDashboardPage />} />
+      <Route path="/learn/gk/revision" element={<GkRevisionPage />} />
       <Route path="/learn/gk/:chapter" element={<GkChapterPage />} />
       <Route path="/learn/:subject" element={<SubjectPage />} />
       <Route path="/learn/:subject/:chapter" element={<ChapterPage />} />

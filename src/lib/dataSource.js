@@ -102,6 +102,11 @@ export function createHttpDataSource() {
     getGkCards: () => request('/gk/cards'),
     listGkFacts: (params = {}) => request(`/gk/facts?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))}`),
     getGkCurrentAffairsMonths: () => request('/gk/current-affairs/months'),
+    countGkQuestions: (params) => request(`/gk/questions/count?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== false))}`),
+    setGkFactBookmark: (code, on) => request(`/gk/facts/${code}/bookmark`, { method: 'PUT', body: { on } }),
+    reviewGkFact: (code, result) => request(`/gk/facts/${code}/review`, { method: 'POST', body: { result, tz: -new Date().getTimezoneOffset() } }),
+    getGkRevision: () => request('/gk/revision'),
+    getGkDaily: () => request(`/gk/daily?tz=${-new Date().getTimezoneOffset()}`),
     listVocabularyWords: (params = {}) => request(`/vocabulary/words?${new URLSearchParams(params)}`),
     getVocabularyWordOfDay: () => request(`/vocabulary/word-of-day?tz=${-new Date().getTimezoneOffset()}`),
     getVocabularyProgressSummary: () => request('/vocabulary/progress/summary'),
@@ -390,6 +395,16 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getGkCards: learnOffline,
     listGkFacts: learnOffline,
     getGkCurrentAffairsMonths: learnOffline,
+    countGkQuestions: learnOffline,
+    setGkFactBookmark: learnOffline,
+    reviewGkFact: learnOffline,
+    getGkRevision: learnOffline,
+    getGkDaily: learnOffline,
+    countGkQuestions: learnOffline,
+    setGkFactBookmark: learnOffline,
+    reviewGkFact: learnOffline,
+    getGkRevision: learnOffline,
+    getGkDaily: learnOffline,
     async listVocabularyWords({ q = '', category, difficulty, status, offset = 0, limit = 20 } = {}) {
       const query = q.normalize('NFKC').trim().toLocaleLowerCase();
       const progress = readVocabularyProgress();

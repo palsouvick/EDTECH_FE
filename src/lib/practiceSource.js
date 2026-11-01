@@ -7,11 +7,12 @@ import { request } from './api';
  *   setBookmark(questionId, on) -> void
  *   report({ questionId, reason, message?, language }) -> { duplicate }
  */
-export function createHttpPracticeSource({ category, subject, topic, pattern }) {
+export function createHttpPracticeSource({ category, subject, topic, pattern, subtopic, difficulty, verifiedOnly }) {
   return {
     fetchPage({ cursor, language, limit }) {
       // pattern: only that question pattern ("practise successive % change").
-      const qs = new URLSearchParams({ category, subject, topic, language, limit: String(limit), ...(pattern && { pattern }) });
+      // GK filters: one subcategory, a difficulty band, source-verified only.
+      const qs = new URLSearchParams({ category, subject, topic, language, limit: String(limit), ...(pattern && { pattern }), ...(subtopic && { subtopic }), ...(difficulty && { difficulty }), ...(verifiedOnly && { verifiedOnly: 'true' }) });
       if (cursor) qs.set('cursor', cursor);
       return request(`/practice/questions?${qs}`);
     },

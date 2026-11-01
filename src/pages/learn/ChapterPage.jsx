@@ -444,7 +444,7 @@ export default function ChapterPage() {
   const valid = subject && topic;
   const { status, data, error, retry } = useResource(valid && `learn:chapter:${subject}.${topic}`, () => source.getLearnChapter(subject, topic));
   const patternResource = useResource(
-    valid && subject === 'quant' && topic === 'time_work' ? `patterns:${subject}.${topic}` : null,
+    valid && subject === 'quant' ? `patterns:${subject}.${topic}` : null,
     () => source.getTopicPatterns({ subject, topic }),
   );
   useEffect(() => {
