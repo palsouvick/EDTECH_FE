@@ -1,0 +1,19 @@
+# Render Blueprint — EDTECH frontend (React + Vite, static site)
+# Deploy: Render dashboard → New → Blueprint → connect this repo.
+# The /api rewrite proxies API calls to the backend service, so the app
+# keeps using relative /api/v1 URLs. If the backend service name (and so
+# its URL) differs from edtech-be.onrender.com, update the destination.
+services:
+  - type: web
+    name: edtech-fe
+    runtime: static
+    branch: test
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://edtech-be.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
