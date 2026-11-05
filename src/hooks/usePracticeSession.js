@@ -78,7 +78,8 @@ export function usePracticeSession(source, { onAttempt, goal } = {}) {
       const result = await source.verify({
         questionId: q.questionId,
         selectedOptionId: s.selected,
-        timeSpentSec: Math.round((performance.now() - shownAt.current) / 100) / 10,
+        // Capped: a question left open for hours must still check (older servers reject > 1 hour).
+        timeSpentSec: Math.min(3600, Math.round((performance.now() - shownAt.current) / 100) / 10),
       });
       if (!mounted.current) return;
       dispatch({ type: 'CHECK_SUCCESS', result });

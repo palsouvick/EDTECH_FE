@@ -310,7 +310,7 @@ export default function QuizPage() {
           answers: quiz.questions.map((q) => ({
             questionId: q.questionId,
             selectedOptionId: answers[q.questionId] ?? null,
-            timeSpentSec: Math.round((timeSpent.current[q.questionId] || 0) * 10) / 10,
+            timeSpentSec: Math.min(3600, Math.round((timeSpent.current[q.questionId] || 0) * 10) / 10),
           })),
         });
         recordQuiz(subject, topic, level, {

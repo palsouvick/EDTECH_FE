@@ -64,7 +64,7 @@ export default function RevisePage() {
       const r = await source.answerReview({
         questionId: item.question.questionId,
         selectedOptionId: picked,
-        timeSpentSec: Math.round((Date.now() - shownAt.current) / 100) / 10,
+        timeSpentSec: Math.min(3600, Math.round((Date.now() - shownAt.current) / 100) / 10),
       });
       setResult(r);
       setTally((x) => (r.review.status === 'mastered' ? { ...x, mastered: x.mastered + 1 } : { ...x, again: x.again + 1 }));
