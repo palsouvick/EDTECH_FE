@@ -125,7 +125,11 @@ export default function PyqPage() {
   const [running, setRunning] = useState(() => {
     const exam = params.get('exam');
     const year = Number(params.get('year'));
-    return exam && Number.isInteger(year) && year > 1990 ? { title: { en: `${exam} ${year}` }, filters: { exam, year } } : null;
+    if (exam && Number.isInteger(year) && year > 1990) return { title: { en: `${exam} ${year}` }, filters: { exam, year } };
+    // /pyq?subject=…&topic=… (from a Learn chapter's PYQ level) opens that chapter's set.
+    const subject = params.get('subject');
+    const topic = params.get('topic');
+    return subject && topic && /^[a-z_]+$/.test(subject + topic) ? { title: { en: topic.replace(/_/g, ' ') }, filters: { subject, topic } } : null;
   }); // { title, filters }
   const practiceSource = useMemo(() => (running ? source.pyqPracticeSource(running.filters) : null), [running, source]);
 

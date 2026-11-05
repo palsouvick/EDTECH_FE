@@ -1,5 +1,5 @@
 import { ApiError, request } from './api';
-import { createFixturePracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
+import { createFixturePracticeSource, createGkFactPracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
 import { catalogFixture, markingFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
 import { practiceBank } from '../fixtures/practiceQuestions';
@@ -16,6 +16,7 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getTopicPatterns({ subject, topic })          -> { patterns } question patterns ([] when none yet)
  *   practiceSource({ category, subject, topic })  -> practice source for the arena
  *   getPyqFilters()                               -> { exams: [{ name, count, years, papers }], topics }
+ *   getPyqProgress(subject)                       -> { topics: { polity: { total, attempted, solved } } } (signed in)
  *   getStudyPlan() / getPlanProgress() / startPlan({ startDate, reset }) / setPlanTasks({ done, undone }) -> 60-day Clerkship plan
  *   getPriorities()                               -> { paperCount, rule, subjects: { gs: { topics: { polity: { share, papers, level } } } } }
  *   pyqPracticeSource({ exam, year, subject, topic }) -> arena source over previous-year questions
@@ -48,6 +49,7 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getGkCards()                                  -> { signedIn, cards } GK dashboard (real counts; progress when signed in)
  *   listGkFacts({ card, subtopic, q, difficulty, exam, year, month, offset, limit }) -> { facts, pagination }
  *   getGkCurrentAffairsMonths()                   -> { months }
+ *   getGkFact(code) / getGkCardPacks(card) / getGkFactPyqs(code) / gkFactPracticeSource(code) -> GK topic packs
  *   getImportantDays()                            -> { months: [{ month, rows, sources }], similarNames, confusedPairs }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
@@ -73,6 +75,7 @@ export function createHttpDataSource() {
     practiceSource: (route) => createHttpPracticeSource(route),
     getPyqFilters: () => request('/pyq/filters'),
     getPriorities: () => request('/pyq/priorities'),
+    getPyqProgress: (subject) => request(`/me/pyq-progress?subject=${subject}`),
     getStudyPlan: () => request('/plan/clerkship-60'),
     getPlanProgress: () => request('/plan/clerkship-60/progress'),
     startPlan: (body) => request('/plan/clerkship-60/progress', { method: 'PUT', body }),
@@ -115,6 +118,10 @@ export function createHttpDataSource() {
     listGkFacts: (params = {}) => request(`/gk/facts?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))}`),
     getGkCurrentAffairsMonths: () => request('/gk/current-affairs/months'),
     getImportantDays: () => request('/gk/important-days'),
+    getGkFact: (code) => request(`/gk/facts/${code}`),
+    getGkCardPacks: (card) => request(`/gk/cards/${card}/packs`),
+    getGkFactPyqs: (code) => request(`/gk/facts/${code}/pyqs`),
+    gkFactPracticeSource: (code) => createGkFactPracticeSource(code),
     countGkQuestions: (params) => request(`/gk/questions/count?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== false))}`),
     setGkFactBookmark: (code, on) => request(`/gk/facts/${code}/bookmark`, { method: 'PUT', body: { on } }),
     reviewGkFact: (code, result) => request(`/gk/facts/${code}/review`, { method: 'POST', body: { result, tz: -new Date().getTimezoneOffset() } }),
@@ -405,6 +412,7 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getLearnChapter: learnOffline,
     getPyqFilters: learnOffline,
     getPriorities: learnOffline,
+    getPyqProgress: (subject) => wait({ subject, topics: {} }),
     getStudyPlan: learnOffline,
     getPlanProgress: learnOffline,
     startPlan: learnOffline,
@@ -416,6 +424,10 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     listGkFacts: learnOffline,
     getGkCurrentAffairsMonths: learnOffline,
     getImportantDays: learnOffline,
+    getGkFact: learnOffline,
+    getGkCardPacks: () => wait({ packs: [] }),
+    getGkFactPyqs: learnOffline,
+    gkFactPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     countGkQuestions: learnOffline,
     setGkFactBookmark: learnOffline,
     reviewGkFact: learnOffline,

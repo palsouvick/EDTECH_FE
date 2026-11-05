@@ -10,7 +10,11 @@ import { createExamState } from '../../features/mock/mockExamReducer';
 import MockSetupDialog from '../mock/MockSetupDialog';
 import { loginPath } from '../auth/AccountButton';
 
-const GS_NAME = { en: 'General Studies', bn: 'সাধারণ পাঠ' };
+const SUBJECT_NAMES = {
+  gs: { en: 'General Studies', bn: 'সাধারণ পাঠ' },
+  quant: { en: 'Math', bn: 'গণিত' },
+  english: { en: 'English', bn: 'ইংরেজি' },
+};
 const pick = (v, l) => v?.[l] || v?.en || '';
 
 /**
@@ -19,9 +23,12 @@ const pick = (v, l) => v?.[l] || v?.en || '';
  * timer and language in the usual setup dialog. "Whole subject" means all General
  * Studies of the chosen exam category.
  *
- * @param {{ open: boolean, onClose: () => void, category: string, topics: string[], name: {en,bn}, topicNames: Record<string,{en,bn}> }} props
+ * Also used by Learn's Exam mode for Math and English chapters (`subject`, default General Studies).
+ *
+ * @param {{ open: boolean, onClose: () => void, category: string, subject?: string, topics: string[], name: {en,bn}, topicNames: Record<string,{en,bn}> }} props
  */
-export default function GkMockDialog({ open, onClose, category = 'WBPSC', topics, name, topicNames = {} }) {
+export default function GkMockDialog({ open, onClose, category = 'WBPSC', subject = 'gs', topics, name, topicNames = {} }) {
+  const subjectName = SUBJECT_NAMES[subject] ?? SUBJECT_NAMES.gs;
   const source = useDataSource();
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,7 +41,7 @@ export default function GkMockDialog({ open, onClose, category = 'WBPSC', topics
     async (cfg) => {
       const session = await source.createMock({
         category,
-        subject: 'gs',
+        subject,
         topicIds: cfg.scope === 'topic' ? topics : [],
         questionCount: cfg.questionCount,
         timeLimitMinutes: cfg.timeLimitMinutes,
@@ -43,11 +50,11 @@ export default function GkMockDialog({ open, onClose, category = 'WBPSC', topics
         allowPause: cfg.allowPause,
         language: cfg.language,
       });
-      const scopeName = cfg.scope === 'topic' ? name : GS_NAME;
+      const scopeName = cfg.scope === 'topic' ? name : subjectName;
       const exam = createExamState(session, {
         examName: Object.fromEntries(['en', 'bn', 'hi'].map((l) => [l, `${category} · ${pick(scopeName, l)} · ${MOCK.mockTest[l] ?? MOCK.mockTest.en}`])),
         category,
-        subject: 'gs',
+        subject,
         topic: cfg.scope === 'topic' && topics.length === 1 ? topics[0] : null,
         topicPath: location.pathname,
         topicNames,
@@ -56,7 +63,7 @@ export default function GkMockDialog({ open, onClose, category = 'WBPSC', topics
       setLang(cfg.language);
       navigate(`/mock/${session.sessionId}`, { state: { fresh: true } });
     },
-    [source, category, topics, name, topicNames, location.pathname, setLang, navigate],
+    [source, category, subject, subjectName, topics, name, topicNames, location.pathname, setLang, navigate],
   );
 
   return (
@@ -65,7 +72,7 @@ export default function GkMockDialog({ open, onClose, category = 'WBPSC', topics
       onClose={onClose}
       onStart={start}
       topicName={name}
-      subjectName={GS_NAME}
+      subjectName={subjectName}
       loginHref={needsLogin ? loginPath(location) : null}
     />
   );

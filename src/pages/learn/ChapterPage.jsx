@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import { useResource } from '../../hooks/useResource';
 import { LEARN, LEVEL_META, QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
 import { lessonProgress, levelProgress, rememberChapter, toggleLessonBookmark, updateLessonProgress } from '../../lib/learnProgress';
 import { codeFromSlug, learnPaths, subjectCodeFromSlug } from '../../lib/routes';
 import PageShell from '../../components/navigation/PageShell';
+import ChapterLadder from '../../components/learn/ChapterLadder';
+import ModePanel, { MODE_KEYS, ModeTabs } from '../../components/learn/StudyModes';
+import { useLearnStatus } from '../../components/learn/useLearnStatus';
 import { Localized, Tex } from '../../components/topic-hub/Localized';
 import QuestionPatterns from '../../components/topic-hub/QuestionPatterns';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
@@ -450,6 +453,13 @@ export default function ChapterPage() {
   useEffect(() => {
     if (status === 'ready') rememberChapter(subject, topic, data.title);
   }, [status, data, subject, topic]);
+  const [params, setParams] = useSearchParams();
+  const mode = MODE_KEYS.includes(params.get('mode')) ? params.get('mode') : 'detailed';
+  const setMode = (next) => {
+    setParams(next === 'detailed' ? {} : { mode: next }, { replace: true });
+    document.getElementById('study-modes')?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+  };
+  const learnStatus = useLearnStatus(subject);
   if (!valid) return <Navigate to="/" replace />;
   if (status === 'error' && error?.status === 404) return <Navigate to={learnPaths.subject(subject)} replace />;
 
@@ -486,7 +496,25 @@ export default function ChapterPage() {
             </div>
           </header>
 
-          {data.lesson ? (
+          <ChapterLadder subject={subject} topic={topic} status={learnStatus} onMode={setMode} />
+          <div id="study-modes" className="scroll-mt-28">
+            <ModeTabs mode={mode} onMode={setMode} />
+          </div>
+
+          {mode !== 'detailed' && (
+            <ModePanel
+              mode={mode}
+              lesson={data.lesson}
+              isMath={subject === 'quant'}
+              subject={subject}
+              topic={topic}
+              title={data.title}
+              status={learnStatus}
+              renderExample={(example) => <WorkedExample example={example} n={1} />}
+            />
+          )}
+
+          {mode === 'detailed' && (data.lesson ? (
             <Lesson
               lesson={data.lesson}
               isMath={subject === 'quant'}
@@ -495,9 +523,9 @@ export default function ChapterPage() {
               quizLevels={data.levels}
               patternResource={patternResource}
             />
-          ) : <Localized value={LEARN.lessonSoon} as="p" className={`${card} text-slate-500`} />}
+          ) : <Localized value={LEARN.lessonSoon} as="p" className={`${card} text-slate-500`} />)}
 
-          {!data.lesson?.strategy && <QuizCards subject={subject} topic={topic} levels={data.levels} />}
+          {mode === 'detailed' && !data.lesson?.strategy && <QuizCards subject={subject} topic={topic} levels={data.levels} />}
 
           <nav className="flex flex-col gap-3 sm:flex-row sm:justify-between" aria-label="Chapters">
             {data.previous ? (

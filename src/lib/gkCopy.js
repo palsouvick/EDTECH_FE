@@ -2,6 +2,29 @@
 const t = (en, bn) => ({ en, bn });
 const bnDigits = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
+export const PACK = Object.freeze({
+  openTopic: t('Open the complete topic', 'পুরো বিষয়টি খোলো'),
+  alsoLearn: t('You should also learn', 'এগুলিও জেনে রাখো'),
+  topicBadge: t('Complete topic', 'সম্পূর্ণ বিষয়'),
+  mapTitle: t('Knowledge map', 'জ্ঞানের মানচিত্র'),
+  mapSub: t('Whole topics, in study order. Each one gathers everything an examiner can ask about it.', 'পুরো বিষয়, পড়ার ক্রমে। প্রতিটিতে সেই বিষয়ে পরীক্ষক যা জিজ্ঞাসা করতে পারেন সব একসঙ্গে।'),
+  basic: t('Basic explanation', 'মূল ধারণা'),
+  why: t('Why it matters', 'কেন জরুরি'),
+  mustRemember: t('⭐ Must remember for exams', '⭐ পরীক্ষার জন্য অবশ্যই মনে রাখো'),
+  timeline: t('Important dates', 'গুরুত্বপূর্ণ তারিখ'),
+  dontConfuse: t("⚠️ Don't confuse", '⚠️ গুলিয়ে ফেলো না'),
+  memoryTrick: t('🧠 Memory trick', '🧠 মনে রাখার কৌশল'),
+  related: t('🔗 Related facts you should know', '🔗 সম্পর্কিত যে তথ্যগুলি জানা দরকার'),
+  pyqs: t('Asked in WBPSC papers', 'WBPSC প্রশ্নপত্রে এসেছে'),
+  pyqsNone: t('No WBPSC past-paper question on this topic was found in the papers we have.', 'আমাদের কাছে থাকা প্রশ্নপত্রে এই বিষয়ে কোনো WBPSC প্রশ্ন পাওয়া যায়নি।'),
+  pyqsCount: (n) => t(`${n} real questions mention this topic`, `${bnDigits(n)}টি আসল প্রশ্নে এই বিষয়টি আছে`),
+  practisePyqs: t('Practise these past-paper questions', 'এই আগের প্রশ্নগুলি অনুশীলন করো'),
+  practise: t('Practice MCQs', 'অনুশীলনের প্রশ্ন'),
+  practiseStart: t('Start practice', 'অনুশীলন শুরু করো'),
+  revision: t('Quick revision', 'দ্রুত রিভিশন'),
+  backTo: t('Back to the chapter', 'অধ্যায়ে ফিরে যাও'),
+});
+
 export const GK = Object.freeze({
   tab: t('General Knowledge', 'সাধারণ জ্ঞান'),
   pageTitle: t('General Knowledge (GK)', 'সাধারণ জ্ঞান (GK)'),

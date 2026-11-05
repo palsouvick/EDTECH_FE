@@ -4,7 +4,7 @@ import { useDataSource } from '../../app/DataSourceContext';
 import { useOptionalAuth } from '../../app/AuthContext';
 import { useResource } from '../../hooks/useResource';
 import { useLanguagePreference } from '../../hooks/useLanguagePreference';
-import { GK } from '../../lib/gkCopy';
+import { GK, PACK } from '../../lib/gkCopy';
 import { QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
 import { codeFromSlug, learnPaths } from '../../lib/routes';
 import { rememberChapter } from '../../lib/learnProgress';
@@ -44,7 +44,7 @@ function useDebounced(value, ms) {
 }
 
 /** The signed-in student's buttons on a fact: bookmark, "I knew this", "Revise again". */
-function FactActions({ fact, onChange }) {
+export function FactActions({ fact, onChange }) {
   const source = useDataSource();
   const [busy, setBusy] = useState(false);
   const mine = fact.mine;
@@ -86,6 +86,9 @@ function FactActions({ fact, onChange }) {
 }
 
 /** One fact: statement first, then the detail a student can open. Labels never claim more than the data says. */
+/** /learn/gk/topic/<code>: one topic (pack) or fact on its own page. */
+export const gkTopicPath = (code) => `/learn/gk/topic/${code}`;
+
 export function FactCard({ fact, onChange }) {
   const [open, setOpen] = useState(false);
   const verified = fact.verification.status === 'VERIFIED';
@@ -111,6 +114,21 @@ export function FactCard({ fact, onChange }) {
       </div>
       <Localized value={fact.title} as="h3" className="mt-2 text-lg font-bold text-slate-900 dark:text-white" />
       <Localized value={fact.statement} markdown as="div" className="mt-1 leading-relaxed text-slate-800 dark:text-slate-100" />
+      {fact.pack && (
+        <Link to={gkTopicPath(fact.code)} className="mt-3 inline-flex min-h-10 items-center gap-1 rounded-lg bg-indigo-600 px-3 text-sm font-bold text-white hover:bg-indigo-500">
+          📚 <Localized value={PACK.openTopic} /> →
+        </Link>
+      )}
+      {fact.relatedPacks?.length > 0 && (
+        <p className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2 text-sm dark:bg-indigo-500/10">
+          <span className="font-semibold text-indigo-900 dark:text-indigo-200">🔗 <Localized value={PACK.alsoLearn} />:</span>
+          {fact.relatedPacks.map((p) => (
+            <Link key={p.code} to={gkTopicPath(p.code)} className="font-semibold text-indigo-700 underline underline-offset-2 hover:text-indigo-500 dark:text-indigo-300">
+              <Localized value={p.title} />
+            </Link>
+          ))}
+        </p>
+      )}
       {(fact.dates.eventDate || fact.dates.validFrom || fact.referenceYear) && (
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
           {fact.dates.eventDate && <span><Localized value={GK.eventDate} />: {fmtDate(fact.dates.eventDate)}</span>}
@@ -162,6 +180,32 @@ export function FactCard({ fact, onChange }) {
       )}
       {fact.mine && onChange && <FactActions fact={fact} onChange={onChange} />}
     </li>
+  );
+}
+
+/** The chapter's topic packs in study order: Ancient India → … as connected whole topics. */
+function KnowledgeMap({ cardInfo }) {
+  const source = useDataSource();
+  const res = useResource(`gk:packs:${cardInfo.code}`, () => source.getGkCardPacks(cardInfo.code));
+  const packs = res.data?.packs ?? [];
+  if (!packs.length) return null;
+  const subtitle = (code) => cardInfo.subtopics?.find((x) => x.code === code)?.title;
+  return (
+    <section aria-labelledby="gk-map" className={`mt-8 ${card}`}>
+      <h2 id="gk-map" className="text-xl font-bold text-slate-900 dark:text-white">🗺️ <Localized value={PACK.mapTitle} /></h2>
+      <Localized value={PACK.mapSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+      <ol className="mt-4 flex flex-wrap items-stretch gap-2">
+        {packs.map((p, i) => (
+          <li key={p.code} className="flex items-center gap-2">
+            {i > 0 && <span aria-hidden="true" className="text-slate-400">→</span>}
+            <Link to={gkTopicPath(p.code)} className="block rounded-xl bg-indigo-50 px-3 py-2 ring-1 ring-indigo-200 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/30">
+              {subtitle(p.subtopic) && <Localized value={subtitle(p.subtopic)} as="span" className="block text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300" />}
+              <Localized value={p.title} as="span" className="font-semibold text-slate-900 dark:text-white" />
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -531,6 +575,7 @@ export default function GkChapterPage() {
           </header>
 
           {cardInfo.code === 'important_days' && <YearAtAGlance />}
+          <KnowledgeMap cardInfo={cardInfo} />
           <TopicProgress cardInfo={cardInfo} signedIn={signedIn} />
           {cardInfo.questionCount > 0 && <PracticePanel cardInfo={cardInfo} onMock={() => setMockOpen(true)} />}
 

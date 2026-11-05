@@ -31,6 +31,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import VocabularyPage from './pages/VocabularyPage';
 import PyqPage from './pages/PyqPage';
 import PlanPage from './pages/PlanPage';
+import GkTopicPage from './pages/learn/GkTopicPage';
 import CookieConsent from './components/auth/CookieConsent';
 
 const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
@@ -73,6 +74,7 @@ export function AppRoutes() {
       <Route path="/learn" element={<SubjectPage />} />
       <Route path="/learn/gk" element={<GkDashboardPage />} />
       <Route path="/learn/gk/revision" element={<GkRevisionPage />} />
+      <Route path="/learn/gk/topic/:code" element={<GkTopicPage />} />
       <Route path="/learn/gk/:chapter" element={<GkChapterPage />} />
       <Route path="/learn/:subject" element={<SubjectPage />} />
       <Route path="/learn/:subject/:chapter" element={<ChapterPage />} />
