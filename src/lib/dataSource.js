@@ -16,6 +16,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getTopicPatterns({ subject, topic })          -> { patterns } question patterns ([] when none yet)
  *   practiceSource({ category, subject, topic })  -> practice source for the arena
  *   getPyqFilters()                               -> { exams: [{ name, count, years, papers }], topics }
+ *   getStudyPlan() / getPlanProgress() / startPlan({ startDate, reset }) / setPlanTasks({ done, undone }) -> 60-day Clerkship plan
+ *   getPriorities()                               -> { paperCount, rule, subjects: { gs: { topics: { polity: { share, papers, level } } } } }
  *   pyqPracticeSource({ exam, year, subject, topic }) -> arena source over previous-year questions
  *   createMock(payload)                           -> mock session (questions without answers)
  *   getMockSession(sessionId)                     -> active session, or its result once submitted
@@ -46,6 +48,7 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getGkCards()                                  -> { signedIn, cards } GK dashboard (real counts; progress when signed in)
  *   listGkFacts({ card, subtopic, q, difficulty, exam, year, month, offset, limit }) -> { facts, pagination }
  *   getGkCurrentAffairsMonths()                   -> { months }
+ *   getImportantDays()                            -> { months: [{ month, rows, sources }], similarNames, confusedPairs }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
  */
@@ -69,6 +72,11 @@ export function createHttpDataSource() {
     getTopicPatterns: ({ subject, topic }) => request(`/practice/patterns?${new URLSearchParams({ subject, topic })}`),
     practiceSource: (route) => createHttpPracticeSource(route),
     getPyqFilters: () => request('/pyq/filters'),
+    getPriorities: () => request('/pyq/priorities'),
+    getStudyPlan: () => request('/plan/clerkship-60'),
+    getPlanProgress: () => request('/plan/clerkship-60/progress'),
+    startPlan: (body) => request('/plan/clerkship-60/progress', { method: 'PUT', body }),
+    setPlanTasks: (body) => request('/plan/clerkship-60/tasks', { method: 'POST', body }),
     pyqPracticeSource: (filters) => createPyqPracticeSource(filters),
     createMock: (payload) => request('/mock/create-session', { method: 'POST', body: payload }),
     getMockSession: (sessionId) => request(`/mock/session/${sessionId}`),
@@ -106,6 +114,7 @@ export function createHttpDataSource() {
     getGkCards: () => request('/gk/cards'),
     listGkFacts: (params = {}) => request(`/gk/facts?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))}`),
     getGkCurrentAffairsMonths: () => request('/gk/current-affairs/months'),
+    getImportantDays: () => request('/gk/important-days'),
     countGkQuestions: (params) => request(`/gk/questions/count?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== false))}`),
     setGkFactBookmark: (code, on) => request(`/gk/facts/${code}/bookmark`, { method: 'PUT', body: { on } }),
     reviewGkFact: (code, result) => request(`/gk/facts/${code}/review`, { method: 'POST', body: { result, tz: -new Date().getTimezoneOffset() } }),
@@ -395,12 +404,18 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getLearnSubject: learnOffline,
     getLearnChapter: learnOffline,
     getPyqFilters: learnOffline,
+    getPriorities: learnOffline,
+    getStudyPlan: learnOffline,
+    getPlanProgress: learnOffline,
+    startPlan: learnOffline,
+    setPlanTasks: learnOffline,
     pyqPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     createLearnQuiz: learnOffline,
     checkLearnQuiz: learnOffline,
     getGkCards: learnOffline,
     listGkFacts: learnOffline,
     getGkCurrentAffairsMonths: learnOffline,
+    getImportantDays: learnOffline,
     countGkQuestions: learnOffline,
     setGkFactBookmark: learnOffline,
     reviewGkFact: learnOffline,

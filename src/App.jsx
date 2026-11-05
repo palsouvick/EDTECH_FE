@@ -30,6 +30,7 @@ import ChallengePage from './pages/ChallengePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import VocabularyPage from './pages/VocabularyPage';
 import PyqPage from './pages/PyqPage';
+import PlanPage from './pages/PlanPage';
 import CookieConsent from './components/auth/CookieConsent';
 
 const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
@@ -78,6 +79,7 @@ export function AppRoutes() {
       <Route path="/learn/:subject/:chapter/quiz/:level" element={<QuizPage />} />
       <Route path="/vocabulary" element={<VocabularyPage />} />
       <Route path="/pyq" element={<PyqPage />} />
+      <Route path="/plan" element={<PlanPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/:tab?" element={<AdminPage />} />
       <Route path="/exams">

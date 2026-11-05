@@ -10,6 +10,7 @@ import PageShell from '../../components/navigation/PageShell';
 import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon, CheckIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
+import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 
 const SUBJECT_TABS = [
   { code: 'quant', emoji: '🔢', title: { en: 'Math', bn: 'গণিত' } },
@@ -84,6 +85,7 @@ function ChapterCard({ subject, chapter, n, colour, startHere }) {
             <Localized value={LEARN.startHere} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" />
           )}
           {done && <span className="text-2xl" aria-hidden="true">🏆</span>}
+          {!startHere && !done && <PriorityBadge subject={subject} topics={[chapter.topic]} />}
         </div>
         <Localized value={LEARN.chapterN(n)} as="p" className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-400" />
         <Localized value={chapter.title} as="h2" className="mt-0.5 text-lg font-extrabold leading-snug text-slate-900 dark:text-white" />
@@ -232,6 +234,8 @@ export default function SubjectPage() {
           />
         </label>
       </div>
+
+      <PriorityLegend className="mt-4 max-w-4xl" />
 
       <div className="mt-6">
         {status === 'loading' && <CardGridSkeleton count={6} height="h-72" />}

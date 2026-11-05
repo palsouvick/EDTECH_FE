@@ -11,6 +11,7 @@ import { rememberChapter } from '../../lib/learnProgress';
 import PageShell from '../../components/navigation/PageShell';
 import PracticeArena from '../../components/practice/PracticeArena';
 import GkMockDialog from '../../components/gk/GkMockDialog';
+import YearAtAGlance from '../../components/gk/YearAtAGlance';
 import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
@@ -529,6 +530,7 @@ export default function GkChapterPage() {
             </div>
           </header>
 
+          {cardInfo.code === 'important_days' && <YearAtAGlance />}
           <TopicProgress cardInfo={cardInfo} signedIn={signedIn} />
           {cardInfo.questionCount > 0 && <PracticePanel cardInfo={cardInfo} onMock={() => setMockOpen(true)} />}
 

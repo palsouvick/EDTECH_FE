@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
 import { PYQ, PYQ_BASIS, basisNotes } from '../lib/pyqCopy';
@@ -7,6 +8,7 @@ import PracticeArena from '../components/practice/PracticeArena';
 import { Localized } from '../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
+import PriorityBadge, { PriorityLegend } from '../components/priority/PriorityBadge';
 
 // The Commission's own list of published papers.
 const WBPSC_PYQ_PAGE = 'https://psc.wb.gov.in/previous_year_question_paper.jsp';
@@ -83,7 +85,10 @@ function TopicSets({ topics, onPractise }) {
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((t) => (
           <li key={`${t.subject}.${t.topic}`} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <Localized value={t.name} as="h3" className="font-bold text-slate-900 dark:text-white" />
+            <div className="flex items-start justify-between gap-2">
+              <Localized value={t.name} as="h3" className="font-bold text-slate-900 dark:text-white" />
+              <PriorityBadge subject={t.subject} topics={[t.topic]} />
+            </div>
             <Localized value={PYQ.questions(t.count)} as="p" className="mt-0.5 text-sm text-slate-600 dark:text-slate-300" />
             <p className="mt-2 flex flex-wrap gap-1 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
               {Object.entries(t.byYear)
@@ -115,7 +120,13 @@ function TopicSets({ topics, onPractise }) {
 export default function PyqPage() {
   const source = useDataSource();
   const filters = useResource('pyq:filters', () => source.getPyqFilters());
-  const [running, setRunning] = useState(null); // { title, filters }
+  const [params] = useSearchParams();
+  // /pyq?exam=…&year=… (from the study plan) opens that paper straight away.
+  const [running, setRunning] = useState(() => {
+    const exam = params.get('exam');
+    const year = Number(params.get('year'));
+    return exam && Number.isInteger(year) && year > 1990 ? { title: { en: `${exam} ${year}` }, filters: { exam, year } } : null;
+  }); // { title, filters }
   const practiceSource = useMemo(() => (running ? source.pyqPracticeSource(running.filters) : null), [running, source]);
 
   const data = filters.data;
@@ -197,6 +208,7 @@ export default function PyqPage() {
             <section aria-labelledby="pyq-topics" className="mt-10">
               <h2 id="pyq-topics" className="text-2xl font-extrabold text-slate-900 dark:text-white"><Localized value={PYQ.byTopic} /></h2>
               <Localized value={PYQ.byTopicSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+              <PriorityLegend className="mt-2 max-w-3xl" />
               <TopicSets topics={data.topics} onPractise={(t) => start(t.name, { subject: t.subject, topic: t.topic })} />
             </section>
           </>

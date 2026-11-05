@@ -10,6 +10,7 @@ import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { SubjectTabs } from './SubjectPage';
+import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 
 export const gkCardPath = (code) => `/learn/gk/${toSlug(code)}`;
 export const GK_REVISION_PATH = '/learn/gk/revision';
@@ -42,6 +43,7 @@ function GkCard({ card, signedIn }) {
         <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-500/10">{card.emoji}</span>
         <div className="min-w-0">
           <Localized value={card.title} as="h3" className="text-lg font-extrabold leading-snug text-slate-900 dark:text-white" />
+          <PriorityBadge subject="gs" topics={card.topics} className="mt-1.5" />
           <Localized value={card.description} as="p" className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300" />
         </div>
       </div>
@@ -153,6 +155,7 @@ export default function GkDashboardPage() {
       <div className="mt-8">
         <SubjectTabs subject="gs" />
       </div>
+      <PriorityLegend className="mt-4 max-w-4xl" />
 
       {status === 'loading' && <div className="mt-6"><CardGridSkeleton count={6} height="h-64" /></div>}
       {status === 'error' && <div className="mt-6"><LoadError error={error} onRetry={retry} /></div>}
