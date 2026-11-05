@@ -193,7 +193,7 @@ describe('learn', () => {
     expect(screen.getByRole('link', { name: /^Banking/ })).toHaveAttribute('href', '/exams/bank');
     const nav = screen.getAllByRole('navigation', { name: 'Site' })[0];
     expect(within(nav).getByRole('link', { name: /^Exams/ })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Previous years/ })).toBeNull();
+    expect(within(nav).getByRole('link', { name: /^Previous years/ })).toHaveAttribute('href', '/pyq');
 
     const section = document.getElementById('learn-basics');
     expect(within(section).getByRole('heading', { name: /^Weak in the basics/ })).toBeInTheDocument();

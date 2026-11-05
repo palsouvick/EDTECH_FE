@@ -28,6 +28,31 @@ export function createHttpPracticeSource({ category, subject, topic, pattern, su
   };
 }
 
+/**
+ * Previous-year questions from GET /pyq: one paper (exam + year) or one chapter across years.
+ * /pyq pages by number, so the cursor is the next page number.
+ */
+export function createPyqPracticeSource({ exam, year, subject, topic }) {
+  return {
+    async fetchPage({ cursor, language, limit }) {
+      const page = cursor ? Number(cursor) : 1;
+      const qs = new URLSearchParams({ language, page: String(page), limit: String(Math.min(limit, 20)), ...(exam && { exam }), ...(year && { year: String(year) }), ...(subject && { subject }), ...(topic && { topic }) });
+      const { questions, pagination } = await request(`/pyq?${qs}`);
+      const hasMore = pagination.page < pagination.totalPages;
+      return { questions, nextCursor: hasMore ? String(page + 1) : null, hasMore };
+    },
+    verify(body) {
+      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category: 'WBPSC' } });
+    },
+    setBookmark(questionId, on) {
+      return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });
+    },
+    report(body) {
+      return request('/practice/report-error', { method: 'POST', body });
+    },
+  };
+}
+
 const BOOKMARKS_KEY = 'edtech:fixture-bookmarks';
 const readBookmarks = () => {
   try {

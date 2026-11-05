@@ -1,5 +1,5 @@
 import { ApiError, request } from './api';
-import { createFixturePracticeSource, createHttpPracticeSource } from './practiceSource';
+import { createFixturePracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
 import { catalogFixture, markingFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
 import { practiceBank } from '../fixtures/practiceQuestions';
@@ -15,6 +15,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getTopicSummary({ category, subject, topic }) -> summary | null (no sheet yet)
  *   getTopicPatterns({ subject, topic })          -> { patterns } question patterns ([] when none yet)
  *   practiceSource({ category, subject, topic })  -> practice source for the arena
+ *   getPyqFilters()                               -> { exams: [{ name, count, years, papers }], topics }
+ *   pyqPracticeSource({ exam, year, subject, topic }) -> arena source over previous-year questions
  *   createMock(payload)                           -> mock session (questions without answers)
  *   getMockSession(sessionId)                     -> active session, or its result once submitted
  *   submitMock({ sessionId, responses })          -> result
@@ -66,6 +68,8 @@ export function createHttpDataSource() {
     },
     getTopicPatterns: ({ subject, topic }) => request(`/practice/patterns?${new URLSearchParams({ subject, topic })}`),
     practiceSource: (route) => createHttpPracticeSource(route),
+    getPyqFilters: () => request('/pyq/filters'),
+    pyqPracticeSource: (filters) => createPyqPracticeSource(filters),
     createMock: (payload) => request('/mock/create-session', { method: 'POST', body: payload }),
     getMockSession: (sessionId) => request(`/mock/session/${sessionId}`),
     submitMock: (payload) => request('/mock/submit-session', { method: 'POST', body: payload }),
@@ -390,6 +394,8 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     listLearnSubjects: learnOffline,
     getLearnSubject: learnOffline,
     getLearnChapter: learnOffline,
+    getPyqFilters: learnOffline,
+    pyqPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     createLearnQuiz: learnOffline,
     checkLearnQuiz: learnOffline,
     getGkCards: learnOffline,
