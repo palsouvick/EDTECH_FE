@@ -7,6 +7,7 @@ import { lessonProgress, levelProgress, rememberChapter, toggleLessonBookmark, u
 import { codeFromSlug, learnPaths, subjectCodeFromSlug } from '../../lib/routes';
 import PageShell from '../../components/navigation/PageShell';
 import ChapterLadder from '../../components/learn/ChapterLadder';
+import MasteryTestCard from '../../components/custom-test/MasteryTestCard';
 import ModePanel, { MODE_KEYS, ModeTabs } from '../../components/learn/StudyModes';
 import { useLearnStatus } from '../../components/learn/useLearnStatus';
 import { Localized, Tex } from '../../components/topic-hub/Localized';
@@ -497,6 +498,7 @@ export default function ChapterPage() {
           </header>
 
           <ChapterLadder subject={subject} topic={topic} status={learnStatus} onMode={setMode} />
+          <MasteryTestCard subject={subject} topic={topic} title={data.title} />
           <div id="study-modes" className="scroll-mt-28">
             <ModeTabs mode={mode} onMode={setMode} />
           </div>

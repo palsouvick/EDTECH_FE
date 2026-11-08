@@ -17,13 +17,17 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   practiceSource({ category, subject, topic })  -> practice source for the arena
  *   getPyqFilters()                               -> { exams: [{ name, count, years, papers }], topics }
  *   getPyqProgress(subject)                       -> { topics: { polity: { total, attempted, solved } } } (signed in)
- *   getStudyPlan() / getPlanProgress() / startPlan({ startDate, reset }) / setPlanTasks({ done, undone }) -> 60-day Clerkship plan
+ *   getStudyPlan(budget) / getPlanProgress() / startPlan({ startDate, reset, budget, examDate }) / setPlanTasks({ done, undone }) -> 60-day Clerkship plan
+ *   createPlanTest(day, { budget, language }) / checkPlanTest(day, { testToken, answers }) -> plan tests
  *   getPriorities()                               -> { paperCount, rule, subjects: { gs: { topics: { polity: { share, papers, level } } } } }
  *   pyqPracticeSource({ exam, year, subject, topic }) -> arena source over previous-year questions
  *   createMock(payload)                           -> mock session (questions without answers)
  *   getMockSession(sessionId)                     -> active session, or its result once submitted
  *   submitMock({ sessionId, responses })          -> result
  *   getMockAnalytics(sessionId)                   -> result + review + topics + peers + cut-offs
+ *   getCustomTestOptions(subject, language) / previewCustomTest(body) / createCustomTest(body)
+ *   checkCustomAnswer(sessionId, { questionId, selectedOptionId }) / getCustomTestReport(sessionId)
+ *   getCustomTestHistory(subject)                 -> custom chapter tests (signed-in, http only)
  *   getMe()                                       -> { user } (user is null when signed out)
  *   login({ email, password })                    -> { user }
  *   register({ name, email, password })           -> { user }
@@ -76,7 +80,9 @@ export function createHttpDataSource() {
     getPyqFilters: () => request('/pyq/filters'),
     getPriorities: () => request('/pyq/priorities'),
     getPyqProgress: (subject) => request(`/me/pyq-progress?subject=${subject}`),
-    getStudyPlan: () => request('/plan/clerkship-60'),
+    getStudyPlan: (budget) => request(`/plan/clerkship-60${budget ? `?budget=${budget}` : ''}`),
+    createPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test`, { method: 'POST', body }),
+    checkPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test/check`, { method: 'POST', body }),
     getPlanProgress: () => request('/plan/clerkship-60/progress'),
     startPlan: (body) => request('/plan/clerkship-60/progress', { method: 'PUT', body }),
     setPlanTasks: (body) => request('/plan/clerkship-60/tasks', { method: 'POST', body }),
@@ -85,6 +91,13 @@ export function createHttpDataSource() {
     getMockSession: (sessionId) => request(`/mock/session/${sessionId}`),
     submitMock: (payload) => request('/mock/submit-session', { method: 'POST', body: payload }),
     getMockAnalytics: (sessionId) => request(`/mock/session/${sessionId}/analytics`),
+    // Custom chapter tests (signed-in): built from chosen chapters, stored as mock sessions.
+    getCustomTestOptions: (subject, language = 'en') => request(`/custom-tests/options?subject=${subject}&${lang(language)}`),
+    previewCustomTest: (body) => request('/custom-tests/preview', { method: 'POST', body }),
+    createCustomTest: (body) => request('/custom-tests', { method: 'POST', body }),
+    checkCustomAnswer: (sessionId, body) => request(`/custom-tests/${sessionId}/check`, { method: 'POST', body }),
+    getCustomTestReport: (sessionId) => request(`/custom-tests/${sessionId}/report`),
+    getCustomTestHistory: (subject) => request(`/custom-tests/history?subject=${subject}`),
     // The session is an httpOnly cookie set by the server; the token in the body is for non-browser clients.
     getMe: () => request('/auth/me'),
     login: (body) => request('/auth/login', { method: 'POST', body }),
@@ -414,6 +427,8 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getPriorities: learnOffline,
     getPyqProgress: (subject) => wait({ subject, topics: {} }),
     getStudyPlan: learnOffline,
+    createPlanTest: learnOffline,
+    checkPlanTest: learnOffline,
     getPlanProgress: learnOffline,
     startPlan: learnOffline,
     setPlanTasks: learnOffline,

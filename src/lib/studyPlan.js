@@ -38,6 +38,18 @@ export function taskLink(task) {
   }
 }
 
+/** A chapter's page, optionally opened in a study mode (Math/English) — GK chapters have no modes. */
+export function chapterLink(subject, topic, mode) {
+  if (!topic) return subject === 'gs' ? '/learn/gk' : learnPaths.subject(subject);
+  if (subject === 'gs') return `/learn/gk/${toSlug(topic)}`;
+  return `${learnPaths.chapter(subject, topic)}${mode ? `?mode=${mode}` : ''}`;
+}
+
+export const pyqLink = (subject, topic) => `/pyq?${new URLSearchParams({ subject, topic })}`;
+
+/** Tasks that are tests run inside the plan page. */
+export const TEST_KINDS = new Set(['daily_test', 'weekly_test', 'full_mock']);
+
 // How far back unfinished tasks are suggested before they are left behind (no snowballing backlog).
 export const BACKLOG_DAYS = 3;
 // Revision jumps the queue when this many questions are due.
@@ -81,11 +93,14 @@ function reasonFor(task) {
 
 /** Guests keep their plan on this device. */
 const KEY = 'edtech:plan:clerkship60';
+// Ticks saved against another plan layout (version) are dropped; start date and settings are kept.
+export const PLAN_VERSION = 2;
 export const localPlan = {
   read() {
     try {
       const v = JSON.parse(localStorage.getItem(KEY));
-      return v && typeof v.startDate === 'string' && Array.isArray(v.done) ? v : null;
+      if (!(v && typeof v.startDate === 'string' && Array.isArray(v.done))) return null;
+      return v.version === PLAN_VERSION ? v : { ...v, done: [], tests: {}, version: PLAN_VERSION, planUpdated: true };
     } catch {
       return null;
     }
@@ -99,3 +114,69 @@ export const localPlan = {
     }
   },
 };
+
+// ---------------------------------------------------------------- readiness and adaptivity
+
+const SUBJECT_WEIGHT = { quant: 0.3, english: 0.3, gs: 0.4 }; // Part-I marks: 30 / 30 / 40
+export const PYQ_FULL_CREDIT = 150; // real PYQs answered for full PYQ credit
+export const MIN_ANSWERS = 5;
+
+/**
+ * WBPSC Clerkship readiness, 0–100, from the student's own answers:
+ *   subject  average over the plan's chapters of recent accuracy (a chapter with fewer than
+ *            5 answers counts as 0, so untouched chapters lower it: readiness needs coverage)
+ *   pyq      accuracy on real PYQs × share of PYQ_FULL_CREDIT answered
+ *   mock     average accuracy of the plan's weekly tests and full mocks (latest three)
+ *   overall  70% subjects (weighted 30/30/40 like the paper) + 15% PYQ + 15% mock
+ */
+export function readiness({ chapters, mastery, pyq, tests }) {
+  const subject = {};
+  for (const s of Object.keys(SUBJECT_WEIGHT)) {
+    const list = chapters[s] || [];
+    subject[s] = list.length ? Math.round(list.reduce((a, topic) => {
+      const m = mastery[`${s}.${topic}`];
+      return a + (m && m.recentAnswers >= MIN_ANSWERS && m.accuracyPct != null ? m.accuracyPct : 0);
+    }, 0) / list.length) : 0;
+  }
+  const att = Object.values(pyq).reduce((a, t) => a + t.attempted, 0);
+  const sol = Object.values(pyq).reduce((a, t) => a + t.solved, 0);
+  const pyqScore = att ? Math.round((sol / att) * Math.min(1, att / PYQ_FULL_CREDIT) * 100) : 0;
+  const mocks = Object.entries(tests || {}).filter(([, r]) => r.kind === 'weekly_test' || r.kind === 'full_mock').sort(([a], [b]) => Number(b) - Number(a)).slice(0, 3);
+  const mockScore = mocks.length ? Math.round(mocks.reduce((a, [, r]) => a + r.accuracy, 0) / mocks.length) : 0;
+  const subjects = Object.entries(SUBJECT_WEIGHT).reduce((a, [s, w]) => a + w * subject[s], 0);
+  const overall = Math.round(0.7 * subjects + 0.15 * pyqScore + 0.15 * mockScore);
+  const weakest = Object.keys(SUBJECT_WEIGHT).sort((a, b) => subject[a] - subject[b])[0];
+  return { overall, quant: subject.quant, english: subject.english, gs: subject.gs, pyq: pyqScore, mock: mockScore, weakest };
+}
+
+/** The most recent plan test result (by plan day), or null. */
+export function latestTest(tests) {
+  const days = Object.keys(tests || {}).map(Number).filter((d) => d > 0).sort((a, b) => b - a);
+  return days.length ? { day: days[0], ...tests[days[0]] } : null;
+}
+
+/**
+ * What to change because of the latest test: weak topics (below 50%) get revision tomorrow,
+ * strong ones (90%+) may skip their next spaced revision.
+ */
+export function adaptiveAdvice(tests) {
+  const last = latestTest(tests);
+  if (!last) return { weak: [], strong: [] };
+  return { day: last.day, weak: last.weakTopics || [], strong: last.strongTopics || [] };
+}
+
+/** A spaced-revision item the student already knows well (strong mastery or 90%+ in the latest test). */
+export function canSkip(item, { mastery = {}, advice = { strong: [] } } = {}) {
+  const m = mastery[`${item.subject}.${item.topic}`];
+  return m?.status === 'strong' || advice.strong.some((x) => x.subject === item.subject && x.topic === item.topic);
+}
+
+/** End-of-day summary: done or not, topics to revise, and the weakest subject in today's test. */
+export function daySummary(day, { done, tests }) {
+  const required = day.tasks.filter((x) => !x.optional && x.kind !== 'rest');
+  const complete = required.every((x) => done.has(x.id));
+  const result = tests?.[day.day] ?? null;
+  const subjects = Object.entries(result?.bySubject || {}).filter(([, v]) => v.total > 0);
+  const weakArea = subjects.length ? subjects.sort(([, a], [, b]) => a.accuracy - b.accuracy)[0][0] : null;
+  return { complete, remaining: required.filter((x) => !done.has(x.id)).length, result, revise: result?.weakTopics || [], weakArea };
+}

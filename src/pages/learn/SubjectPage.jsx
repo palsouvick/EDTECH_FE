@@ -12,6 +12,7 @@ import { ArrowRightIcon, CheckIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 import SubjectJourney from '../../components/learn/SubjectJourney';
+import CustomTestLauncher from '../../components/custom-test/CustomTestLauncher';
 
 const SUBJECT_TABS = [
   { code: 'quant', emoji: '🔢', title: { en: 'Math', bn: 'গণিত' } },
@@ -236,6 +237,7 @@ export default function SubjectPage() {
         </label>
       </div>
 
+      <CustomTestLauncher subject={subject} className="mt-6" />
       {status === 'ready' && <SubjectJourney subject={subject} chapters={data.chapters} />}
       <PriorityLegend className="mt-4 max-w-4xl" />
 

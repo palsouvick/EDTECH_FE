@@ -3,10 +3,11 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { useDataSource } from '../app/DataSourceContext';
 import { examStore } from '../lib/examStore';
 import { MOCK } from '../lib/i18n';
-import { paths } from '../lib/routes';
+import { learnPaths, paths } from '../lib/routes';
 import { createExamState } from '../features/mock/mockExamReducer';
 import MockTestEngine from '../components/mock/MockTestEngine';
 import TestAnalyticsDashboard from '../components/analytics/TestAnalyticsDashboard';
+import CustomTestResult from '../components/custom-test/CustomTestResult';
 import { Localized } from '../components/topic-hub/Localized';
 import { LoadError } from './funnel/FunnelLayout';
 
@@ -40,7 +41,9 @@ export default function MockTestPage() {
       try {
         const s = await source.getMockSession(sessionId);
         if (s.status === 'SUBMITTED') return show({ status: 'result', result: s });
-        const exam = createExamState(s, { examName: MOCK.mockTest });
+        const exam = createExamState(s, s.custom
+          ? { examName: MOCK.mockTest, custom: true, subject: s.config.subject, topicPath: learnPaths.subject(s.config.subject) }
+          : { examName: MOCK.mockTest });
         await examStore.put(exam);
         return show({ status: 'ready', exam, restored: true });
       } catch (error) {
@@ -68,6 +71,8 @@ export default function MockTestPage() {
     );
   }
 
+  // A student-built chapter test has its own result (chapters, next steps, practice again).
+  if (view.status === 'result' && view.result.custom) return <CustomTestResult sessionId={sessionId} />;
   if (view.status === 'result') return <TestAnalyticsDashboard sessionId={sessionId} source={source} backTo={paths.exams()} />;
 
   return (

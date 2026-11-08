@@ -1,3 +1,4 @@
+import { focusStore } from '../lib/focusStore';
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import {
   accuracyPct,
@@ -83,6 +84,7 @@ export function usePracticeSession(source, { onAttempt, goal } = {}) {
       });
       if (!mounted.current) return;
       dispatch({ type: 'CHECK_SUCCESS', result });
+      focusStore.record(result.isCorrect);
       onAttemptRef.current?.(result);
     } catch (error) {
       if (mounted.current) dispatch({ type: 'CHECK_FAILURE', error });

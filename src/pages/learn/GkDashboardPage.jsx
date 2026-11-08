@@ -10,6 +10,7 @@ import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { SubjectTabs } from './SubjectPage';
+import CustomTestLauncher from '../../components/custom-test/CustomTestLauncher';
 import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 
 export const gkCardPath = (code) => `/learn/gk/${toSlug(code)}`;
@@ -155,6 +156,7 @@ export default function GkDashboardPage() {
       <div className="mt-8">
         <SubjectTabs subject="gs" />
       </div>
+      <CustomTestLauncher subject="gs" className="mt-6" />
       <PriorityLegend className="mt-4 max-w-4xl" />
 
       {status === 'loading' && <div className="mt-6"><CardGridSkeleton count={6} height="h-64" /></div>}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { MOCK, markingLabel, questionOfLabel } from '../../lib/i18n';
 import { examStore } from '../../lib/examStore';
+import CustomTestResult from '../custom-test/CustomTestResult';
 import { clearExamTimers, formatClock, useExamTimer } from '../../hooks/useExamTimer';
 import { languageStore } from '../../hooks/useLanguagePreference';
 import { STATUS, mockExamReducer, statusCounts, toSubmission } from '../../features/mock/mockExamReducer';
@@ -232,6 +233,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   }, [phase, q, select, act, perQuestion]);
 
   // ---- Render ----------------------------------------------------------------------
+  if (phase === 'submitted' && state.meta?.custom) return <CustomTestResult sessionId={sessionId} />;
   if (phase === 'submitted') return <TestAnalyticsDashboard sessionId={sessionId} source={source} meta={state.meta} backTo={backTo} />;
 
   const counts = statusCounts(entries);

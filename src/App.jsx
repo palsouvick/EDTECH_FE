@@ -9,6 +9,7 @@ import TopicList from './pages/funnel/TopicList';
 import StudyPage from './pages/StudyPage';
 import MockTestPage from './pages/MockTestPage';
 import RetryPracticePage from './pages/RetryPracticePage';
+import CustomPracticePage from './pages/CustomPracticePage';
 import AuthPage from './pages/AuthPage';
 import PerformancePage from './pages/PerformancePage';
 import HomePage from './pages/HomePage';
@@ -92,6 +93,7 @@ export function AppRoutes() {
       </Route>
       <Route path="/mock/:sessionId" element={<MockTestPage />} />
       <Route path="/mock/:sessionId/retry" element={<RetryPracticePage />} />
+      <Route path="/practice/custom/:sessionId" element={<CustomPracticePage />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route path="/me" element={<PerformancePage />} />

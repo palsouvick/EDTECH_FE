@@ -12,7 +12,7 @@ import { dayNumber, localIsoDate, localPlan, nextStep, taskLink } from '../lib/s
 
 const t = (en, bn) => ({ en, bn });
 const learn = (id, subject, topic, priority, session) => ({ id, kind: 'learn', subject, topic, name: t(topic, topic), priority, session, minutes: 30 });
-const day = (n, tasks, extra = {}) => ({ day: n, phase: 'FOUNDATION', weeklyTest: false, minutes: 90, tasks, ...extra });
+const day = (n, tasks, extra = {}) => ({ day: n, phase: 'FOUNDATION', title: null, weeklyTest: false, minutes: 90, mission: { concepts: tasks.filter((x) => x.kind === 'learn' && !x.optional).length, questions: 25, revisions: 0, minutes: 90 }, tasks, ...extra });
 const days = [
   day(1, [learn('d1-1', 'gs', 'polity', 'MUST', { n: 1, of: 4 }), learn('d1-2', 'quant', 'number_system', 'MUST', { n: 1, of: 3 }), { id: 'd1-3', kind: 'revise', minutes: 10, title: t('Revision: questions due today', 'রিভিশন') }]),
   day(2, [learn('d2-1', 'gs', 'geography', 'MUST', { n: 1, of: 4 }), { id: 'd2-2', kind: 'revise', minutes: 10, title: t('Revision: questions due today', 'রিভিশন') }]),
@@ -104,12 +104,12 @@ describe('plan page (guest)', () => {
     expect(within(today).getByText(/Day 1 of 4/, { selector: 'span' })).toBeInTheDocument();
     await user.click(within(today).getByRole('button', { name: /Done: Study: polity/ }));
     expect(within(next).getByText('Study: number_system (session 1 of 3)')).toBeInTheDocument();
-    expect(localPlan.read()).toEqual({ startDate: localIsoDate(), done: ['d1-1'] });
+    expect(localPlan.read()).toMatchObject({ startDate: localIsoDate(), done: ['d1-1'], budget: 180, version: 2 });
     expect(within(today).getByText('1 of 8 tasks done')).toBeInTheDocument();
   });
 
   it('a plan started three days ago opens on Day 4 and first offers what was left', async () => {
-    localPlan.write({ startDate: isoDaysAgo(3), done: [] });
+    localPlan.write({ startDate: isoDaysAgo(3), done: [], version: 2 });
     renderAt('/plan');
     const next = await screen.findByRole('region', { name: /What should I study next/ });
     expect(within(next).getByText(/Left over from Day 1/)).toBeInTheDocument();
@@ -120,7 +120,7 @@ describe('plan page (guest)', () => {
 
 describe('plan page (signed in)', () => {
   it('moves a guest\'s ticks into the account once, then saves ticks to the server', async () => {
-    localPlan.write({ startDate: '2026-11-06', done: ['d1-1'] });
+    localPlan.write({ startDate: '2026-11-06', done: ['d1-1'], version: 2 });
     const getPlanProgress = vi.fn(async () => ({ progress: null }));
     const startPlan = vi.fn(async ({ startDate }) => ({ progress: { startDate, done: [] } }));
     const setPlanTasks = vi.fn(async ({ done = [] }) => ({ progress: { startDate: '2026-11-06', done: ['d1-1', ...done.filter((d) => d !== 'd1-1')] } }));
@@ -143,7 +143,7 @@ describe('plan page (signed in)', () => {
       </DataSourceProvider>,
     );
     await screen.findByRole('region', { name: /What should I study next/ });
-    expect(startPlan).toHaveBeenCalledWith({ startDate: '2026-11-06' });
+    expect(startPlan).toHaveBeenCalledWith(expect.objectContaining({ startDate: '2026-11-06', budget: 180 }));
     expect(setPlanTasks).toHaveBeenCalledWith({ done: ['d1-1'] });
     expect(localPlan.read()).toBeNull();
 
