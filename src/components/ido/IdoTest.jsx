@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import { languageStore } from '../../hooks/useLanguagePreference';
 import { PLAN_UI } from '../../lib/planCopy';
+import { MOCK } from '../../lib/i18n';
 import { IDO_UI } from '../../lib/idoCopy';
 import { chapterLink } from '../../lib/studyPlan';
 import PyqBadge from '../practice/PyqBadge';
@@ -96,12 +97,16 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
   const spent = useRef({});
   const [attempt, setAttempt] = useState(0);
   const submitted = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const pausedAt = useRef(null);
 
   useEffect(() => {
     let live = true;
     setState({ status: 'loading' });
     setPicked({});
     setI(0);
+    setPaused(false);
+    pausedAt.current = null;
     spent.current = {};
     submitted.current = false;
     createTest(source).then(
@@ -137,15 +142,33 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
     }
   }, [state.status, questions, picked, source, test, onFinished]);
 
-  useEffect(() => {
-    if (state.status !== 'running') return undefined;
-    const id = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(id);
-  }, [state.status]);
+  // Pause (timed tests): freeze the countdown and the current question's
+  // clock; on resume both clocks shift by the paused span, so paused time
+  // never counts against the student.
+  const pauseTest = () => {
+    if (paused || state.status !== 'running') return;
+    pausedAt.current = Date.now();
+    setPaused(true);
+  };
+  const resumeTest = () => {
+    if (!paused) return;
+    const shift = Date.now() - (pausedAt.current ?? Date.now());
+    pausedAt.current = null;
+    setState((s) => (s.startedAt ? { ...s, startedAt: s.startedAt + shift } : s));
+    shownAt.current += shift;
+    setNow(Date.now());
+    setPaused(false);
+  };
 
   useEffect(() => {
-    if (timed && state.status === 'running' && left <= 0) submit();
-  }, [timed, left, state.status, submit]);
+    if (state.status !== 'running' || (timed && paused)) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [state.status, timed, paused]);
+
+  useEffect(() => {
+    if (timed && !paused && state.status === 'running' && left <= 0) submit();
+  }, [timed, paused, left, state.status, submit]);
 
   if (state.status === 'loading') return <p className="py-8 text-center text-sm text-slate-500">…</p>;
   if (state.status === 'error' && !test) return <LoadError error={state.error} onRetry={() => setAttempt((a) => a + 1)} />;
@@ -169,8 +192,24 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
         {timed ? <span className={`tabular-nums ${left < 300 ? 'text-rose-600' : ''}`}>{mmss(left)}</span> : <span className="tabular-nums">{mmss(elapsed)}</span>}
         {test.negativeMarking > 0 && <span className="text-rose-700 dark:text-rose-300">−{test.negativeMarking}</span>}
         <span className="text-slate-500 dark:text-slate-400">{answeredCount} ✓</span>
+        {timed && (
+          <button type="button" onClick={paused ? resumeTest : pauseTest} className="rounded-full px-3 py-1 ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800">
+            {paused ? '▶' : '⏸'} <Localized value={paused ? MOCK.resume : MOCK.pause} />
+          </button>
+        )}
       </div>
       {state.error && <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-500/10 dark:text-rose-200">{String(state.error.message ?? state.error)}</p>}
+      {paused ? (
+        <div className="rounded-2xl bg-slate-50 p-8 text-center ring-1 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700">
+          <p className="text-4xl" aria-hidden="true">⏸</p>
+          <Localized value={MOCK.pausedTitle} as="h3" className="mt-2 text-lg font-bold text-slate-900 dark:text-white" />
+          <Localized value={MOCK.pausedHint} as="p" className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400" />
+          <button type="button" autoFocus onClick={resumeTest} className={`${btn} mt-5 bg-indigo-600 text-white hover:bg-indigo-500`}>
+            ▶ <Localized value={MOCK.resume} />
+          </button>
+        </div>
+      ) : (
+      <>
       <div>
         <Localized value={q.stem} markdown as="div" className="text-base font-medium text-slate-900 dark:text-white" />
         {q.pyq && <div className="mt-1"><PyqBadge pyq={q.pyq} /></div>}
@@ -212,6 +251,8 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
           </button>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }

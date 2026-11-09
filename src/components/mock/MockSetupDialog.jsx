@@ -80,7 +80,9 @@ export default function MockSetupDialog({ open, onClose, onStart, initialCount =
   const [timerMode, setTimerMode] = useState('overall');
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES[initialCount] ?? 20);
   const [seconds, setSeconds] = useState(45);
-  const [allowPause, setAllowPause] = useState(false);
+  // Pause is on by default: beginners need to stop the clock on a hard
+  // question. Students who want real-exam conditions can switch it off.
+  const [allowPause, setAllowPause] = useState(true);
   const [language, setLanguage] = useState(() => (languageStore.get() === 'bn' ? 'bn' : 'en'));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);

@@ -4,6 +4,7 @@ import { useDataSource } from '../../app/DataSourceContext';
 import { languageStore } from '../../hooks/useLanguagePreference';
 import { focusStore } from '../../lib/focusStore';
 import { PLAN_UI } from '../../lib/planCopy';
+import { MOCK } from '../../lib/i18n';
 import { chapterLink } from '../../lib/studyPlan';
 import PyqBadge from '../practice/PyqBadge';
 import { Localized } from '../topic-hub/Localized';
@@ -93,12 +94,16 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
   const shownAt = useRef(Date.now());
   const spent = useRef({});
   const [attempt, setAttempt] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const pausedAt = useRef(null);
 
   useEffect(() => {
     let live = true;
     setState({ status: 'loading' });
     setPicked({});
     setI(0);
+    setPaused(false);
+    pausedAt.current = null;
     spent.current = {};
     source.createPlanTest(day, { budget, language: languageStore.get() }).then(
       (test) => {
@@ -141,17 +146,35 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
     // note() only reads refs, so it is not a dependency.
   }, [state.status, state.test, questions, picked, source, day, onFinished]);
 
+  // Pause (timed tests): freeze the countdown and the current question's
+  // clock; on resume both clocks shift by the paused span, so paused time
+  // never counts against the student.
+  const pauseTest = () => {
+    if (paused || state.status !== 'running') return;
+    pausedAt.current = Date.now();
+    setPaused(true);
+  };
+  const resumeTest = () => {
+    if (!paused) return;
+    const shift = Date.now() - (pausedAt.current ?? Date.now());
+    pausedAt.current = null;
+    setState((s) => (s.startedAt ? { ...s, startedAt: s.startedAt + shift } : s));
+    shownAt.current += shift;
+    setNow(Date.now());
+    setPaused(false);
+  };
+
   // Full mock: a countdown that submits the test at zero.
   const timed = state.test?.timed;
   const left = timed ? state.test.minutes * 60 - Math.floor((now - state.startedAt) / 1000) : null;
   useEffect(() => {
-    if (!timed || state.status !== 'running') return undefined;
+    if (!timed || state.status !== 'running' || paused) return undefined;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [timed, state.status]);
+  }, [timed, state.status, paused]);
   useEffect(() => {
-    if (timed && left != null && left <= 0 && state.status === 'running') submit();
-  }, [timed, left, state.status, submit]);
+    if (timed && !paused && left != null && left <= 0 && state.status === 'running') submit();
+  }, [timed, paused, left, state.status, submit]);
 
   if (state.status === 'loading') return <div aria-busy="true" className="h-40 animate-pulse rounded-2xl bg-slate-100 motion-reduce:animate-none dark:bg-slate-800" />;
   if (state.status === 'error') return <LoadError error={state.error} onRetry={() => setAttempt((n) => n + 1)} />;
@@ -165,8 +188,24 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
           <Localized value={PLAN_UI.section[q.section]} /> · <Localized value={PLAN_UI.questionOf(i + 1, questions.length)} />
         </span>
         {timed && <span className={`font-mono font-bold tabular-nums ${left < 300 ? 'text-rose-600' : 'text-slate-900 dark:text-white'}`} aria-label={PLAN_UI.timeLeft.en}>⏱ {mmss(left)}</span>}
+        {timed && (
+          <button type="button" onClick={paused ? resumeTest : pauseTest} className="rounded-full px-3 py-1 font-bold ring-1 ring-slate-300 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800">
+            {paused ? '▶' : '⏸'} <Localized value={paused ? MOCK.resume : MOCK.pause} />
+          </button>
+        )}
         <Localized value={PLAN_UI.answeredCount(answered, questions.length)} className="text-slate-500" />
       </div>
+      {paused ? (
+        <div className="rounded-2xl bg-slate-50 p-8 text-center ring-1 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700">
+          <p className="text-4xl" aria-hidden="true">⏸</p>
+          <Localized value={MOCK.pausedTitle} as="h3" className="mt-2 text-lg font-bold text-slate-900 dark:text-white" />
+          <Localized value={MOCK.pausedHint} as="p" className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400" />
+          <button type="button" autoFocus onClick={resumeTest} className={`${btn} mt-5 bg-indigo-600 text-white hover:bg-indigo-500`}>
+            ▶ <Localized value={MOCK.resume} />
+          </button>
+        </div>
+      ) : (
+      <>
       <div className="flex flex-wrap gap-2"><PyqBadge refs={q.pyq} /></div>
       <Localized value={q.stem} markdown as="div" className="text-lg font-medium text-slate-900 dark:text-white" />
       <div role="radiogroup" aria-label={PLAN_UI.questionOf(i + 1, questions.length).en} className="space-y-2">
@@ -192,6 +231,8 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
           <Localized value={state.status === 'checking' ? PLAN_UI.checking : PLAN_UI.submit} />
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -88,6 +88,10 @@ export const LEARN = Object.freeze({
   finishNow: t('Finish now', 'এখনই শেষ করো'),
   timeLeft: t('Time left', 'বাকি সময়'),
   timeUp: t('Time is up! Your answers were submitted.', 'সময় শেষ! তোমার উত্তর জমা হয়ে গেছে।'),
+  pause: t('Pause', 'বিরতি'),
+  resume: t('Resume', 'আবার শুরু করো'),
+  pausedTitle: t('Paused', 'বিরতি চলছে'),
+  pausedHint: t('The timer is stopped, and the time on this question is not counting either. Take a breath — resume when you are ready.', 'টাইমার থেমে আছে, আর এই প্রশ্নের সময়ও গোনা হচ্ছে না। নিশ্বাস নাও — তৈরি হলে আবার শুরু করো।'),
   newCycle: t('You have seen every question at this level, so some come again.', 'এই স্তরের সব প্রশ্ন দেখা হয়ে গেছে, তাই কিছু প্রশ্ন আবার আসছে।'),
   borrowed: t(
     'This level does not have enough questions of its own yet, so this quiz also includes questions from the level below.',

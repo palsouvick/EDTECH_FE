@@ -17,13 +17,17 @@ const fmt = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-/** Countdown for timed (advanced) quizzes, from a fixed deadline so it never drifts. */
-function useCountdown(deadline, onExpire) {
+/**
+ * Countdown for timed (advanced) quizzes, from a fixed deadline so it never
+ * drifts. While `paused`, the interval stops and `now` freezes, so the time
+ * on screen stands still; the caller shifts the deadline on resume.
+ */
+function useCountdown(deadline, onExpire, paused = false) {
   const [now, setNow] = useState(() => Date.now());
   const expire = useRef(onExpire);
   expire.current = onExpire;
   useEffect(() => {
-    if (!deadline) return undefined;
+    if (!deadline || paused) return undefined;
     const id = setInterval(() => {
       const t = Date.now();
       setNow(t);
@@ -33,7 +37,7 @@ function useCountdown(deadline, onExpire) {
       }
     }, 250);
     return () => clearInterval(id);
-  }, [deadline]);
+  }, [deadline, paused]);
   return deadline ? Math.max(0, deadline - now) : null;
 }
 
@@ -243,6 +247,8 @@ export default function QuizPage() {
   const [outcome, setOutcome] = useState(null);
   const [timedOut, setTimedOut] = useState(false);
   const [deadline, setDeadline] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const pausedAt = useRef(null);
   const timeSpent = useRef({});
   const shownAt = useRef(Date.now());
 
@@ -257,6 +263,8 @@ export default function QuizPage() {
     setTimedOut(false);
     setConfirming(false);
     setDeadline(null);
+    setPaused(false);
+    pausedAt.current = null;
     timeSpent.current = {};
     const progress = levelProgress(subject, topic, level);
     source
@@ -332,11 +340,28 @@ export default function QuizPage() {
     [quiz, phase, answers, noteTime, source, subject, topic, level],
   );
 
-  const remaining = useCountdown(phase === 'running' ? deadline : null, () => submit(true));
+  // Pause: freeze the countdown and the current question's clock. On resume
+  // the deadline and shownAt shift by the paused span, so no paused second is
+  // ever counted — a beginner can stop and think without losing time.
+  const pauseQuiz = () => {
+    if (paused || phase !== 'running' || !deadline) return;
+    pausedAt.current = Date.now();
+    setPaused(true);
+  };
+  const resumeQuiz = () => {
+    if (!paused) return;
+    const shift = Date.now() - (pausedAt.current ?? Date.now());
+    pausedAt.current = null;
+    setDeadline((d) => (d ? d + shift : d));
+    shownAt.current += shift;
+    setPaused(false);
+  };
+
+  const remaining = useCountdown(phase === 'running' ? deadline : null, () => submit(true), paused);
 
   // Keys 1-4 pick an option (the hints shown on each option), arrows move between questions.
   useEffect(() => {
-    if (phase !== 'running' || !quiz || confirming) return undefined;
+    if (phase !== 'running' || !quiz || confirming || paused) return undefined;
     const onKey = (e) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select')) return;
       const q = quiz.questions[index];
@@ -352,7 +377,7 @@ export default function QuizPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, quiz, index, confirming, noteTime]);
+  }, [phase, quiz, index, confirming, paused, noteTime]);
 
   if (!valid) return <Navigate to="/" replace />;
 
@@ -410,6 +435,17 @@ export default function QuizPage() {
               <Localized value={LEARN.questionOf(index + 1, total)} />
               <Localized value={LEARN.answered(answeredCount, total)} />
             </div>
+            {paused ? (
+              <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+                <p className="text-4xl" aria-hidden="true">⏸</p>
+                <Localized value={LEARN.pausedTitle} as="h2" className="mt-2 text-xl font-bold text-slate-900 dark:text-white" />
+                <Localized value={LEARN.pausedHint} as="p" className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400" />
+                <button type="button" autoFocus onClick={resumeQuiz} className="mt-5 min-h-12 rounded-xl bg-indigo-600 px-6 font-semibold text-white hover:bg-indigo-500">
+                  ▶ <Localized value={LEARN.resume} />
+                </button>
+              </div>
+            ) : (
+            <>
             <ol className="mb-4 flex flex-wrap gap-1.5" aria-label="Questions">
               {quiz.questions.map((q, i) => (
                 <li key={q.questionId}>
@@ -437,6 +473,8 @@ export default function QuizPage() {
               selected={answers[question.questionId]}
               onSelect={(optionId) => setAnswers((a) => ({ ...a, [question.questionId]: optionId }))}
             />
+            </>
+            )}
           </>
         )}
       </div>
@@ -446,7 +484,7 @@ export default function QuizPage() {
           <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-3">
             <button
               type="button"
-              disabled={index === 0}
+              disabled={index === 0 || paused}
               onClick={() => go(index - 1)}
               className="min-h-12 rounded-xl px-4 font-semibold text-slate-700 ring-1 ring-slate-300 disabled:opacity-40 dark:text-slate-200 dark:ring-slate-700"
             >
@@ -459,15 +497,27 @@ export default function QuizPage() {
                 </span>
               )}
             </div>
+            {remaining != null && (
+              paused ? (
+                <button type="button" onClick={resumeQuiz} className="min-h-12 rounded-xl bg-indigo-600 px-4 font-semibold text-white hover:bg-indigo-500">
+                  ▶ <Localized value={LEARN.resume} />
+                </button>
+              ) : (
+                <button type="button" onClick={pauseQuiz} className="min-h-12 rounded-xl px-4 font-semibold text-slate-700 ring-1 ring-slate-300 dark:text-slate-200 dark:ring-slate-700">
+                  ⏸ <Localized value={LEARN.pause} />
+                </button>
+              )
+            )}
             {index < total - 1 ? (
-              <button type="button" onClick={() => go(index + 1)} className="min-h-12 rounded-xl bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-500">
+              <button type="button" disabled={paused} onClick={() => go(index + 1)} className="min-h-12 rounded-xl bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-500 disabled:opacity-40">
                 <Localized value={LEARN.nextQ} /> →
               </button>
             ) : (
               <button
                 type="button"
+                disabled={paused}
                 onClick={() => (answeredCount < total ? setConfirming(true) : submit())}
-                className="min-h-12 rounded-xl bg-emerald-600 px-4 font-semibold text-white hover:bg-emerald-500"
+                className="min-h-12 rounded-xl bg-emerald-600 px-4 font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
                 <Localized value={LEARN.submit} />
               </button>
