@@ -134,6 +134,10 @@ export default function PyqPage() {
   const practiceSource = useMemo(() => (running ? source.pyqPracticeSource(running.filters) : null), [running, source]);
 
   const data = filters.data;
+  // A chapter opened from a link (/pyq?subject=…&topic=…) that has no past questions yet:
+  // say so instead of starting an empty set, which would look "finished" at 0 answered.
+  const linkedTopic = running?.filters.topic && data ? data.topics.find((t) => t.subject === running.filters.subject && t.topic === running.filters.topic) : undefined;
+  const noPyqs = Boolean(running?.filters.topic && data && !(linkedTopic?.count > 0));
   const paperCount = data?.exams.reduce((a, e) => a + e.papers.length, 0) ?? 0;
   const questionCount = data?.exams.reduce((a, e) => a + e.count, 0) ?? 0;
 
@@ -153,20 +157,30 @@ export default function PyqPage() {
       {filters.status === 'loading' && <div className="mt-8"><CardGridSkeleton count={6} /></div>}
       {filters.status === 'error' && <div className="mt-8"><LoadError error={filters.error} onRetry={filters.retry} /></div>}
 
-      {running && practiceSource && (
+      {running && noPyqs && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900">
+          <Localized value={PYQ.noTopicTitle} as="p" className="text-lg font-bold text-slate-900 dark:text-white" />
+          <Localized value={PYQ.noTopicBody} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+          <button type="button" onClick={() => setRunning(null)} className={`${practiseCls} mt-4`}>
+            <Localized value={PYQ.back} />
+          </button>
+        </div>
+      )}
+
+      {running && practiceSource && !noPyqs && (!running.filters.topic || data) && (
         <section aria-label="Practice" className="mt-6">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => setRunning(null)} className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-indigo-700 ring-1 ring-slate-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-slate-700">
               ← <Localized value={PYQ.back} />
             </button>
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              <Localized value={PYQ.practising} />: <Localized value={running.title} />
+              <Localized value={PYQ.practising} />: <Localized value={linkedTopic?.name ?? running.title} />
             </p>
           </div>
           <PracticeArena
             key={JSON.stringify(running.filters)}
             source={practiceSource}
-            topicName={running.title}
+            topicName={linkedTopic?.name ?? running.title}
             endScreen={
               <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900">
                 <Localized value={PYQ.endTitle} as="p" className="text-lg font-bold text-slate-900 dark:text-white" />

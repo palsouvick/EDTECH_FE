@@ -139,6 +139,8 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
   useEffect(() => onActiveChange?.(inView), [inView, onActiveChange]);
   const [results, setResults] = usePersistentState(`patterns:${subject}.${topic}`, {});
   const p = patterns[active];
+  // The server lists only the levels that have questions for this pattern.
+  const practiceLevels = p.practiceLevels ?? [];
   const practicePatterns = patterns.filter((x) => x.tryIt);
   const tried = practicePatterns.filter((x) => results[x.key] != null).length;
   const isLast = active === patterns.length - 1;
@@ -276,11 +278,11 @@ export default function QuestionPatterns({ subject, topic, patterns, initialPatt
             </button>
           )}
         </div>
-        {learnPractice && (p.practiceLevels?.length || p.registryLinked || p.practiceKey || ['two_together', 'efficiency'].includes(p.key)) && (
+        {learnPractice && practiceLevels.length > 0 && (
           <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
             <Localized value={PATTERNS.practiceByLevel} as="p" className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-200" />
             <div className="grid gap-2 sm:grid-cols-3">
-              {(p.practiceLevels ?? (p.registryLinked ? ['advanced'] : ['beginner', 'intermediate', 'advanced'])).map((level) => (
+              {practiceLevels.map((level) => (
                 <Link
                   key={level}
                   to={`${learnPaths.quiz('quant', topic, level)}?pattern=${encodeURIComponent(p.practiceKey ?? p.key)}`}

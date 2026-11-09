@@ -110,6 +110,20 @@ describe('PYQ hub', () => {
     expect(await screen.findByRole('heading', { name: /^Year-wise papers/ })).toBeInTheDocument();
   }, 20_000);
 
+  it('a linked chapter with no PYQs says so instead of showing an empty "finished" set', async () => {
+    const { user } = renderAt('/pyq?subject=gs&topic=important_days');
+    expect(await screen.findByText('No previous-year questions on this chapter yet')).toBeInTheDocument();
+    expect(screen.queryByText('You have finished this set')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Choose another set/ }));
+    expect(await screen.findByRole('heading', { name: /^Year-wise papers/ })).toBeInTheDocument();
+  });
+
+  it('a linked chapter with PYQs opens its set under its proper name', async () => {
+    renderAt('/pyq?subject=gs&topic=indian_history');
+    expect(await screen.findByText('Who founded the Brahmo Samaj?')).toBeInTheDocument();
+    expect(screen.getByText('Indian History')).toBeInTheDocument();
+  });
+
   it('topic-wise sets: GS first, counts per year, other subjects one tap away', async () => {
     const { user, source } = renderAt('/pyq');
     const history = (await screen.findByRole('heading', { name: /^Indian History/ })).closest('li');

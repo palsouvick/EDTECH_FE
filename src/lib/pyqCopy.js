@@ -60,6 +60,11 @@ export const PYQ = Object.freeze({
   ),
   sourcesLink: t("WBPSC's previous-year paper page", 'WBPSC-র আগের বছরের প্রশ্নপত্রের পাতা'),
   empty: t('No previous-year papers are available yet.', 'এখনও কোনো আগের বছরের প্রশ্নপত্র নেই।'),
+  noTopicTitle: t('No previous-year questions on this chapter yet', 'এই অধ্যায়ে এখনও আগের বছরের কোনো প্রশ্ন নেই'),
+  noTopicBody: t(
+    'The WBPSC papers we have do not ask from this chapter yet. Choose another set to practise.',
+    'আমাদের কাছে থাকা WBPSC প্রশ্নপত্রে এই অধ্যায় থেকে প্রশ্ন আসেনি। অন্য একটি সেট বেছে নাও।',
+  ),
   endTitle: t('You have finished this set', 'এই সেট শেষ করেছ'),
   endBody: t('Mistakes are saved to your Mistake Notebook when you are signed in.', 'সাইন ইন থাকলে ভুল উত্তরগুলি তোমার ভুলের খাতায় জমা থাকে।'),
 });

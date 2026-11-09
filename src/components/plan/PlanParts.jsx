@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { PLAN, PLAN_UI } from '../../lib/planCopy';
 import { canSkip, chapterLink, pyqLink, taskLink, TEST_KINDS } from '../../lib/studyPlan';
 import PriorityBadge from '../priority/PriorityBadge';
+import { usePyqTopics } from '../../hooks/usePyqTopics';
 import { Localized } from '../topic-hub/Localized';
 import { CheckIcon } from '../topic-hub/icons';
 
@@ -18,6 +19,8 @@ export function taskTitle(task) {
 }
 
 function TaskBody({ task, ctx }) {
+  // Only link to past questions for chapters that have some; an empty set looks like a finished one.
+  const pyqTopics = usePyqTopics();
   if (task.kind === 'learn') {
     return (
       <div className="mt-2 space-y-2 text-sm">
@@ -38,7 +41,7 @@ function TaskBody({ task, ctx }) {
           <p><Localized value={PLAN_UI.topicPages} />: {task.packs.map((c, i) => <span key={c}>{i > 0 && ' · '}<Link to={`/learn/gk/topic/${c}`} className={linkCls}>{c}</Link></span>)}</p>
         )}
         {task.outcome && <p className="text-slate-600 dark:text-slate-300"><Localized value={PLAN_UI.outcome} className="font-semibold" />: <Localized value={task.outcome} /></p>}
-        {!task.optional && <Link to={pyqLink(task.subject, task.topic)} className={`${linkCls} text-xs`}>🏆 <Localized value={PLAN_UI.howAsked} /></Link>}
+        {!task.optional && pyqTopics?.has(`${task.subject}.${task.topic}`) && <Link to={pyqLink(task.subject, task.topic)} className={`${linkCls} text-xs`}>🏆 <Localized value={PLAN_UI.howAsked} /></Link>}
       </div>
     );
   }

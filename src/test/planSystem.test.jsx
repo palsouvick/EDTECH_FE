@@ -54,6 +54,7 @@ function renderPlan(overrides = {}, { signedIn = false } = {}) {
     getReviewSummary: vi.fn(async () => ({ dueToday: 0 })),
     getInsights: vi.fn(async () => ({ mastery: [{ subject: 'quant', topic: 'percentage', status: 'strong', accuracyPct: 95, recentAnswers: 20 }] })),
     getPyqProgress: vi.fn(async (subject) => ({ subject, topics: {} })),
+    getPyqFilters: vi.fn(async () => ({ exams: [], topics: [{ subject: 'quant', topic: 'number_system', name: { en: 'Number System' }, count: 12 }] })),
     ...overrides,
   };
   const user = userEvent.setup();
@@ -111,8 +112,18 @@ describe('plan page', () => {
     expect(within(today).getByText('Prime numbers')).toBeInTheDocument();
     expect(within(today).getAllByText(/Target accuracy: 70%\+/).length).toBeGreaterThan(0);
     expect(within(today).getAllByText(/You can solve 15 questions/).length).toBeGreaterThan(0);
-    expect(within(today).getAllByRole('link', { name: /How WBPSC asks this/ })[0]).toHaveAttribute('href', '/pyq?subject=quant&topic=number_system');
+    expect((await within(today).findAllByRole('link', { name: /How WBPSC asks this/ }))[0]).toHaveAttribute('href', '/pyq?subject=quant&topic=number_system');
     expect(within(today).getAllByRole('link', { name: /^Articles/ })[0]).toHaveAttribute('href', '/learn/english/articles?mode=revision');
+  });
+
+  it('hides the past-question link for a chapter with no PYQs', async () => {
+    localPlan.write({ startDate: localIsoDate(), done: [], version: 2 });
+    const getPyqFilters = vi.fn(async () => ({ exams: [], topics: [] }));
+    renderPlan({ getPyqFilters });
+    const today = await screen.findByRole('region', { name: /Today's target/ });
+    expect(await within(today).findByText('Prime numbers')).toBeInTheDocument();
+    await vi.waitFor(() => expect(getPyqFilters).toHaveBeenCalled());
+    expect(within(today).queryByRole('link', { name: /How WBPSC asks this/ })).not.toBeInTheDocument();
   });
 
   it('changing the study time reloads the plan for that budget and saves it', async () => {
