@@ -7,6 +7,7 @@ const ITEMS = [
   { key: 'home', to: '/', end: true, label: NAV.home },
   { key: 'exams', to: '/exams', label: NAV.exams },
   { key: 'plan', to: '/plan', label: PLAN.nav },
+  { key: 'ido', to: '/ido', label: { en: '🏛️ IDO', bn: '🏛️ IDO' } },
   { key: 'learn', to: '/learn', label: NAV.learn },
   { key: 'pyq', to: '/pyq', label: NAV.pyq },
   { key: 'vocabulary', to: '/vocabulary', label: NAV.vocabulary },

@@ -32,6 +32,8 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import VocabularyPage from './pages/VocabularyPage';
 import PyqPage from './pages/PyqPage';
 import PlanPage from './pages/PlanPage';
+import IdoDashboardPage from './pages/IdoDashboardPage';
+import IdoPlanPage from './pages/IdoPlanPage';
 import GkTopicPage from './pages/learn/GkTopicPage';
 import CookieConsent from './components/auth/CookieConsent';
 
@@ -83,6 +85,8 @@ export function AppRoutes() {
       <Route path="/vocabulary" element={<VocabularyPage />} />
       <Route path="/pyq" element={<PyqPage />} />
       <Route path="/plan" element={<PlanPage />} />
+      <Route path="/ido" element={<IdoDashboardPage />} />
+      <Route path="/plan/ido" element={<IdoPlanPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/:tab?" element={<AdminPage />} />
       <Route path="/exams">

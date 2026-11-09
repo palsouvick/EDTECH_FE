@@ -9,6 +9,7 @@ import LanguageSwitcher from '../../components/topic-hub/LanguageSwitcher';
 import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import ExamInfoPanel from '../../components/exam-info/ExamInfoPanel';
+import { IDO_UI } from '../../lib/idoCopy';
 import FunnelLayout, { CardGridSkeleton, LoadError } from './FunnelLayout';
 import { CATEGORY_ACCENTS } from './CategorySelect';
 
@@ -86,6 +87,16 @@ export default function SubjectSelect() {
             ))}
           </div>
           <Localized value={BANK_TRACK.hint} as="p" className="mt-2 text-xs text-slate-500 dark:text-slate-400" />
+        </section>
+      )}
+
+      {category === 'WBPSC' && (
+        <section aria-labelledby="ido-track" className="mb-4 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-200 dark:bg-indigo-500/10 dark:ring-indigo-500/30">
+          <h2 id="ido-track" className="text-sm font-bold text-indigo-950 dark:text-indigo-100">🏛️ <Localized value={IDO_UI.title} /></h2>
+          <Localized value={IDO_UI.subtitle} as="p" className="mt-1 text-sm text-indigo-900/80 dark:text-indigo-200/80" />
+          <Link to="/ido" className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-500">
+            <Localized value={IDO_UI.openDashboard ?? IDO_UI.title} />
+          </Link>
         </section>
       )}
 
