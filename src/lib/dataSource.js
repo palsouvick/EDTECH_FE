@@ -245,13 +245,13 @@ function createFixtureMockApi(wait) {
           timeLimitMinutes,
           perQuestionTimer: Boolean(p.perQuestionTimer),
           perQuestionLimitSec: p.perQuestionTimer ? p.perQuestionSeconds : null,
-          allowPause: Boolean(p.allowPause),
+          allowPause: p.allowPause !== false,
           // Like the server, offline mocks never take marks from the caller: they use the
           // category's official marking, resolved by the server's rules at fixture build time.
           markingScheme: markingFixture[p.category]?.[p.subject] ?? { positive: 1, negative: 0, basis: 'PRACTICE', examCode: null, sourceUrl: null },
         },
         startedAt: new Date(now).toISOString(),
-        expiresAt: new Date(now + (p.allowPause ? 72 * 3600_000 : timeLimitMinutes * 60_000)).toISOString(),
+        expiresAt: new Date(now + (p.allowPause !== false ? 72 * 3600_000 : timeLimitMinutes * 60_000)).toISOString(),
         questions: picked.map((q, i) => ({
           questionId: q.questionId,
           seq: i + 1,
