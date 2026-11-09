@@ -36,9 +36,12 @@ export default function IdoDashboardPage() {
   const { user } = useAuth() ?? {};
   const [test, setTest] = useState(null); // { createTest } while a test is open
 
-  const categories = useResource('categories:en', () => source.listCategories('en'));
-  const wbpsc = categories.data?.categories?.find((c) => c.code === 'WBPSC');
+  // ExamInfoPanel needs the category's subjects (for its question counts);
+  // those come from getCategory — the listCategories summary has none.
+  const catRes = useResource('ido:category', () => source.getCategory('WBPSC', languageStore.get()));
+  const wbpsc = catRes.data?.category;
   const idoExam = wbpsc?.exams?.filter((e) => e.code === 'WBPSC_IDO');
+  const subjects = catRes.data?.subjects ?? [];
 
   const planRes = useResource('ido:sections', () => source.getIdoPlan(60, 180));
   const sections = planRes.data?.sections ?? [];
@@ -144,8 +147,8 @@ export default function IdoDashboardPage() {
           </button>
         </section>
 
-        {wbpsc && idoExam?.length > 0 && (
-          <ExamInfoPanel category="WBPSC" exams={idoExam} website={wbpsc.website} subjects={wbpsc.subjects} />
+        {wbpsc && idoExam?.length > 0 && subjects.length > 0 && (
+          <ExamInfoPanel category="WBPSC" exams={idoExam} website={wbpsc.website} subjects={subjects} />
         )}
       </div>
 
