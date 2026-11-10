@@ -10,6 +10,11 @@ export function clearResourceCache() {
   cache.clear();
 }
 
+/** Patch a cached resource after a save, so returning to the page shows the saved state. */
+export function updateCachedResource(key, update) {
+  if (cache.has(key)) cache.set(key, update(cache.get(key)));
+}
+
 /**
  * Load `loader()` once per `key`. A null key loads nothing.
  * While a new key loads, the previous data stays available as `staleData`

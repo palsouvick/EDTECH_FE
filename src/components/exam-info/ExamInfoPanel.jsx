@@ -54,7 +54,7 @@ function PatternTable({ stage, category, bankCounts }) {
   const shown = new Set();
   return (
     <div className="-mx-1 overflow-x-auto">
-      <table className="w-full min-w-[22rem] text-left text-sm">
+      <table className="w-full min-w-[20rem] text-left text-sm sm:min-w-[22rem]">
         <thead className="text-xs text-slate-500 dark:text-slate-400">
           <tr>
             <th scope="col" className="px-1 py-1.5 font-medium"><Localized value={EXAM_INFO.section} /></th>
@@ -247,7 +247,7 @@ export default function ExamInfoPanel({ category, exams, website, subjects, clas
       <h2 id={`${baseId}-h`} className="text-base font-semibold text-slate-900 dark:text-white">
         <Localized value={EXAM_INFO.heading} />
       </h2>
-      <div role="tablist" aria-label={EXAM_INFO.tabsLabel.en} onKeyDown={onKeyDown} className="mt-3 flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+      <div role="tablist" aria-label={EXAM_INFO.tabsLabel.en} onKeyDown={onKeyDown} className="mt-3 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 sm:flex-nowrap dark:bg-slate-800">
         {exams.map((e, i) => (
           <button
             key={e.code}

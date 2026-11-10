@@ -286,7 +286,9 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
             </button>
           )}
 
-          <LanguageSwitcher only={['en', 'bn']} className="hidden sm:inline-flex" />
+          {/* A `hidden` passed in className used to lose to the switcher's own inline-flex, which
+              pushed the palette button off phone screens. On phones it lives in the palette drawer. */}
+          <LanguageSwitcher only={['en', 'bn']} hideBelow="sm" />
 
           <button
             type="button"
@@ -410,17 +412,24 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
           open={paletteOpen}
           onClose={() => setPaletteOpen(false)}
           footer={
-            <button
-              type="button"
-              onClick={() => {
-                setPaletteOpen(false);
-                act({ type: 'OPEN_SUBMIT' });
-              }}
-              disabled={phase !== 'active'}
-              className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
-            >
-              <Localized value={MOCK.submit} />
-            </button>
+            <>
+              {/* Phones only: the top bar has no room for the language switch. */}
+              <div className="mb-3 flex items-center justify-between gap-2 sm:hidden">
+                <Localized value={MOCK.language} className="text-sm font-medium text-slate-600 dark:text-slate-300" />
+                <LanguageSwitcher only={['en', 'bn']} />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaletteOpen(false);
+                  act({ type: 'OPEN_SUBMIT' });
+                }}
+                disabled={phase !== 'active'}
+                className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              >
+                <Localized value={MOCK.submit} />
+              </button>
+            </>
           }
         />
       </div>

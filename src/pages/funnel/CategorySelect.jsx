@@ -16,6 +16,7 @@ export const CATEGORY_ACCENTS = {
   BANK: { bar: 'bg-emerald-500', chip: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300', ring: 'hover:ring-emerald-300 dark:hover:ring-emerald-500/50' },
   WBPSC: { bar: 'bg-amber-500', chip: 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300', ring: 'hover:ring-amber-300 dark:hover:ring-amber-500/50' },
   WB_POST: { bar: 'bg-rose-500', chip: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300', ring: 'hover:ring-rose-300 dark:hover:ring-rose-500/50' },
+  WB_POLICE: { bar: 'bg-sky-600', chip: 'bg-sky-50 text-sky-800 dark:bg-sky-500/10 dark:text-sky-300', ring: 'hover:ring-sky-300 dark:hover:ring-sky-500/50' },
 };
 const accentFor = (code) => CATEGORY_ACCENTS[code] ?? CATEGORY_ACCENTS.SSC;
 

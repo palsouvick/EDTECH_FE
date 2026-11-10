@@ -8,7 +8,7 @@
  *   /exams/wb-post/quant/profit-loss         Step 4  study & practice
  */
 
-export const CATEGORY_CODES = Object.freeze(['SSC', 'BANK', 'WBPSC', 'WB_POST']);
+export const CATEGORY_CODES = Object.freeze(['SSC', 'BANK', 'WBPSC', 'WB_POST', 'WB_POLICE']);
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

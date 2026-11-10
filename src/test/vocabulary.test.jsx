@@ -56,7 +56,10 @@ describe('Vocabulary Mastery', () => {
     expect(within(card).getByText('Bengali meaning pending review')).toBeInTheDocument();
     expect(within(card).getByText('lavish')).toBeInTheDocument();
     expect(within(card).getByText(/Often confused with Abandon/)).toBeInTheDocument();
-    expect(within(card).getByText('/əˈbʌndənt/')).toHaveAttribute('title', expect.stringMatching(/CMU Pronouncing Dictionary/));
+    // A readable respelling instead of raw IPA; the IPA and the CMU credit stay in the tooltip.
+    expect(within(card).queryByText('/əˈbʌndənt/')).toBeNull();
+    const say = within(card).getByText('uh-BUN-duhnt').closest('[title]');
+    expect(say).toHaveAttribute('title', expect.stringMatching(/IPA \/əˈbʌndənt\/.*CMU Pronouncing Dictionary/));
     const reviewed = screen.getByRole('heading', { name: 'Benevolent' }).closest('article');
     expect(within(reviewed).queryByText('Bengali meaning pending review')).toBeNull();
     expect(screen.getByText(/Carnegie Mellon University, BSD licence/)).toBeInTheDocument();

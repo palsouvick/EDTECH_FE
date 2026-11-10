@@ -25,6 +25,7 @@ import { Localized } from '../topic-hub/Localized';
 import { ArrowRightIcon, TrophyIcon } from '../topic-hub/icons';
 import { AnswerBar, RingGauge, TimeChart, TopicAccuracyBars } from './charts';
 import ReviewMatrix from './ReviewMatrix';
+import LossReasons from './LossReasons';
 
 const WEAK_TOPIC_PRACTICE = 15;
 
@@ -229,6 +230,9 @@ export default function TestAnalyticsDashboard({ sessionId, source, meta, backTo
           </div>
         </div>
       </Card>
+
+      {/* Why did I lose marks? (sources without the save call, e.g. older fixtures, skip it) */}
+      {source?.setLossReason && <LossReasons sessionId={sessionId} source={source} data={d} />}
 
       {/* Retention hooks: the two things to do next */}
       <div className="grid gap-4 md:grid-cols-2">

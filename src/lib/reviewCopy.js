@@ -50,4 +50,21 @@ export const REVIEW = Object.freeze({
   more: t('Load more', 'আরও দেখাও'),
   notebookEmpty: t('No mistakes here. Keep practising! 💪', 'এখানে কোনো ভুল নেই। অনুশীলন চালিয়ে যাও! 💪'),
   bookmarks: t('Bookmarked questions', 'বুকমার্ক করা প্রশ্ন'),
+  // Mistake notebook layout (2026-11-10): subject tabs, compact cards.
+  subjects: {
+    all: t('All', 'সব'),
+    gs: t('GK & GS', 'সাধারণ জ্ঞান'),
+    quant: t('Maths', 'গণিত'),
+    english: t('English', 'ইংরেজি'),
+    reasoning: t('Reasoning', 'যুক্তি'),
+  },
+  fixedShare: (pct) => t(`${pct}% fixed`, `${pct}% ঠিক হয়েছে`),
+  progressLabel: t('Mistakes fixed so far', 'এখন পর্যন্ত ঠিক হওয়া ভুল'),
+  chapters: t('Chapters', 'অধ্যায়'),
+  moreChapters: (n) => t(`+${n} more`, `আরও ${n}টি`),
+  fewerChapters: t('Show fewer', 'কম দেখাও'),
+  showDetails: t('Show options & explanation', 'সব অপশন ও ব্যাখ্যা দেখাও'),
+  hideDetails: t('Hide details', 'বিস্তারিত লুকাও'),
+  noAnswer: t('Not answered', 'উত্তর দেওয়া হয়নি'),
+  topChapter: t('Most mistakes', 'সবচেয়ে বেশি ভুল'),
 });

@@ -151,6 +151,9 @@ describe('revision queue and mistake notebook', () => {
     const card = (await screen.findByText('Revise question 7?')).closest('article');
     expect(within(card).getByText('Your answer')).toBeInTheDocument();
     expect(within(card).getByText('Correct answer')).toBeInTheDocument();
+    // Compact card: options and the explanation open on demand.
+    expect(within(card).queryByText('Because seven.')).not.toBeInTheDocument();
+    await user.click(within(card).getByRole('button', { name: /Show options & explanation/ }));
     expect(within(card).getByText('Because seven.')).toBeInTheDocument();
     expect(within(card).getByText('Mock test')).toBeInTheDocument();
     // Tab names carry both languages: "Still wrong এখনও ভুল 2".
@@ -158,5 +161,26 @@ describe('revision queue and mistake notebook', () => {
 
     await user.click(screen.getByRole('tab', { name: /Fixed.*1/ }));
     expect(source.getMistakes).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'mastered', offset: 0 }));
+  });
+
+  it('mistake notebook: subject tabs narrow the chapters; long chapter lists collapse', async () => {
+    const source = stubSource();
+    const gsTopics = Array.from({ length: 10 }, (_, i) => ({ subject: 'gs', topic: `gs_${i}`, topicName: t(`GS chapter ${i}`, `সা ${i}`), count: 20 - i }));
+    const groups = [...gsTopics, { subject: 'quant', topic: 'profit_loss', topicName: PL, count: 4 }];
+    const base = await source.getMistakes({ status: 'active' });
+    source.getMistakes = vi.fn(async () => ({ ...base, groups }));
+    const { user } = renderAt('/mistakes', source);
+
+    const subjects = await screen.findByRole('navigation', { name: 'Subjects' });
+    expect(within(subjects).getByRole('button', { name: /^All.*159/ })).toHaveAttribute('aria-pressed', 'true'); // 155 GS + 4 maths
+    const chapters = screen.getByRole('navigation', { name: 'Chapters' });
+    expect(within(chapters).getAllByRole('button', { pressed: false })).toHaveLength(8); // top 8 of 11, then "+3 more"
+    await user.click(within(chapters).getByRole('button', { name: /\+3 more/ }));
+    expect(within(chapters).getAllByRole('button', { pressed: false })).toHaveLength(11);
+
+    await user.click(within(subjects).getByRole('button', { name: /Maths.*4/ }));
+    expect(source.getMistakes).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'active', subject: 'quant', offset: 0 }));
+    // Only one Maths chapter: no chapter row needed.
+    expect(screen.queryByRole('navigation', { name: 'Chapters' })).not.toBeInTheDocument();
   });
 });

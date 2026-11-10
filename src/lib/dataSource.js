@@ -24,7 +24,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   createMock(payload)                           -> mock session (questions without answers)
  *   getMockSession(sessionId)                     -> active session, or its result once submitted
  *   submitMock({ sessionId, responses })          -> result
- *   getMockAnalytics(sessionId)                   -> result + review + topics + peers + cut-offs
+ *   getMockAnalytics(sessionId)                   -> result + review + topics + peers + cut-offs + lossReasons
+ *   setLossReason(sessionId, { seq, reason })     -> { lossReasons } ("Why did I lose marks?" tag; null clears)
  *   getCustomTestOptions(subject, language) / previewCustomTest(body) / createCustomTest(body)
  *   checkCustomAnswer(sessionId, { questionId, selectedOptionId }) / getCustomTestReport(sessionId)
  *   getCustomTestHistory(subject)                 -> custom chapter tests (signed-in, http only)
@@ -99,6 +100,7 @@ export function createHttpDataSource() {
     getMockSession: (sessionId) => request(`/mock/session/${sessionId}`),
     submitMock: (payload) => request('/mock/submit-session', { method: 'POST', body: payload }),
     getMockAnalytics: (sessionId) => request(`/mock/session/${sessionId}/analytics`),
+    setLossReason: (sessionId, body) => request(`/mock/session/${sessionId}/loss-reason`, { method: 'PUT', body }),
     // Custom chapter tests (signed-in): built from chosen chapters, stored as mock sessions.
     getCustomTestOptions: (subject, language = 'en') => request(`/custom-tests/options?subject=${subject}&${lang(language)}`),
     previewCustomTest: (body) => request('/custom-tests/preview', { method: 'POST', body }),
@@ -357,7 +359,21 @@ function createFixtureMockApi(wait) {
         weakestTopic: topic.marksLost > 0 ? topic : null,
         peers: { available: false, peers: 0, minPeers: 5, basis: { category: cat?.code, subject: subj?.code, questionCount: review.length } },
         cutoffs: [],
+        lossReasons: rec.lossReasons ?? {},
       });
+    },
+
+    /** Offline twin of PUT /mock/session/:id/loss-reason: same rules, kept with the session. */
+    async setLossReason(id, { seq, reason }) {
+      const rec = read(id);
+      if (!rec?.result) throw new ApiError(rec ? 409 : 404, rec ? 'SESSION_NOT_SUBMITTED' : 'SESSION_NOT_FOUND', 'Not available');
+      const q = rec.result.perQuestion.find((p) => p.seq === seq);
+      if (!q || q.outcome === 'CORRECT') throw new ApiError(422, q ? 'NOT_A_LOSS' : 'UNKNOWN_QUESTION', 'Not a lost question');
+      const lossReasons = { ...(rec.lossReasons ?? {}) };
+      if (reason) lossReasons[seq] = reason;
+      else delete lossReasons[seq];
+      write({ ...rec, lossReasons });
+      return wait({ lossReasons });
     },
   };
 }

@@ -40,18 +40,20 @@ beforeEach(() => {
 });
 
 describe('selection funnel', () => {
-  it('/exams lists the four categories with their exams; / is the home page', async () => {
+  it('/exams lists the five categories with their exams; / is the home page', async () => {
     renderAt('/exams');
     await screen.findByRole('link', { name: /^SSC/ });
     expect(path()).toBe('/exams');
 
     const cards = screen.getAllByRole('link').filter((a) => a.getAttribute('href')?.match(/^\/exams\/[a-z-]+$/));
-    expect(cards.map((a) => a.getAttribute('href'))).toEqual(['/exams/ssc', '/exams/bank', '/exams/wbpsc', '/exams/wb-post']);
+    expect(cards.map((a) => a.getAttribute('href'))).toEqual(['/exams/ssc', '/exams/bank', '/exams/wbpsc', '/exams/wb-post', '/exams/wb-police']);
     const ssc = cards[0];
     for (const exam of ['CGL', 'CHSL', 'MTS']) expect(within(ssc).getByText(exam)).toBeInTheDocument();
     expect(within(cards[1]).getByText('IBPS PO')).toBeInTheDocument();
     expect(within(cards[2]).getByText('WBCS')).toBeInTheDocument();
     expect(within(cards[3]).getByText('GDS')).toBeInTheDocument();
+    expect(within(cards[4]).getByText('WBP Constable')).toBeInTheDocument();
+    expect(within(cards[4]).getByText('Kolkata Police Constable')).toBeInTheDocument();
   });
 
   it('walks category -> subject -> topic -> study page, with dynamic breadcrumbs that navigate back', async () => {
@@ -63,7 +65,7 @@ describe('selection funnel', () => {
     const quant = await screen.findByRole('link', { name: /Quantitative Aptitude/ });
     expect(quant).toHaveTextContent('12 questions');
     expect(quant).toHaveTextContent('15 topics');
-    expect(screen.getByRole('link', { name: /General Studies/ })).toHaveTextContent('7 topics'); // + West Bengal GK
+    expect(screen.getByRole('link', { name: /General Studies/ })).toHaveTextContent('16 topics'); // the WBPSC GS chapters in db/seed/catalog.js
 
     // Names and counts follow the study language.
     await user.click(screen.getAllByRole('radio', { name: 'বাংলা' })[1]);

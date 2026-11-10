@@ -6,7 +6,11 @@ import { useLanguagePreference } from '../../hooks/useLanguagePreference';
  * re-renders on a language switch: it has to move its highlight.
  * Keyboard: arrow keys move and select, per the WAI-ARIA radio group pattern.
  */
-export default function LanguageSwitcher({ className = '', only }) {
+// hideBelow: hide on narrow screens. Chosen here because a `hidden` passed in className
+// loses to the root's own `inline-flex` (it did in the mock test bar on phones).
+const DISPLAY = { sm: 'hidden sm:inline-flex', md: 'hidden md:inline-flex' };
+
+export default function LanguageSwitcher({ className = '', only, hideBelow }) {
   const { lang, setLang, languages: all } = useLanguagePreference();
   // `only` limits the choices, e.g. ['en', 'bn'] in a test paper set in those two.
   const languages = only ? all.filter((l) => only.includes(l.code)) : all;
@@ -27,7 +31,7 @@ export default function LanguageSwitcher({ className = '', only }) {
       role="radiogroup"
       aria-label="Language / ভাষা"
       onKeyDown={onKeyDown}
-      className={`inline-flex shrink-0 rounded-full bg-slate-100 p-0.5 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700 ${className}`}
+      className={`${DISPLAY[hideBelow] ?? 'inline-flex'} shrink-0 rounded-full bg-slate-100 p-0.5 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700 ${className}`}
     >
       {languages.map((l, i) => {
         const active = l.code === lang;

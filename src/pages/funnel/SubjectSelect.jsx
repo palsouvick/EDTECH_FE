@@ -110,7 +110,7 @@ export default function SubjectSelect() {
         <Localized value={FUNNEL.languageHint} as="p" className="mt-2 text-xs text-slate-500 dark:text-slate-400" />
       </section>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
         <div className="min-w-0">
           {res.status === 'error' && !data ? (
             <LoadError error={res.error} onRetry={res.retry} />

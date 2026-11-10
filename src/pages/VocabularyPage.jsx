@@ -4,6 +4,7 @@ import { useOptionalAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import PageShell from '../components/navigation/PageShell';
 import BengaliReviewNote, { CMU_CREDIT } from '../components/vocabulary/BengaliReviewNote';
+import Pronunciation from '../components/vocabulary/Pronunciation';
 
 const MODES = [
   ['meaning', 'Meaning'],
@@ -35,7 +36,8 @@ function WordCard({ word, onState, busy, signedIn }) {
           <BengaliReviewNote review={word.bengaliReview} className="mt-1" />
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{word.partOfSpeech} · {titleCase(word.difficulty)}</p>
         </div>
-        {word.pronunciation && <span title={word.pronunciationSource === 'CMUDICT' ? CMU_CREDIT : undefined} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">{word.pronunciation}</span>}
+        {/* Plain respelling + Listen, not raw IPA (students could not read /əˈkjumjəˌleɪt/). */}
+        <Pronunciation word={word.word} ipa={word.pronunciation} source={word.pronunciationSource} />
       </div>
       <p className="mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{word.definitionEn}</p>
       {word.explanationBn && <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{word.explanationBn}</p>}

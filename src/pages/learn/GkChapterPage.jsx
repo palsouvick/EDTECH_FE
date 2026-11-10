@@ -29,6 +29,7 @@ const EXAM_TYPES = [
   { code: 'SSC', label: { en: 'SSC', bn: 'SSC' } },
   { code: 'BANK', label: { en: 'Banking', bn: 'ব্যাংকিং' } },
   { code: 'WB_POST', label: { en: 'WB Post Office', bn: 'পশ্চিমবঙ্গ ডাক বিভাগ' } },
+  { code: 'WB_POLICE', label: { en: 'WB Police (WBP, Kolkata Police)', bn: 'পশ্চিমবঙ্গ পুলিশ (WBP, কলকাতা পুলিশ)' } },
 ];
 const fmtDate = (iso) => (iso ? new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : null);
 const fmtMilestone = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? fmtDate(d) : d);

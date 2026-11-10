@@ -41,6 +41,10 @@ export const NAV = Object.freeze({
   pyq: t('Previous years', 'পূর্ববর্তী বছরের প্রশ্ন', 'पिछले वर्ष'),
   privacy: t('Privacy policy', 'গোপনীয়তা নীতি', 'गोपनीयता नीति'),
   admin: t('Admin', 'অ্যাডমিন', 'एडमिन'),
+  menu: t('Menu', 'মেনু', 'मेनू'),
+  openMenu: t('Open menu', 'মেনু খুলুন', 'मेनू खोलें'),
+  closeMenu: t('Close menu', 'মেনু বন্ধ করুন', 'मेनू बंद करें'),
+  language: t('Language', 'ভাষা', 'भाषा'),
 });
 
 export const PRIVACY = Object.freeze({

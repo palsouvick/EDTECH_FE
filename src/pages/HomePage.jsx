@@ -20,6 +20,7 @@ const EXAMS = [
   { code: 'BANK', name: t('Banking', 'ব্যাঙ্কিং'), sub: t('PO · Clerk (IBPS & SBI)', 'PO · ক্লার্ক (IBPS ও SBI)'), bar: 'from-emerald-500 to-teal-500' },
   { code: 'WBPSC', name: t('WBPSC', 'WBPSC'), sub: t('WBCS · Clerkship · Misc', 'WBCS · ক্লার্কশিপ · মিসেলেনিয়াস'), bar: 'from-amber-500 to-orange-500' },
   { code: 'WB_POST', name: t('WB Post Office', 'WB পোস্ট অফিস'), sub: t('India Post, West Bengal Circle', 'ইন্ডিয়া পোস্ট, পশ্চিমবঙ্গ সার্কেল'), bar: 'from-rose-500 to-pink-500' },
+  { code: 'WB_POLICE', name: t('WB Police', 'পশ্চিমবঙ্গ পুলিশ'), sub: t('WBP Constable · Kolkata Police Constable', 'WBP কনস্টেবল · কলকাতা পুলিশ কনস্টেবল'), bar: 'from-sky-500 to-blue-600' },
 ];
 
 const SUBJECTS = [

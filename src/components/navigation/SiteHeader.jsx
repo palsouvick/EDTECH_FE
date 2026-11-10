@@ -4,6 +4,7 @@ import AccountButton from '../auth/AccountButton';
 import LanguageSwitcher from '../topic-hub/LanguageSwitcher';
 import { Localized } from '../topic-hub/Localized';
 import { SigmaIcon } from '../topic-hub/icons';
+import MobileMenu from './MobileMenu';
 import SiteNav from './SiteNav';
 
 /**
@@ -25,10 +26,15 @@ export default function SiteHeader({ sticky = true, showLanguage = true }) {
           </span>
           <Localized value={FUNNEL.brand} />
         </Link>
-        <SiteNav className="order-last basis-full md:order-none md:basis-auto md:flex-1 md:justify-center" />
+        {/* md and up: the tab row, exactly as before. Phones use MobileMenu instead of a row
+            that scrolled sideways and hid most sections. */}
+        <SiteNav desktopOnly className="order-last basis-full md:order-none md:basis-auto md:flex-1 md:justify-center-safe" />
         <div className="ml-auto flex items-center gap-2">
-          {showLanguage && <LanguageSwitcher />}
+          {/* On phones the language switch moves into the menu sheet: brand, language,
+              account and menu do not fit one 390px row. */}
+          {showLanguage && <LanguageSwitcher hideBelow="md" />}
           <AccountButton />
+          <MobileMenu showLanguage={showLanguage} />
         </div>
       </div>
     </header>
