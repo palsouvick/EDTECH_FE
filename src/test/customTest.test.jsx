@@ -73,6 +73,7 @@ describe('custom test helpers', () => {
     const body = buildRequest('quant', { preset: 'custom', topics: new Set(['percentage']), count: 25, difficulty: 'exam', distribution: 'smart', mode: 'exam', time: 'smart' }, 'bn');
     expect(body).toEqual({ subject: 'quant', preset: 'custom', topics: ['percentage'], questionCount: 25, difficulty: 'exam', distribution: 'smart', mode: 'exam', language: 'bn' });
     expect(buildRequest('quant', { preset: 'quick10', topics: new Set(['a']), count: 30, difficulty: 'mixed', distribution: 'smart', mode: 'exam', time: 12 }, 'en')).toMatchObject({ timeLimitMinutes: 12 });
+    expect(buildRequest('quant', { preset: 'custom', topics: new Set(['percentage']), count: 25, difficulty: 'exam', distribution: 'smart', mode: 'exam', time: 'unlimited' }, 'en').timeLimitMinutes).toBeNull();
     expect(buildRequest('quant', { preset: 'quick10', topics: new Set(['a']), count: 30, difficulty: 'mixed', distribution: 'smart', mode: 'exam', time: 12 }, 'en').questionCount).toBeUndefined();
   });
 

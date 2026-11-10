@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { STATUS, createExamState, mockExamReducer as r, statusCounts, statusOf, toSubmission } from '../features/mock/mockExamReducer';
 
-const session = (n, { perQuestion = false, allowPause = true } = {}) => ({
+const session = (n, { perQuestion = false, allowPause = true, timeLimitMinutes = 10 } = {}) => ({
   sessionId: 'a'.repeat(24),
   config: {
     questionCount: n,
-    timeLimitMinutes: 10,
+    timeLimitMinutes,
     perQuestionTimer: perQuestion,
     perQuestionLimitSec: perQuestion ? 45 : null,
     allowPause,
@@ -24,6 +24,11 @@ const opt = (s, i, c) => s.questions[i].options['abcd'.indexOf(c)].optionId;
 const statuses = (s) => s.entries.map(statusOf);
 
 describe('mockExamReducer (CBT rules)', () => {
+  it('an untimed session (timeLimitMinutes null) gets durationSec null', () => {
+    const s = createExamState(session(2, { timeLimitMinutes: null }), {});
+    expect(s.config.durationSec).toBeNull();
+  });
+
   it('starts on Q1 visited, the rest not visited', () => {
     const s = createExamState(session(4), {});
     expect(statuses(s)).toEqual([STATUS.NOT_ANSWERED, STATUS.NOT_VISITED, STATUS.NOT_VISITED, STATUS.NOT_VISITED]);

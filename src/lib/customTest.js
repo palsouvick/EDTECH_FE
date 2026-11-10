@@ -40,7 +40,8 @@ export function buildRequest(subject, s, language) {
     language,
   };
   if (s.preset !== 'quick10') body.questionCount = s.count;
-  if (typeof s.time === 'number') body.timeLimitMinutes = s.time;
+  if (s.time === 'unlimited') body.timeLimitMinutes = null;
+  else if (typeof s.time === 'number') body.timeLimitMinutes = s.time;
   if (s.followUpOf) body.followUpOf = s.followUpOf;
   return body;
 }

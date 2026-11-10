@@ -271,6 +271,7 @@ export const MOCK = Object.freeze({
   submit: { en: 'Submit', bn: 'জমা দিন', hi: 'जमा करें' },
   palette: { en: 'Question palette', bn: 'প্রশ্ন তালিকা', hi: 'प्रश्न पैलेट' },
   timeLeft: { en: 'Time left', bn: 'বাকি সময়', hi: 'शेष समय' },
+  noTimeLimit: { en: 'No time limit', bn: 'কোনো সময়সীমা নেই', hi: 'कोई समय सीमा नहीं' },
   questionTime: { en: 'This question', bn: 'এই প্রশ্নে', hi: 'इस प्रश्न में' },
   locked: { en: "Time's up for this question.", bn: 'এই প্রশ্নের সময় শেষ।', hi: 'इस प्रश्न का समय समाप्त।' },
   confirmTitle: { en: 'Submit the test?', bn: 'পরীক্ষা জমা দেবেন?', hi: 'परीक्षा जमा करें?' },

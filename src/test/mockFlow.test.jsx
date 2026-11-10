@@ -116,6 +116,17 @@ describe('mock test (CBT) flow', () => {
     return exam;
   }
 
+  it('untimed test: the clock counts up from zero and nothing auto-submits', async () => {
+    await startEngine({ create: { allowPause: true }, config: { durationSec: null } });
+    const chip = screen.getByRole('timer');
+    expect(chip).not.toHaveAttribute('data-low-time', 'true');
+    expect(chip.textContent).toMatch(/00:00:0\d/); // elapsed time, not a countdown
+    await new Promise((r) => setTimeout(r, 2100));
+    expect(screen.getByText(/Question 1 of 2/)).toBeInTheDocument(); // still on the test
+    expect(screen.queryByText('Performance analysis')).toBeNull(); // no auto-submit
+    expect(screen.getByRole('timer').textContent).toMatch(/00:00:0[2-9]/); // and it kept counting up
+  }, 10_000);
+
   it('overall timer: auto-submits at 00:00:00', async () => {
     await startEngine({ create: { allowPause: true }, config: { durationSec: 1 } });
     expect(screen.getByRole('timer')).toHaveAttribute('data-low-time', 'true'); // red under 5 minutes

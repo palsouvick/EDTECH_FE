@@ -18,6 +18,9 @@ import TestAnalyticsDashboard from '../analytics/TestAnalyticsDashboard';
 const OPTION_KEYS = { a: 0, b: 1, c: 2, d: 3, 1: 0, 2: 1, 3: 2, 4: 3 };
 // Buffered time is moved into (persisted) state this often, so a crash loses at most ~1 s.
 const FLUSH_TIME_EVERY_MS = 1000;
+// Untimed tests run the same deadline clock against a far-away cap and show
+// the elapsed time counting up; the cap is never reached in practice.
+const UNTIMED_CAP_MS = 7 * 24 * 3600_000;
 const PENDING_KEY = (id) => `edtech:exam-pending:${id}`;
 
 /**
@@ -55,6 +58,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   const [state, dispatch] = useReducer(mockExamReducer, initialState, withRecoveredTime);
   const { sessionId, config, phase, current, entries, questions } = state;
   const perQuestion = config.timerMode === 'perQuestion';
+  const untimed = !perQuestion && config.durationSec == null;
   const live = phase === 'active' || phase === 'paused' || phase === 'confirming';
 
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -73,9 +77,11 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   // Overall: one clock. Non-pausable tests end at the server's deadline, so a
   // student cannot win time back by reloading.
   const [overallMs] = useState(() =>
-    config.allowPause
-      ? config.durationSec * 1000
-      : Math.max(0, Math.min(config.durationSec * 1000, Date.parse(state.expiresAt) - Date.now())),
+    untimed
+      ? UNTIMED_CAP_MS
+      : config.allowPause
+        ? config.durationSec * 1000
+        : Math.max(0, Math.min(config.durationSec * 1000, Date.parse(state.expiresAt) - Date.now())),
   );
   const pendingMs = useRef(0);
   // State as it would be once buffered time is applied. dispatch() is asynchronous, so code
@@ -238,6 +244,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
 
   const counts = statusCounts(entries);
   const lowTime = perQuestion ? timer.remainingMs < 10_000 : timer.remainingMs < 300_000;
+  const elapsedMs = overallMs - timer.remainingMs;
   const last = current === entries.length - 1;
 
   return (
@@ -256,7 +263,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
 
           <div
             role="timer"
-            aria-label={`${say(perQuestion ? MOCK.questionTime : MOCK.timeLeft)} ${formatClock(timer.remainingMs)}`}
+            aria-label={untimed ? `${say(MOCK.noTimeLimit)} · ${formatClock(elapsedMs)}` : `${say(perQuestion ? MOCK.questionTime : MOCK.timeLeft)} ${formatClock(timer.remainingMs)}`}
             className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 font-mono text-base font-bold tabular-nums transition-colors sm:text-lg ${
               lowTime
                 ? 'animate-pulse bg-rose-100 text-rose-700 ring-1 ring-rose-300 motion-reduce:animate-none dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/40'
@@ -265,7 +272,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
             data-low-time={lowTime || undefined}
           >
             <TimerIcon width={18} height={18} aria-hidden="true" />
-            {formatClock(timer.remainingMs, { compact: perQuestion })}
+            {formatClock(untimed ? elapsedMs : timer.remainingMs, { compact: perQuestion })}
           </div>
 
           {config.allowPause && (

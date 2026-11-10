@@ -50,7 +50,7 @@ export function createExamState(session, meta) {
     config: {
       questionCount: c.questionCount,
       timerMode: c.perQuestionTimer ? 'perQuestion' : 'overall',
-      durationSec: c.timeLimitMinutes * 60,
+      durationSec: c.timeLimitMinutes ? c.timeLimitMinutes * 60 : null,
       perQuestionSec: c.perQuestionLimitSec ?? null,
       allowPause: c.allowPause,
       language: c.language,

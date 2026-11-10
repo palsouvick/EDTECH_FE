@@ -381,6 +381,7 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
                         <span aria-hidden="true">⏱</span> <Localized value={CT.minutes(m)} />
                       </Choice>
                     ))}
+                    <Choice selected={s.time === 'unlimited'} onClick={() => update({ time: 'unlimited' })}><Localized value={CT.unlimitedTime} /></Choice>
                   </div>
                   <Localized value={CT.smartTimeHint(preview?.questionCount ?? count, (diffLabel[lang] ?? diffLabel.en).toLowerCase(), recommended)} as="p" className="text-xs text-slate-500 dark:text-slate-400" />
                   {s.mode === 'practice' && <Localized value={CT.untimedPractice} as="p" className="text-xs text-slate-500 dark:text-slate-400" />}
@@ -400,7 +401,7 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
                     <Localized value={CT.modeLabel} as="dt" className="font-semibold text-slate-500" />
                     <dd>{CT.modes[s.mode].icon} <Localized value={CT.modes[s.mode].label} /></dd>
                     <Localized value={CT.timeLabel} as="dt" className="font-semibold text-slate-500" />
-                    <dd><Localized value={CT.minutes(s.time === 'smart' ? recommended : s.time)} /></dd>
+                    <dd>{s.time === 'unlimited' ? <Localized value={CT.unlimitedTime} /> : <Localized value={CT.minutes(s.time === 'smart' ? recommended : s.time)} />}</dd>
                     {s.topics.size > 1 && (
                       <>
                         <Localized value={CT.distributionLabel} as="dt" className="font-semibold text-slate-500" />

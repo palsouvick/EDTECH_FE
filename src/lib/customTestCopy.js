@@ -63,6 +63,7 @@ export const CT = Object.freeze({
   smartTime: (m) => t(`⚡ Smart time: ${m} min`, `⚡ স্মার্ট সময়: ${bnNum(m)} মিনিট`),
   smartTimeHint: (n, diff, m) => t(`${n} ${diff} questions → recommended ${m} minutes`, `${bnNum(n)}টি ${diff} প্রশ্ন → প্রস্তাবিত ${bnNum(m)} মিনিট`),
   minutes: (m) => t(`${m} min`, `${bnNum(m)} মিনিট`),
+  unlimitedTime: t('∞ Unlimited time', '∞ সীমাহীন সময়'),
   mode: t('Test mode', 'টেস্ট মোড'),
   modes: {
     exam: { icon: '🎯', label: t('Exam simulation', 'পরীক্ষার মতো'), hint: t('Countdown, one question at a time, mark for review, answers only after submitting', 'কাউন্টডাউন, একবারে একটি প্রশ্ন, রিভিউর জন্য চিহ্ন, উত্তর জমা দেওয়ার পরে') },
@@ -125,7 +126,7 @@ export const CT = Object.freeze({
   nextQuestion: t('Next question →', 'পরের প্রশ্ন →'),
   finish: t('Finish and see result', 'শেষ করে ফল দেখো'),
   skip: t('Skip', 'বাদ দাও'),
-  targetTime: (m) => t(`Target: ${m} min`, `লক্ষ্য: ${bnNum(m)} মিনিট`),
+  targetTime: (m) => (m == null ? t('No time limit', 'কোনো সময়সীমা নেই') : t(`Target: ${m} min`, `লক্ষ্য: ${bnNum(m)} মিনিট`)),
   expired: t('This test has expired. Build a new one.', 'এই টেস্টের সময় শেষ। নতুন একটা বানাও।'),
   backToLearn: t('Back to chapters', 'অধ্যায়ে ফিরে যাও'),
 
