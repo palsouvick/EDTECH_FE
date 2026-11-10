@@ -63,6 +63,97 @@ function Pager({ p, setPage }) {
   );
 }
 
+function QuestionBankHealth() {
+  const [bank, setBank] = useState(null);
+  const [error, setError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      setBank(await request('/admin/question-bank/status'));
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const initializing = bank?.status === 'initializing';
+  useEffect(() => {
+    if (!initializing) return undefined;
+    const t = setInterval(load, 4000);
+    return () => clearInterval(t);
+  }, [initializing, load]);
+
+  const startSync = async () => {
+    setSyncing(true);
+    setError('');
+    try {
+      await request('/admin/question-bank/sync', { method: 'POST' });
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const statusLabel = { idle: 'Not initialized', initializing: 'Initializing', completed: 'Completed', failed: 'Failed' }[bank?.status] || 'Unknown';
+  const statusClass = bank?.status === 'completed'
+    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+    : bank?.status === 'initializing'
+      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+      : bank?.status === 'failed'
+        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+  const run = bank?.last_run;
+  const fmtDate = (v) => (v ? new Date(v).toLocaleString() : '—');
+
+  return (
+    <section aria-labelledby="question-bank-health-heading" className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="question-bank-health-heading" className="text-lg font-bold text-slate-900 dark:text-white">📚 Question Bank Health</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">The bank syncs itself on every deploy. Force a sync only to recover or to pick up source changes immediately.</p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusClass}`}>{statusLabel}</span>
+      </div>
+
+      {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 ring-1 ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:ring-rose-900">{error}</p>}
+
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+        <div><dt className="font-semibold text-slate-500 dark:text-slate-400">Version</dt><dd className="mt-0.5 text-slate-900 dark:text-white">{bank?.version ?? '—'}</dd></div>
+        <div><dt className="font-semibold text-slate-500 dark:text-slate-400">Total Questions</dt><dd className="mt-0.5 text-slate-900 dark:text-white">{bank?.total_questions != null ? bank.total_questions.toLocaleString() : '—'}</dd></div>
+        <div><dt className="font-semibold text-slate-500 dark:text-slate-400">Last Sync</dt><dd className="mt-0.5 text-slate-900 dark:text-white">{fmtDate(bank?.last_completed_at)}</dd></div>
+        <div><dt className="font-semibold text-slate-500 dark:text-slate-400">Source</dt><dd className="mt-0.5 text-slate-900 dark:text-white">{bank?.source_current == null ? '—' : bank.source_current ? 'Current' : 'Changed since last sync'}</dd></div>
+      </dl>
+
+      {initializing && bank?.progress && (
+        <div className="mt-4">
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width: `${bank.progress.percent}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Syncing… approx. {bank.progress.percent}% {bank.progress.subject ? `(${bank.progress.subject})` : ''}</p>
+        </div>
+      )}
+
+      {run && (
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+          Last run: <strong>{(run.inserted ?? 0).toLocaleString()}</strong> new · <strong>{(run.updated ?? 0).toLocaleString()}</strong> updated · <strong>{(run.skipped ?? 0).toLocaleString()}</strong> skipped · <strong>{(run.protected ?? 0).toLocaleString()}</strong> admin-protected · <strong>{(run.failed ?? 0).toLocaleString()}</strong> failed
+        </p>
+      )}
+      {bank?.last_error && <p className="mt-2 text-sm text-rose-700 dark:text-rose-300">Last Error: {bank.last_error}</p>}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" onClick={startSync} disabled={syncing || initializing} className={`${btn} bg-indigo-600 text-white disabled:cursor-wait disabled:opacity-60`}>
+          {initializing ? 'Sync running…' : syncing ? 'Starting…' : '🔄 Sync Question Bank'}
+        </button>
+        <button type="button" onClick={load} className={`${btn} ring-1 ring-slate-300 dark:text-white`}>🔍 View Sync Details</button>
+      </div>
+    </section>
+  );
+}
+
 function Overview() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -172,6 +263,8 @@ function Overview() {
           ))}
         </div>
       </section>
+
+      <QuestionBankHealth />
 
       <section aria-labelledby="admin-actions-heading">
         <div className="mb-3">
