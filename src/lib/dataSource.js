@@ -1,5 +1,6 @@
 import { ApiError, request } from './api';
 import { createFixturePracticeSource, createGkFactPracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
+import { bookApi, createBookPracticeSource } from './bookSource';
 import { catalogFixture, markingFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
 import { practiceBank } from '../fixtures/practiceQuestions';
@@ -58,6 +59,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getImportantDays()                            -> { months: [{ month, rows, sources }], similarNames, confusedPairs }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
+ *   getBook(book) / getBookChapter(book, code) / getBookProgress(book) / saveBookReading / saveBookResult
+ *   bookPracticeSource(book, code, { mode, sections, preview, onChecked }) -> study books (lib/bookSource.js)
  */
 export function createHttpDataSource() {
   const lang = (language) => `language=${encodeURIComponent(language)}`;
@@ -150,6 +153,8 @@ export function createHttpDataSource() {
     reviewGkFact: (code, result) => request(`/gk/facts/${code}/review`, { method: 'POST', body: { result, tz: -new Date().getTimezoneOffset() } }),
     getGkRevision: () => request('/gk/revision'),
     getGkDaily: () => request(`/gk/daily?tz=${-new Date().getTimezoneOffset()}`),
+    ...bookApi,
+    bookPracticeSource: (book, code, opts) => createBookPracticeSource(book, code, opts),
     listVocabularyWords: (params = {}) => request(`/vocabulary/words?${new URLSearchParams(params)}`),
     getVocabularyWordOfDay: () => request(`/vocabulary/word-of-day?tz=${-new Date().getTimezoneOffset()}`),
     getVocabularyProgressSummary: () => request('/vocabulary/progress/summary'),
@@ -480,6 +485,12 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     reviewGkFact: learnOffline,
     getGkRevision: learnOffline,
     getGkDaily: learnOffline,
+    getBook: learnOffline,
+    getBookChapter: learnOffline,
+    getBookProgress: learnOffline,
+    saveBookReading: learnOffline,
+    saveBookResult: learnOffline,
+    bookPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     countGkQuestions: learnOffline,
     setGkFactBookmark: learnOffline,
     reviewGkFact: learnOffline,

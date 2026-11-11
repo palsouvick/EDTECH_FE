@@ -10,6 +10,7 @@ import { Localized } from '../../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { SubjectTabs } from './SubjectPage';
+import { BookEntryCard } from './BookHomePage';
 import CustomTestLauncher from '../../components/custom-test/CustomTestLauncher';
 import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 
@@ -157,6 +158,7 @@ export default function GkDashboardPage() {
         <SubjectTabs subject="gs" />
       </div>
       <CustomTestLauncher subject="gs" className="mt-6" />
+      <BookEntryCard card="indian_history" onlyIfStarted className="mt-6 block max-w-4xl" />
       <PriorityLegend className="mt-4 max-w-4xl" />
 
       {status === 'loading' && <div className="mt-6"><CardGridSkeleton count={6} height="h-64" /></div>}

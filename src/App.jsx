@@ -35,6 +35,8 @@ import PlanPage from './pages/PlanPage';
 import IdoDashboardPage from './pages/IdoDashboardPage';
 import IdoPlanPage from './pages/IdoPlanPage';
 import GkTopicPage from './pages/learn/GkTopicPage';
+import BookHomePage from './pages/learn/BookHomePage';
+import BookChapterPage from './pages/learn/BookChapterPage';
 import CookieConsent from './components/auth/CookieConsent';
 
 const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === 'true';
@@ -78,6 +80,8 @@ export function AppRoutes() {
       <Route path="/learn/gk" element={<GkDashboardPage />} />
       <Route path="/learn/gk/revision" element={<GkRevisionPage />} />
       <Route path="/learn/gk/topic/:code" element={<GkTopicPage />} />
+      <Route path="/learn/gk/:chapter/book" element={<BookHomePage />} />
+      <Route path="/learn/gk/:chapter/book/:code" element={<BookChapterPage />} />
       <Route path="/learn/gk/:chapter" element={<GkChapterPage />} />
       <Route path="/learn/:subject" element={<SubjectPage />} />
       <Route path="/learn/:subject/:chapter" element={<ChapterPage />} />

@@ -1,3 +1,5 @@
+import { BookEntryCard } from './BookHomePage';
+import { BOOK_FOR_CARD } from '../../lib/bookCopy';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
@@ -575,6 +577,7 @@ export default function GkChapterPage() {
             </div>
           </header>
 
+          {BOOK_FOR_CARD[cardInfo.code] && <BookEntryCard card={cardInfo.code} className="mt-5 block" />}
           {cardInfo.code === 'important_days' && <YearAtAGlance />}
           <KnowledgeMap cardInfo={cardInfo} />
           <TopicProgress cardInfo={cardInfo} signedIn={signedIn} />
