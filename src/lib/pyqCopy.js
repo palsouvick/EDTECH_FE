@@ -20,8 +20,8 @@ export const PYQ_BASIS = Object.freeze({
   UNOFFICIAL_COPY: {
     label: t('Paper text from an unofficial copy', 'প্রশ্নপত্রের বেসরকারি প্রতিলিপি'),
     hint: t(
-      'The Commission did not publish this paper, so the question text comes from an unofficial copy. The answer is from the official key.',
-      'কমিশন এই প্রশ্নপত্র প্রকাশ করেনি, তাই প্রশ্নের লেখা একটি বেসরকারি প্রতিলিপি থেকে নেওয়া। উত্তর সরকারি উত্তরমালা থেকে।',
+      'The Commission did not publish this paper, so the question text comes from an unofficial copy.',
+      'কমিশন এই প্রশ্নপত্র প্রকাশ করেনি, তাই প্রশ্নের লেখা একটি বেসরকারি প্রতিলিপি থেকে নেওয়া।',
     ),
     tone: 'bg-violet-50 text-violet-800 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30',
   },
@@ -42,6 +42,8 @@ export const PYQ = Object.freeze({
     'WBCS প্রিলিমিনারি ও WBPSC ক্লার্কশিপের আসল প্রশ্ন। একটি করে প্রশ্ন অনুশীলন করো, সঙ্গে সঙ্গে উত্তর ও ব্যাখ্যা দেখো। প্রতিটি প্রশ্নপত্রের প্রশ্ন ও উত্তর কোথা থেকে নেওয়া, তা লেখা আছে।',
   ),
   totals: (q, p) => t(`${q} questions from ${p} papers`, `${bnDigits(p)}টি প্রশ্নপত্র থেকে ${bnDigits(q)}টি প্রশ্ন`),
+  examWise: t('Exam wise PYQ', 'পরীক্ষাভিত্তিক PYQ'),
+  examWiseSub: t('Every paper of one exam in one place — pick a year and session to practise the full paper.', 'একটি পরীক্ষার সব প্রশ্নপত্র এক জায়গায় — বছর ও সেশন বেছে পুরো প্রশ্নপত্রটি অনুশীলন করো।'),
   byYear: t('Year-wise papers', 'বছরভিত্তিক প্রশ্নপত্র'),
   byYearSub: t('Attempt a whole paper in its printed order.', 'পুরো প্রশ্নপত্র ছাপা ক্রমে অনুশীলন করো।'),
   byTopic: t('Topic-wise sets', 'বিষয়ভিত্তিক সেট'),

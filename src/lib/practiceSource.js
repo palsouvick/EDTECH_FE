@@ -32,11 +32,11 @@ export function createHttpPracticeSource({ category, subject, topic, pattern, su
  * Previous-year questions from GET /pyq: one paper (exam + year) or one chapter across years.
  * /pyq pages by number, so the cursor is the next page number.
  */
-export function createPyqPracticeSource({ exam, year, subject, topic, pack }) {
+export function createPyqPracticeSource({ exam, year, shift, subject, topic, pack }) {
   return {
     async fetchPage({ cursor, language, limit }) {
       const page = cursor ? Number(cursor) : 1;
-      const qs = new URLSearchParams({ language, page: String(page), limit: String(Math.min(limit, 20)), ...(exam && { exam }), ...(year && { year: String(year) }), ...(subject && { subject }), ...(topic && { topic }), ...(pack && { pack }) });
+      const qs = new URLSearchParams({ language, page: String(page), limit: String(Math.min(limit, 20)), ...(exam && { exam }), ...(year && { year: String(year) }), ...(shift && { shift }), ...(subject && { subject }), ...(topic && { topic }), ...(pack && { pack }) });
       const { questions, pagination } = await request(`/pyq?${qs}`);
       const hasMore = pagination.page < pagination.totalPages;
       return { questions, nextCursor: hasMore ? String(page + 1) : null, hasMore };

@@ -25,12 +25,14 @@ function BasisChip({ basis }) {
   );
 }
 
+const paperTitle = (exam, paper) => `${exam.name} ${paper.year}${paper.shift ? ` · ${paper.shift}` : ''}`;
+
 function PaperCard({ exam, paper, onPractise }) {
   const notes = basisNotes(paper);
   return (
     <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-        {exam.name} {paper.year}
+        {paperTitle(exam, paper)}
       </h3>
       <Localized value={PYQ.questions(paper.count)} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
       <div className="mt-3 flex flex-wrap gap-2">
@@ -49,7 +51,7 @@ function PaperCard({ exam, paper, onPractise }) {
         )}
       </p>
       <div className="mt-auto pt-4">
-        <button type="button" onClick={onPractise} className={`${practiseCls} w-full`} aria-label={`Practise ${exam.name} ${paper.year}`}>
+        <button type="button" onClick={onPractise} className={`${practiseCls} w-full`} aria-label={`Practise ${paperTitle(exam, paper)}`}>
           <Localized value={PYQ.practise} />
           <ArrowRightIcon />
         </button>
@@ -125,7 +127,8 @@ export default function PyqPage() {
   const [running, setRunning] = useState(() => {
     const exam = params.get('exam');
     const year = Number(params.get('year'));
-    if (exam && Number.isInteger(year) && year > 1990) return { title: { en: `${exam} ${year}` }, filters: { exam, year } };
+    const shift = params.get('shift');
+    if (exam && Number.isInteger(year) && year > 1990) return { title: { en: `${exam} ${year}${shift ? ` · ${shift}` : ''}` }, filters: { exam, year, ...(shift && { shift }) } };
     // /pyq?subject=…&topic=… (from a Learn chapter's PYQ level) opens that chapter's set.
     const subject = params.get('subject');
     const topic = params.get('topic');
@@ -199,17 +202,42 @@ export default function PyqPage() {
           <Localized value={PYQ.empty} as="p" className="mt-8 text-slate-600 dark:text-slate-300" />
         ) : (
           <>
+            {(() => {
+              // Exam wise PYQ: one exam's complete set of papers in one place.
+              // Only WBPSC Clerkship (Part-I) is curated here for now.
+              const examWise = data.exams.find((e) => e.name === 'WBPSC Clerkship (Part-I)');
+              if (!examWise?.papers.length) return null;
+              return (
+                <section aria-labelledby="pyq-exam-wise" className="mt-8">
+                  <h2 id="pyq-exam-wise" className="text-2xl font-extrabold text-slate-900 dark:text-white"><Localized value={PYQ.examWise} /></h2>
+                  <Localized value={PYQ.examWiseSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+                  <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">{examWise.name}</h3>
+                  <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {examWise.papers.map((paper) => (
+                      <li key={`${paper.year}|${paper.shift ?? ''}`}>
+                        <PaperCard
+                          exam={examWise}
+                          paper={paper}
+                          onPractise={() => start({ en: paperTitle(examWise, paper) }, { exam: examWise.name, year: paper.year, ...(paper.shift && { shift: paper.shift }) })}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })()}
+
             <section aria-labelledby="pyq-years" className="mt-8">
               <h2 id="pyq-years" className="text-2xl font-extrabold text-slate-900 dark:text-white"><Localized value={PYQ.byYear} /></h2>
               <Localized value={PYQ.byYearSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
               {data.exams.map((exam) => (
                 <ul key={exam.name} className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {exam.papers.map((paper) => (
-                    <li key={paper.year}>
+                    <li key={`${paper.year}|${paper.shift ?? ''}`}>
                       <PaperCard
                         exam={exam}
                         paper={paper}
-                        onPractise={() => start({ en: `${exam.name} ${paper.year}` }, { exam: exam.name, year: paper.year })}
+                        onPractise={() => start({ en: paperTitle(exam, paper) }, { exam: exam.name, year: paper.year, ...(paper.shift && { shift: paper.shift }) })}
                       />
                     </li>
                   ))}
