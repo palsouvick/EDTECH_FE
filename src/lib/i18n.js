@@ -264,9 +264,9 @@ export const MOCK = Object.freeze({
   resume: { en: 'Resume', bn: 'আবার শুরু', hi: 'फिर शुरू करें' },
   pausedTitle: { en: 'Test paused', bn: 'পরীক্ষা থেমে আছে', hi: 'परीक्षा रुकी हुई है' },
   pausedHint: {
-    en: 'Questions are hidden and the timer is stopped.',
-    bn: 'প্রশ্ন লুকানো আছে এবং টাইমার বন্ধ।',
-    hi: 'प्रश्न छिपे हैं और टाइमर बंद है।',
+    en: 'The timer is stopped. The question stays visible — resume when you are ready.',
+    bn: 'টাইমার বন্ধ আছে, প্রশ্ন দেখা যাচ্ছে। তৈরি হলে আবার শুরু করো।',
+    hi: 'टाइमर बंद है, प्रश्न दिख रहा है। तैयार होने पर फिर शुरू करें।',
   },
   submit: { en: 'Submit', bn: 'জমা দিন', hi: 'जमा करें' },
   palette: { en: 'Question palette', bn: 'প্রশ্ন তালিকা', hi: 'प्रश्न पैलेट' },

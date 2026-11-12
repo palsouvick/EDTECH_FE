@@ -155,12 +155,12 @@ describe('mock test (CBT) flow', () => {
     submitMock.mockRestore();
   }, 10_000);
 
-  it('pause hides the question and stops the clock', async () => {
+  it('pause keeps the question visible and stops the clock', async () => {
     const user = userEvent.setup();
     await startEngine({ create: { allowPause: true } });
     await user.click(screen.getByRole('button', { name: /^Pause/ }));
-    expect(screen.getByRole('heading', { name: /Test paused/ })).toBeInTheDocument();
-    expect(document.getElementById('mock-stem')).toBeNull(); // question content is not in the DOM
+    expect(screen.getByText(/Test paused/)).toBeInTheDocument();
+    expect(document.getElementById('mock-stem')).not.toBeNull(); // question stays visible while paused
     const t = screen.getByRole('timer').textContent;
     await new Promise((r) => setTimeout(r, 1200));
     expect(screen.getByRole('timer').textContent).toBe(t);

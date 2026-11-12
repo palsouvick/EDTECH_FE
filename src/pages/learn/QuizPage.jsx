@@ -435,16 +435,17 @@ export default function QuizPage() {
               <Localized value={LEARN.questionOf(index + 1, total)} />
               <Localized value={LEARN.answered(answeredCount, total)} />
             </div>
-            {paused ? (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-                <p className="text-4xl" aria-hidden="true">⏸</p>
-                <Localized value={LEARN.pausedTitle} as="h2" className="mt-2 text-xl font-bold text-slate-900 dark:text-white" />
-                <Localized value={LEARN.pausedHint} as="p" className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400" />
-                <button type="button" autoFocus onClick={resumeQuiz} className="mt-5 min-h-12 rounded-xl bg-indigo-600 px-6 font-semibold text-white hover:bg-indigo-500">
+            {paused && (
+              <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
+                <div>
+                  <p className="font-bold text-amber-900 dark:text-amber-200">⏸ <Localized value={LEARN.pausedTitle} inline /></p>
+                  <Localized value={LEARN.pausedHint} as="p" className="text-sm text-amber-800 dark:text-amber-300" />
+                </div>
+                <button type="button" onClick={resumeQuiz} className="min-h-11 rounded-xl bg-indigo-600 px-4 font-semibold text-white hover:bg-indigo-500">
                   ▶ <Localized value={LEARN.resume} />
                 </button>
               </div>
-            ) : (
+            )}
             <>
             <ol className="mb-4 flex flex-wrap gap-1.5" aria-label="Questions">
               {quiz.questions.map((q, i) => (
@@ -474,7 +475,6 @@ export default function QuizPage() {
               onSelect={(optionId) => setAnswers((a) => ({ ...a, [question.questionId]: optionId }))}
             />
             </>
-            )}
           </>
         )}
       </div>

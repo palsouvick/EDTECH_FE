@@ -319,17 +319,17 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-4 px-3 py-4 sm:px-4">
         <main className="flex min-w-0 flex-1 flex-col">
-          {phase === 'paused' ? (
-            <section className="arena-enter grid flex-1 place-items-center rounded-2xl bg-white p-8 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+          {phase === 'paused' && (
+            <div role="status" className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
               <div>
-                <Localized value={MOCK.pausedTitle} as="h2" className="text-xl font-bold text-slate-900 dark:text-white" />
-                <Localized value={MOCK.pausedHint} as="p" className="mt-1 text-sm text-slate-500 dark:text-slate-400" />
-                <button type="button" onClick={resume} autoFocus className="mt-5 min-h-12 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white hover:bg-indigo-500">
-                  <Localized value={MOCK.resume} />
-                </button>
+                <p className="font-bold text-amber-900 dark:text-amber-200">⏸ <Localized value={MOCK.pausedTitle} inline /></p>
+                <Localized value={MOCK.pausedHint} as="p" className="text-sm text-amber-800 dark:text-amber-300" />
               </div>
-            </section>
-          ) : (
+              <button type="button" onClick={resume} className="min-h-11 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-500">
+                <Localized value={MOCK.resume} />
+              </button>
+            </div>
+          )}
             <article key={q.questionId} aria-labelledby="mock-stem" className="arena-enter flex-1 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h2 className="text-sm font-semibold text-slate-600 dark:text-slate-300">
@@ -361,7 +361,6 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
                 ))}
               </div>
             </article>
-          )}
 
           {/* CBT actions: sticky to the bottom on phones */}
           <div className="sticky bottom-0 z-20 -mx-3 mt-3 border-t border-slate-200 bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:static sm:mx-0 sm:rounded-2xl sm:border-0 sm:p-3 sm:ring-1 sm:ring-slate-200 dark:border-slate-800 dark:bg-slate-900/95 dark:sm:ring-slate-800">
