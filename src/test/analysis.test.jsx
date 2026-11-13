@@ -75,7 +75,7 @@ const average = chapter('average', 'Average', { answers: 30, correct: 28, wrong:
 
 const analysis = {
   subject: 'quant',
-  summary: { chapters: 15, started: 2, masteryPct: 72, syllabusMasteryPct: 10, accuracyPct: 71, answered: 65, weakChapters: 1, needsAttentionChapters: 2, incompleteChapters: 1, strongChapters: 1, openMistakes: 5, openSkips: 2, revisionDue: 0, totalSec: 15600 },
+  summary: { chapters: 15, started: 2, masteryPct: 72, syllabusMasteryPct: 10, accuracyPct: 71, answered: 65, weakChapters: 1, needsAttentionChapters: 2, incompleteChapters: 1, strongChapters: 1, openMistakes: 5, openSkips: 2, revisionDue: 0, totalSec: 15600, pyqSolved: 7, pyqTotal: 20, weekAnswered: 65, weekMinutes: 95, weekActiveDays: 5, remainingQuestions: 120, answersPerDay: 4.6, paceDays: 27 },
   trend: { weeks: [{ week: '2026-10-19', answered: 10, accuracyPct: 42 }, { week: '2026-10-26', answered: 0, accuracyPct: null }, { week: '2026-11-02', answered: 12, accuracyPct: 71 }], firstAccuracy: 42, lastAccuracy: 71, deltaPts: 29, direction: 'up' },
   month: { month: '2026-11', attempted: 420, accuracyPct: 71, lastMonth: { month: '2026-10', attempted: 300, accuracyPct: 62 }, deltaPts: 9, strongestImprovement: { topic: 'percentage', title: t('Percentage', 'শতকরা'), from: 40, to: 58, deltaPts: 18 }, needsAttention: { topic: 'time_work', title: t('Time & Work', 'সময় ও কাজ'), from: 76, to: 70, deltaPts: -6 } },
   areas: [{ key: 'arithmetic', answered: 65, accuracyPct: 71, chapters: 8, weakestTopic: { topic: 'percentage', title: t('Percentage', 'শতকরা'), accuracy: 60 } }],
@@ -109,7 +109,21 @@ function Where() {
   return <p data-testid="where">{loc.pathname}</p>;
 }
 
+const brief = (c) => ({
+  topic: c.topic,
+  title: c.title,
+  emoji: c.emoji,
+  mastery: c.mastery,
+  accuracy: c.recentAccuracy,
+  band: c.focus.band,
+  score: c.focus.score,
+  started: c.answers > 0,
+  practicePct: c.progress.practice,
+  weakestSkill: c.skills?.[0] ? { name: c.skills[0].name, accuracy: c.skills[0].accuracyPct } : null,
+});
+
 function makeSource(extra = {}) {
+  const examIn30 = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
   return {
     kind: 'test',
     getMe: vi.fn(() => Promise.resolve({ user })),
@@ -117,13 +131,15 @@ function makeSource(extra = {}) {
     getLearningOverview: vi.fn(() =>
       Promise.resolve({
         subjects: [
-          { subject: 'quant', summary: analysis.summary, month: analysis.month, trend: {}, nextTask: null, areas: [] },
-          { subject: 'english', summary: { ...analysis.summary, masteryPct: 74, accuracyPct: 76, weakChapters: 3, needsAttentionChapters: 4, incompleteChapters: 2 }, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [] },
+          { subject: 'quant', summary: analysis.summary, month: analysis.month, trend: { direction: 'up', recentDelta: 6, weeks: analysis.trend.weeks }, nextTask: null, areas: [], chapters: [brief(percentage), brief(average)] },
+          { subject: 'english', summary: { ...analysis.summary, masteryPct: 74, accuracyPct: 76, weakChapters: 3, needsAttentionChapters: 4, incompleteChapters: 2, weekMinutes: 40, weekActiveDays: 3, paceDays: null, remainingQuestions: 40 }, month: { deltaPts: null }, trend: { direction: null, recentDelta: null, weeks: [] }, nextTask: null, areas: [], chapters: [] },
         ],
         focus: [
-          { subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), band: 'high', score: 82, why: percentage.why, plan: percentage.plan },
+          { subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), band: 'high', score: 82, why: percentage.why, plan: percentage.plan, weakestSkill: { name: t('Successive percentage', 'ক্রমিক শতাংশ'), accuracy: 40 } },
           { subject: 'english', topic: 'tenses', title: t('Tenses', 'কাল'), band: 'medium', score: 51, why: [], plan: { steps: [{ kind: 'smart_quiz', count: 10 }], questions: 10, minutes: 13 } },
         ],
+        streakDays: 6,
+        plan: { exam: 'WBPSC_CLERKSHIP', examDate: examIn30, startDate: '2026-10-01' },
       }),
     ),
     setSkipReason: vi.fn((questionId, reason) => Promise.resolve({ questionId, reason })),
@@ -184,6 +200,48 @@ describe('learning analysis pages', () => {
     expect(skipLinks[0]).toHaveAttribute('href', '/analysis/math#skipped');
     expect(skipLinks[1]).toHaveAttribute('href', '/analysis/english#skipped');
     expect(source.getLearningOverview).toHaveBeenCalledWith('en');
+    // Trends: weekly chart, the 2-week change, streak, solving minutes, active days.
+    const trends = screen.getByRole('region', { name: /Trends, not snapshots/ });
+    expect(within(trends).getByText('Accuracy up 6 points in the last 2 weeks')).toBeInTheDocument();
+    expect(within(trends).getAllByText('🔥 6')).toHaveLength(2);
+    expect(within(trends).getByText('1h 35m')).toBeInTheDocument();
+    expect(within(trends).getByText('5/7')).toBeInTheDocument();
+    expect(within(trends).getByText('2026-10-19')).toBeInTheDocument(); // sr-only weekly table
+    // Exam strip: target exam, date, days left, coverage, PYQs, pace — and the no-pace state.
+    const exam = screen.getByRole('region', { name: /Your exam/ });
+    expect(within(exam).getByText('WBPSC Clerkship')).toBeInTheDocument();
+    expect(within(exam).getByText('30 days to go')).toBeInTheDocument();
+    expect(within(exam).getByText(/At ~4.6 questions a day, the remaining 120 practice questions take about 27 days/)).toBeInTheDocument();
+    expect(within(exam).getByText('Answer a few questions over the next days to see your pace.')).toBeInTheDocument();
+    // Mastery bars: weakest first; the focus item names its weakest skill.
+    const bars = screen.getByRole('region', { name: /Mastery by chapter/ });
+    expect(within(bars).getByText('Percentage')).toBeInTheDocument();
+    expect(within(bars).getByText('54%')).toBeInTheDocument();
+    expect(within(focus).getByText('Weakest skill: Successive percentage (40%)')).toBeInTheDocument();
+    // All chapters: weakest first, with mastery and accuracy per row.
+    const all = screen.getByRole('region', { name: /All chapters/ });
+    const rows = within(all).getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Percentage');
+    expect(rows[0]).toHaveTextContent(/Mastery/);
+    expect(rows[0]).toHaveTextContent('54%');
+    expect(rows[1]).toHaveTextContent('Average');
+  });
+
+  it('overview without an exam date: the strip says so and links to the plan', async () => {
+    const noDate = {
+      subjects: [
+        { subject: 'quant', summary: analysis.summary, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [], chapters: [] },
+        { subject: 'english', summary: analysis.summary, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [], chapters: [] },
+      ],
+      focus: [],
+      streakDays: 0,
+      plan: { exam: 'WBPSC_CLERKSHIP', examDate: null, startDate: null },
+    };
+    renderAt('/analysis', makeSource({ getLearningOverview: vi.fn(() => Promise.resolve(noDate)) }));
+    await screen.findByRole('heading', { name: /Mathematics/ });
+    expect(screen.getByText('No exam date set yet.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Set it in your 60-day plan/ })).toHaveAttribute('href', '/plan');
   });
 
   it('stat tiles stay plain text when there is nothing to open', async () => {

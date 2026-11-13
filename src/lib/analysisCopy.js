@@ -37,6 +37,41 @@ export const AN = Object.freeze({
   currentFocus: t('🎯 Current focus', '🎯 এখনকার লক্ষ্য'),
   currentFocusSub: t('The chapters that need your time most, across both subjects.', 'দুই বিষয় মিলিয়ে যে অধ্যায়গুলোতে সবচেয়ে বেশি সময় দরকার।'),
 
+  // Trends
+  trendsTitle: t('📈 Trends, not snapshots', '📈 এক ঝলক নয়, ধারা', '📈 रुझान, झलक नहीं'),
+  trendsSub: t('Accuracy week by week, your streak, and how much you studied in the last 7 days.', 'সপ্তাহে সপ্তাহে নির্ভুলতা, তোমার ধারাবাহিকতা, আর গত ৭ দিনে কত পড়েছ।'),
+  streak: t('Day streak', 'দিনের ধারাবাহিকতা', 'लगातार दिन'),
+  weekMinutes: t('Solving time, last 7 days', 'গত ৭ দিনে সমাধানের সময়'),
+  weekActiveDays: t('Active days, last 7 days', 'গত ৭ দিনে সক্রিয় দিন'),
+  trendDelta: (d) =>
+    d >= 0
+      ? t(`Accuracy up ${d} points in the last 2 weeks`, `গত ২ সপ্তাহে নির্ভুলতা ${bnNum(d)} পয়েন্ট বেড়েছে`)
+      : t(`Accuracy down ${-d} points in the last 2 weeks`, `গত ২ সপ্তাহে নির্ভুলতা ${bnNum(-d)} পয়েন্ট কমেছে`),
+
+  // Exam context
+  examTitle: t('🎯 Your exam', '🎯 তোমার পরীক্ষা', '🎯 तुम्हारी परीक्षा'),
+  examName: t('WBPSC Clerkship', 'WBPSC Clerkship'),
+  examOn: (d) => t(`Exam on ${d}`, `পরীক্ষা ${d}`),
+  daysLeft: (n) => t(`${n} days to go`, `${bnNum(n)} দিন বাকি`),
+  noExamDate: t('No exam date set yet.', 'পরীক্ষার তারিখ এখনও দেওয়া হয়নি।'),
+  setExamDate: t('Set it in your 60-day plan', '৬০ দিনের পরিকল্পনায় দাও'),
+  coverage: t('Syllabus coverage', 'সিলেবাস কতটা শেষ'),
+  pyqDone: t('PYQs solved', 'PYQ সমাধান'),
+  pace: (rate, remaining, days, date) =>
+    t(
+      `At ~${rate} questions a day, the remaining ${remaining} practice questions take about ${days} days — around ${date}.`,
+      `দিনে প্রায় ${bnNum(rate)}টি প্রশ্নের হারে বাকি ${bnNum(remaining)}টি অনুশীলনের প্রশ্ন শেষ হতে প্রায় ${bnNum(days)} দিন লাগবে — প্রায় ${date}।`,
+    ),
+  paceNoData: t('Answer a few questions over the next days to see your pace.', 'তোমার গতি দেখতে আগামী কয়েক দিন কিছু প্রশ্নের উত্তর দাও।'),
+  paceDone: t('Practice bank cleared — nothing left to solve.', 'অনুশীলনের ভান্ডার শেষ — আর কিছু বাকি নেই।'),
+
+  // All chapters
+  allChapters: t('📚 All chapters', '📚 সব অধ্যায়', '📚 सभी अध्याय'),
+  allChaptersSub: t('Every chapter, weakest first. Nothing hidden: what you have not started yet is here too.', 'প্রতিটি অধ্যায়, সবচেয়ে দুর্বল আগে। কিছু লুকানো নেই: যা শুরু করোনি তাও এখানে আছে।'),
+  masteryBars: t('Mastery by chapter', 'অধ্যায় অনুযায়ী দক্ষতা', 'अध्यायवार दक्षता'),
+  masteryBarsSub: t('Weakest first — the chapters that need you most.', 'সবচেয়ে দুর্বল আগে — যে অধ্যায়গুলোতে তোমাকে সবচেয়ে বেশি দরকার।'),
+  seeAllChapters: t('See all chapters', 'সব অধ্যায় দেখো'),
+
   // Tabs
   tabs: {
     now: t('🎯 Study now', '🎯 এখন পড়ো'),

@@ -65,6 +65,24 @@ export function ProgressMeters({ progress }) {
   );
 }
 
+/** Mastery bars for a subject's chapters: weakest first, started chapters only. */
+export function MasteryBars({ chapters, limit = 5 }) {
+  const rows = [...(chapters ?? [])]
+    .filter((c) => c.started && c.mastery != null)
+    .sort((a, b) => a.mastery - b.mastery)
+    .slice(0, limit);
+  if (!rows.length) return null;
+  return (
+    <ul className="space-y-2">
+      {rows.map((c) => (
+        <li key={c.topic}>
+          <Meter label={c.title} value={c.mastery} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function WhyList({ why }) {
   if (!why?.length) return null;
   return (
