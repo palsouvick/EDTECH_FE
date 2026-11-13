@@ -114,6 +114,24 @@ export function PlanSteps({ subject, topic, plan }) {
   );
 }
 
+/** The first step of the action plan, as one clear action (overview page). */
+export function FirstPlanStep({ subject, topic, plan }) {
+  const s = plan?.steps?.[0];
+  if (!s) return null;
+  const to = stepLink(subject, topic, s);
+  return (
+    <div className="mt-2">
+      {to ? (
+        <Link to={to} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-600 px-3.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+          <Localized value={stepText(s)} /> →
+        </Link>
+      ) : (
+        <SmartQuizButton subject={subject} topics={[topic]} count={s.count} label={stepText(s)} />
+      )}
+    </div>
+  );
+}
+
 /** Starts a Smart Quiz (custom-test preset "smart") and opens it. */
 export function SmartQuizButton({ subject, topics = [], count = 15, mode = 'practice', variant = 'primary', label = AN.start }) {
   const start = useStartCustomTest();

@@ -6,7 +6,7 @@ import { loginPath } from '../components/auth/AccountButton';
 import PageShell from '../components/navigation/PageShell';
 import { Localized } from '../components/topic-hub/Localized';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
-import { BandBadge, card, Meter, WhyList } from '../components/analysis/AnalysisParts';
+import { BandBadge, card, FirstPlanStep, Meter, WhyList } from '../components/analysis/AnalysisParts';
 import { AN } from '../lib/analysisCopy';
 import { subjectSlugFromCode } from '../lib/routes';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
@@ -73,6 +73,7 @@ export default function AnalysisPage() {
                       <BandBadge band={c.band} score={c.score} />
                     </div>
                     <WhyList why={c.why.slice(0, 2)} />
+                    <FirstPlanStep subject={c.subject} topic={c.topic} plan={c.plan} />
                   </div>
                 </li>
               ))}
@@ -96,17 +97,39 @@ function SubjectCard({ s }) {
       </h3>
       <Localized value={AN.chaptersStarted(sum.started, sum.chapters)} as="p" className="text-sm text-slate-500 dark:text-slate-400" />
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <Meter label={AN.mastery} value={sum.masteryPct} />
+        <div>
+          <Meter label={AN.mastery} value={sum.masteryPct} />
+          {sum.syllabusMasteryPct != null && (
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <Localized value={AN.syllabus} />: <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{sum.syllabusMasteryPct}%</span>
+            </p>
+          )}
+        </div>
         <Meter label={AN.accuracy} value={sum.accuracyPct} />
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-        {[[AN.weakTopics, sum.weakChapters], [AN.incomplete, sum.incompleteChapters], [AN.openMistakes, sum.openMistakes], [AN.openSkips, sum.openSkips]].map(([l, v], i) => (
-          <div key={i} className="rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-slate-800/60">
-            <dt><Localized value={l} className="text-xs text-slate-500 dark:text-slate-400" /></dt>
-            <dd className="text-lg font-extrabold tabular-nums text-slate-900 dark:text-white">{v}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+        {[
+          [AN.needsAttention, sum.needsAttentionChapters, null],
+          [AN.incomplete, sum.incompleteChapters, null],
+          [AN.openMistakes, sum.openMistakes, '/mistakes'],
+          [AN.openSkips, sum.openSkips, `/analysis/${slug}#skipped`],
+        ].map(([l, v, to], i) => {
+          const body = (
+            <>
+              <Localized value={l} className="text-xs text-slate-500 dark:text-slate-400" />
+              <span className="block text-lg font-extrabold tabular-nums text-slate-900 dark:text-white">{v}</span>
+            </>
+          );
+          const cls = 'rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-slate-800/60';
+          return to && v > 0 ? (
+            <Link key={i} to={to} className={`${cls} hover:bg-indigo-50 hover:ring-1 hover:ring-indigo-200 dark:hover:bg-indigo-500/10 dark:hover:ring-indigo-500/30`}>
+              {body}
+            </Link>
+          ) : (
+            <div key={i} className={cls}>{body}</div>
+          );
+        })}
+      </div>
       {s.month.deltaPts != null && <Localized value={AN.improvement(s.month.deltaPts)} as="p" className={`mt-3 text-sm font-semibold ${s.month.deltaPts >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`} />}
       <Link to={`/analysis/${slug}`} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
         <Localized value={AN.open(AN.subjects[s.subject])} /> →

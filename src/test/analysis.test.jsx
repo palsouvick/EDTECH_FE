@@ -8,7 +8,7 @@ import { languageStore } from '../hooks/useLanguagePreference';
 import { useStudyHeartbeat } from '../hooks/useStudyHeartbeat';
 import AnalysisPage from '../pages/AnalysisPage';
 import SubjectAnalysisPage from '../pages/SubjectAnalysisPage';
-import { formatDuration } from '../lib/analysisCopy';
+import { AN, formatDuration } from '../lib/analysisCopy';
 
 const t = (en, bn) => ({ en, bn });
 const user = { id: 'u1', name: 'Riya Sen', email: 'r@example.com' };
@@ -75,7 +75,7 @@ const average = chapter('average', 'Average', { answers: 30, correct: 28, wrong:
 
 const analysis = {
   subject: 'quant',
-  summary: { chapters: 15, started: 2, masteryPct: 72, syllabusMasteryPct: 10, accuracyPct: 71, answered: 65, weakChapters: 1, incompleteChapters: 1, strongChapters: 1, openMistakes: 5, openSkips: 2, revisionDue: 0, totalSec: 15600 },
+  summary: { chapters: 15, started: 2, masteryPct: 72, syllabusMasteryPct: 10, accuracyPct: 71, answered: 65, weakChapters: 1, needsAttentionChapters: 2, incompleteChapters: 1, strongChapters: 1, openMistakes: 5, openSkips: 2, revisionDue: 0, totalSec: 15600 },
   trend: { weeks: [{ week: '2026-10-19', answered: 10, accuracyPct: 42 }, { week: '2026-10-26', answered: 0, accuracyPct: null }, { week: '2026-11-02', answered: 12, accuracyPct: 71 }], firstAccuracy: 42, lastAccuracy: 71, deltaPts: 29, direction: 'up' },
   month: { month: '2026-11', attempted: 420, accuracyPct: 71, lastMonth: { month: '2026-10', attempted: 300, accuracyPct: 62 }, deltaPts: 9, strongestImprovement: { topic: 'percentage', title: t('Percentage', 'শতকরা'), from: 40, to: 58, deltaPts: 18 }, needsAttention: { topic: 'time_work', title: t('Time & Work', 'সময় ও কাজ'), from: 76, to: 70, deltaPts: -6 } },
   areas: [{ key: 'arithmetic', answered: 65, accuracyPct: 71, chapters: 8, weakestTopic: { topic: 'percentage', title: t('Percentage', 'শতকরা'), accuracy: 60 } }],
@@ -118,11 +118,11 @@ function makeSource(extra = {}) {
       Promise.resolve({
         subjects: [
           { subject: 'quant', summary: analysis.summary, month: analysis.month, trend: {}, nextTask: null, areas: [] },
-          { subject: 'english', summary: { ...analysis.summary, masteryPct: 74, accuracyPct: 76, weakChapters: 3, incompleteChapters: 2 }, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [] },
+          { subject: 'english', summary: { ...analysis.summary, masteryPct: 74, accuracyPct: 76, weakChapters: 3, needsAttentionChapters: 4, incompleteChapters: 2 }, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [] },
         ],
         focus: [
-          { subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), band: 'high', score: 82, why: percentage.why },
-          { subject: 'english', topic: 'tenses', title: t('Tenses', 'কাল'), band: 'medium', score: 51, why: [] },
+          { subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), band: 'high', score: 82, why: percentage.why, plan: percentage.plan },
+          { subject: 'english', topic: 'tenses', title: t('Tenses', 'কাল'), band: 'medium', score: 51, why: [], plan: { steps: [{ kind: 'smart_quiz', count: 10 }], questions: 10, minutes: 13 } },
         ],
       }),
     ),
@@ -163,7 +163,42 @@ describe('learning analysis pages', () => {
     expect(items[0]).toHaveTextContent(/Mathematics.*—.*Percentage/);
     expect(items[0]).toHaveTextContent('14/35 questions wrong');
     expect(screen.getByText('Improvement: +9 percentage points')).toBeInTheDocument();
+    // "Needs attention" replaces the misleading "Weak chapters" tile, mastery shows the whole syllabus,
+    // and each focus item carries its first plan step as an action.
+    const mathCard = screen.getByRole('heading', { name: /Mathematics/ }).closest('li');
+    const mathNeeds = within(mathCard).getByText('Needs attention').closest('div');
+    expect(within(mathNeeds).getByText('2')).toBeInTheDocument();
+    expect(within(mathCard).getByText('Syllabus')).toBeInTheDocument();
+    expect(within(mathCard).getByText('10%')).toBeInTheDocument();
+    const englishCard = screen.getByRole('heading', { name: /English/ }).closest('li');
+    const englishNeeds = within(englishCard).getByText('Needs attention').closest('div');
+    expect(within(englishNeeds).getByText('4')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Read the concept again — 15 min/ })).toHaveAttribute('href', '/learn/math/percentage');
+    expect(screen.getByRole('button', { name: /Take a 10-question Smart Quiz/ })).toBeInTheDocument();
+    // Stat tiles are doorways: open mistakes and skips link to where they are listed.
+    const mistakeLinks = screen.getAllByRole('link', { name: /Open mistakes/ });
+    expect(mistakeLinks).toHaveLength(2);
+    expect(mistakeLinks[0]).toHaveAttribute('href', '/mistakes');
+    const skipLinks = screen.getAllByRole('link', { name: /Skipped, not yet solved/ });
+    expect(skipLinks).toHaveLength(2);
+    expect(skipLinks[0]).toHaveAttribute('href', '/analysis/math#skipped');
+    expect(skipLinks[1]).toHaveAttribute('href', '/analysis/english#skipped');
     expect(source.getLearningOverview).toHaveBeenCalledWith('en');
+  });
+
+  it('stat tiles stay plain text when there is nothing to open', async () => {
+    const zero = {
+      subjects: [
+        { subject: 'quant', summary: { ...analysis.summary, openMistakes: 0, openSkips: 0 }, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [] },
+        { subject: 'english', summary: { ...analysis.summary, openMistakes: 0, openSkips: 0 }, month: { deltaPts: null }, trend: {}, nextTask: null, areas: [] },
+      ],
+      focus: [],
+    };
+    renderAt('/analysis', makeSource({ getLearningOverview: vi.fn(() => Promise.resolve(zero)) }));
+    await screen.findByRole('heading', { name: /Mathematics/ });
+    expect(screen.queryByRole('link', { name: /Open mistakes/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Skipped, not yet solved/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Open mistakes')).toHaveLength(2);
   });
 
   it('subject page: what to study now, why, the plan, and the next Smart Quiz', async () => {
@@ -180,6 +215,11 @@ describe('learning analysis pages', () => {
     expect(screen.getByText('You skipped 3 Time & Work questions.')).toBeInTheDocument();
     expect(screen.getByText('Next Smart Quiz: 15 questions')).toBeInTheDocument();
     expect(screen.getByText('to keep it fresh')).toBeInTheDocument();
+    // Header summary: needs-attention count (not "Weak chapters") and the whole-syllabus mastery.
+    const needsTile = screen.getByText('Needs attention').closest('div');
+    expect(within(needsTile).getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Syllabus')).toBeInTheDocument();
+    expect(screen.getByText('10%')).toBeInTheDocument();
   });
 
   it('starts a Smart Quiz with the chosen size and opens it', async () => {
@@ -233,6 +273,17 @@ describe('learning analysis pages', () => {
   it('only Mathematics and English have an analysis page', async () => {
     renderAt('/analysis/gk', makeSource());
     expect(await screen.findByRole('heading', { name: /My learning analysis/ })).toBeInTheDocument();
+  });
+
+  it('overview in Bengali: the new labels render in Bengali, and the Hindi text is stored for later', async () => {
+    languageStore.set('bn');
+    renderAt('/analysis', makeSource());
+    await screen.findByRole('heading', { name: /গণিত/ });
+    expect(screen.getAllByText('মনোযোগ দরকার')).toHaveLength(2);
+    expect(screen.getAllByText('সিলেবাস')).toHaveLength(2);
+    // Hindi is not a live UI language yet (no switcher option), but the copy already carries it.
+    expect(AN.syllabus).toEqual({ en: 'Syllabus', bn: 'সিলেবাস', hi: 'पाठ्यक्रम' });
+    expect(AN.needsAttention.hi).toBe('ध्यान देने योग्य');
   });
 
   it('formats study time', () => {

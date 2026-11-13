@@ -1,5 +1,7 @@
-/** Copy for "My learning analysis" (Mathematics and English). English + Bengali. */
-const t = (en, bn) => ({ en, bn });
+/** Copy for "My learning analysis" (Mathematics and English). English + Bengali (+ Hindi where added: the
+ *  Localized type already allows `hi` and the CSS already hides/shows a `hi` slot, though the language
+ *  switcher offers only English and Bengali today, so `hi` text is stored and ready, not shown yet). */
+const t = (en, bn, hi) => (hi ? { en, bn, hi } : { en, bn });
 const bnNum = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
 export const AN = Object.freeze({
@@ -21,6 +23,7 @@ export const AN = Object.freeze({
   // Health / summary
   health: t('Learning health', 'শেখার স্বাস্থ্য'),
   mastery: t('Mastery', 'দক্ষতা'),
+  syllabus: t('Syllabus', 'সিলেবাস', 'पाठ्यक्रम'),
   accuracy: t('Accuracy', 'নির্ভুলতা'),
   weakTopics: t('Weak chapters', 'দুর্বল অধ্যায়'),
   incomplete: t('Incomplete chapters', 'অসম্পূর্ণ অধ্যায়'),
@@ -189,7 +192,7 @@ export const AN = Object.freeze({
   questionsAttempted: t('Questions attempted', 'প্রশ্নের চেষ্টা'),
   improvement: (d) => (d >= 0 ? t(`Improvement: +${d} percentage points`, `উন্নতি: +${bnNum(d)} শতাংশ পয়েন্ট`) : t(`Change: ${d} percentage points`, `পরিবর্তন: ${d} শতাংশ পয়েন্ট`)),
   strongestImprovement: t('Strongest improvement', 'সবচেয়ে বেশি উন্নতি'),
-  needsAttention: t('Needs attention', 'মনোযোগ দরকার'),
+  needsAttention: t('Needs attention', 'মনোযোগ দরকার', 'ध्यान देने योग्य'),
   weekly: t('Accuracy, week by week', 'সপ্তাহ অনুযায়ী নির্ভুলতা'),
   weekOf: (w) => t(`Week of ${w}`, `${w}-এর সপ্তাহ`),
   overWindow: (a, b, d) => t(`From ${a}% to ${b}%: ${d >= 0 ? '+' : ''}${d} points`, `${bnNum(a)}% থেকে ${bnNum(b)}%: ${d >= 0 ? '+' : ''}${d} পয়েন্ট`),

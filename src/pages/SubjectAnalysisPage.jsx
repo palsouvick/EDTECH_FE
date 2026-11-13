@@ -112,9 +112,16 @@ export default function SubjectAnalysisPage() {
 
 function SummaryRow({ s }) {
   const items = [
-    [AN.mastery, s.masteryPct == null ? '—' : `${s.masteryPct}%`],
+    [AN.mastery, (
+      <>
+        {s.masteryPct == null ? '—' : `${s.masteryPct}%`}
+        {s.syllabusMasteryPct != null && (
+          <span className="block text-xs font-semibold text-white/75"><Localized value={AN.syllabus} /> {s.syllabusMasteryPct}%</span>
+        )}
+      </>
+    )],
     [AN.accuracy, s.accuracyPct == null ? '—' : `${s.accuracyPct}%`],
-    [AN.weakTopics, s.weakChapters],
+    [AN.needsAttention, s.needsAttentionChapters],
     [AN.incomplete, s.incompleteChapters],
     [AN.openMistakes, s.openMistakes],
     [AN.openSkips, s.openSkips],
