@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -162,6 +162,37 @@ describe('book pages', () => {
     expect(readLocal('history').chapters['HIS-02'].practice.best).toMatchObject({ correct: 1, total: 3 });
     await user.click(within(result).getByRole('button', { name: /Test again on these sections/ }));
     expect(opts).toMatchObject({ mode: 'weak', sections: ['decline'] });
+  });
+
+  it('Geography: its own labels, a "Locate it" table, and no empty timeline, events or people', async () => {
+    const geo = {
+      ...chapter, book: 'geography', code: 'GEO-03', number: 3, part: 'india_land', title: 'ভারতের নদনদী ও হ্রদ', subtopics: ['rivers'],
+      prerequisites: [], events: [], people: [], timeline: [],
+      locate: [{ place: 'গঙ্গোত্রী হিমবাহ', where: 'উত্তরাখণ্ড', about: 'ভাগীরথীর উৎস', section: 'discovery' }],
+      previous: null, next: { code: 'GEO-04', number: 4, available: false },
+    };
+    renderAt('/learn/gk/geography/book/GEO-03', { getBookChapter: vi.fn(async () => geo) });
+    expect(await screen.findByRole('heading', { level: 1, name: 'ভারতের নদনদী ও হ্রদ' })).toBeInTheDocument();
+    expect(screen.getByText('Locate it')).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'গঙ্গোত্রী হিমবাহ' })).toBeInTheDocument();
+    expect(screen.getByText('West Bengal connection')).toBeInTheDocument();
+    expect(screen.queryByText('Timeline')).toBeNull();
+    expect(screen.queryByText('Important people')).toBeNull();
+  });
+
+  it('a GK card offers its book even before any chapter is ready (contents show "coming soon")', async () => {
+    const empty = { ...book, chapters: book.chapters.map((c) => ({ ...c, available: false })) };
+    const { BookEntryCard } = await import('../pages/learn/BookHomePage');
+    const source = { ...createFixtureDataSource({ latencyMs: 0 }), getBook: vi.fn(async () => empty) };
+    render(
+      <DataSourceProvider source={source}>
+        <MemoryRouter><BookEntryCard card="geography" /></MemoryRouter>
+      </DataSourceProvider>,
+    );
+    await waitFor(() => expect(source.getBook).toHaveBeenCalledWith('geography'));
+    const link = await screen.findByRole('link', { name: /Read Geography as a book/ });
+    expect(link).toHaveAttribute('href', '/learn/gk/geography/book');
+    expect(within(link).getByText(/0 of \d+ chapters ready to read; the rest are being written/)).toBeInTheDocument();
   });
 
   it('a chapter that is not available says so', async () => {

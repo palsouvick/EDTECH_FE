@@ -94,8 +94,20 @@ function TaskBody({ task, ctx }) {
 }
 
 /** One task of a plan day: tick, title, minutes, details by kind, and where to do it. */
-export function TaskCard({ task, done, onToggle, ctx }) {
+/** One task. `locked`: its day has not opened yet, so it is shown but cannot be started or ticked. */
+export function TaskCard({ task, done, onToggle, ctx, locked = false }) {
   const link = taskLink(task);
+  if (locked) {
+    return (
+      <li className="flex items-start gap-3 py-3 opacity-60">
+        <span aria-hidden="true" className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">🔒</span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-slate-700 dark:text-slate-300"><Localized value={taskTitle(task)} /></p>
+          {task.minutes > 0 && <Localized value={PLAN.minutes(task.minutes)} as="p" className="mt-0.5 text-xs text-slate-500 dark:text-slate-400" />}
+        </div>
+      </li>
+    );
+  }
   return (
     <li className="flex items-start gap-3 py-3">
       <button

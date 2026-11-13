@@ -147,6 +147,11 @@ describe('plan page', () => {
     expect(screen.getByText('What is 2 + 2?')).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /^A/ }));
     await user.click(screen.getByRole('button', { name: /Submit test/ }));
+    const confirm = await screen.findByRole('dialog', { name: /Submit the test\?/ });
+    expect(within(confirm).getByTestId('attempted')).toHaveTextContent('2');
+    expect(within(confirm).getByTestId('not-attempted')).toHaveTextContent('0');
+    expect(within(confirm).getByText('You have answered every question.')).toBeInTheDocument();
+    await user.click(within(confirm).getByRole('button', { name: /^Yes, submit/ }));
     expect(source.checkPlanTest).toHaveBeenCalledWith(1, expect.objectContaining({ testToken: 'tok', answers: [expect.objectContaining({ questionId: 'e1', selectedOptionId: 'opt_e10' }), expect.objectContaining({ questionId: 'm1', selectedOptionId: 'opt_m10' })] }));
     expect(await screen.findByText('Score: 1/2')).toBeInTheDocument();
     expect(screen.getByText(/Today's test: 1\/2 \(50%\)/)).toBeInTheDocument();
@@ -154,6 +159,30 @@ describe('plan page', () => {
     expect(screen.getByText(/Weak topic detected: Number System \(0%\)/)).toBeInTheDocument();
     expect(localPlan.read().tests['1'].correct).toBe(1);
     expect(localPlan.read().done).toContain('d1-2');
+  });
+
+  it('submitting asks first, with attempted and not-attempted counts', async () => {
+    localPlan.write({ startDate: localIsoDate(), done: [], version: 2 });
+    const { user, source } = renderPlan();
+    const today = await screen.findByRole('region', { name: /Today's target/ });
+    await user.click(within(today).getAllByRole('button', { name: /Start the test/ })[0]);
+    expect(await screen.findByText('English question')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /^A/ }));
+    await user.click(screen.getByRole('button', { name: /Submit test/ }));
+    let confirm = await screen.findByRole('dialog', { name: /Submit the test\?/ });
+    expect(within(confirm).getByTestId('total')).toHaveTextContent('2');
+    expect(within(confirm).getByTestId('attempted')).toHaveTextContent('1');
+    expect(within(confirm).getByTestId('not-attempted')).toHaveTextContent('1');
+    expect(within(confirm).getByText(/1 question is not answered yet/)).toBeInTheDocument();
+    // Back to the test: nothing is submitted.
+    await user.click(within(confirm).getByRole('button', { name: /^Back to test/ }));
+    expect(source.checkPlanTest).not.toHaveBeenCalled();
+    // Go to the first unanswered question.
+    await user.click(screen.getByRole('button', { name: /Submit test/ }));
+    confirm = await screen.findByRole('dialog', { name: /Submit the test\?/ });
+    await user.click(within(confirm).getByRole('button', { name: /^Go to first unanswered/ }));
+    expect(screen.getByText('What is 2 + 2?')).toBeInTheDocument();
+    expect(source.checkPlanTest).not.toHaveBeenCalled();
   });
 
   it('signed in: readiness with the biggest improvement area; strong topics may be skipped', async () => {

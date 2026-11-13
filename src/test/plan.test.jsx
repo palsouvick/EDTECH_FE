@@ -8,7 +8,7 @@ import { createFixtureDataSource } from '../lib/dataSource';
 import { createFixturePracticeSource } from '../lib/practiceSource';
 import { clearResourceCache } from '../hooks/useResource';
 import { languageStore } from '../hooks/useLanguagePreference';
-import { dayNumber, localIsoDate, localPlan, nextStep, taskLink } from '../lib/studyPlan';
+import { currentPlanDay, dayNumber, localIsoDate, localPlan, nextStep, taskLink } from '../lib/studyPlan';
 
 const t = (en, bn) => ({ en, bn });
 const learn = (id, subject, topic, priority, session) => ({ id, kind: 'learn', subject, topic, name: t(topic, topic), priority, session, minutes: 30 });
@@ -28,6 +28,21 @@ describe('plan logic', () => {
     expect(dayNumber('2026-11-06', '2026-12-05')).toBe(30);
     expect(dayNumber('2026-11-06', '2026-11-05')).toBe(0);
     expect(dayNumber('2026-10-30', '2026-11-02')).toBe(4);
+  });
+
+  it('a day opens only when the one before it is complete, never ahead of the calendar', () => {
+    // Calendar says Day 4, nothing done: still Day 1.
+    expect(currentPlanDay({ days, done: new Set(), calendarDay: 4 })).toBe(1);
+    // Day 1 half done: still Day 1.
+    expect(currentPlanDay({ days, done: new Set(['d1-1', 'd1-2']), calendarDay: 4 })).toBe(1);
+    // Day 1 complete: Day 2.
+    expect(currentPlanDay({ days, done: new Set(['d1-1', 'd1-2', 'd1-3']), calendarDay: 4 })).toBe(2);
+    // Finishing early does not jump ahead of the calendar.
+    expect(currentPlanDay({ days, done: new Set(['d1-1', 'd1-2', 'd1-3']), calendarDay: 1 })).toBe(1);
+    // Optional tasks do not block; past the end stays on the last day.
+    expect(currentPlanDay({ days, done: new Set(['d1-1', 'd1-2', 'd1-3', 'd2-1', 'd2-2', 'd3-1', 'd3-2']), calendarDay: 99 })).toBe(4);
+    // Before the start date: Day 1.
+    expect(currentPlanDay({ days, done: new Set(), calendarDay: 0 })).toBe(1);
   });
 
   it('what next: leftover first, then due revision, then today in order, then a weak chapter', () => {
@@ -108,13 +123,22 @@ describe('plan page (guest)', () => {
     expect(within(today).getByText('1 of 8 tasks done')).toBeInTheDocument();
   });
 
-  it('a plan started three days ago opens on Day 4 and first offers what was left', async () => {
+  it('a plan started three days ago with nothing done stays on Day 1 and locks later days', async () => {
     localPlan.write({ startDate: isoDaysAgo(3), done: [], version: 2 });
     renderAt('/plan');
     const next = await screen.findByRole('region', { name: /What should I study next/ });
-    expect(within(next).getByText(/Left over from Day 1/)).toBeInTheDocument();
+    expect(within(next).getByText('Study: polity (session 1 of 4)')).toBeInTheDocument();
     const today = screen.getByRole('region', { name: /Today's target/ });
-    expect(within(today).getByText('If you have time')).toBeInTheDocument();
+    expect(within(today).getByText(/Day 1 of 4/, { selector: 'span' })).toBeInTheDocument();
+    expect(within(today).getByText(/By the calendar it is Day 4\. Finish Day 1 first/)).toBeInTheDocument();
+    expect(screen.getByText('Locked — finish Day 1 to open')).toBeInTheDocument();
+  });
+
+  it('once Day 1 is complete, Day 2 opens', async () => {
+    localPlan.write({ startDate: isoDaysAgo(3), done: ['d1-1', 'd1-2', 'd1-3'], version: 2 });
+    renderAt('/plan');
+    const today = await screen.findByRole('region', { name: /Today's target/ });
+    expect(within(today).getByText(/Day 2 of 4/, { selector: 'span' })).toBeInTheDocument();
   });
 });
 

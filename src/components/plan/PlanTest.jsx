@@ -7,8 +7,18 @@ import { PLAN_UI } from '../../lib/planCopy';
 import { MOCK } from '../../lib/i18n';
 import { chapterLink } from '../../lib/studyPlan';
 import PyqBadge from '../practice/PyqBadge';
+import CheckAnswer, { checkedTone, useAnswerChecks } from '../practice/CheckAnswer';
 import { Localized } from '../topic-hub/Localized';
+import SubmitConfirmDialog from '../practice/SubmitConfirmDialog';
 import { LoadError } from '../../pages/funnel/FunnelLayout';
+
+// Options once their question is checked (see CheckAnswer).
+export const CHECKED_OPTION = {
+  correct: 'bg-emerald-50 ring-2 ring-emerald-500 dark:bg-emerald-500/15',
+  answer: 'bg-emerald-50/70 ring-emerald-400 dark:bg-emerald-500/10',
+  wrong: 'bg-rose-50 ring-2 ring-rose-500 dark:bg-rose-500/15',
+  dimmed: 'bg-white opacity-60 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700',
+};
 
 const btn = 'inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold';
 const mmss = (s) => `${String(Math.floor(Math.max(0, s) / 60)).padStart(2, '0')}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
@@ -95,10 +105,15 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
   const spent = useRef({});
   const [attempt, setAttempt] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const pausedAt = useRef(null);
+  const testToken = state.test?.testToken;
+  const peek = useCallback((questionId, selectedOptionId) => source.peekPlanTest(day, { testToken, questionId, selectedOptionId }), [source, day, testToken]);
+  const { checks, check, reset: resetChecks, isLocked } = useAnswerChecks(peek);
 
   useEffect(() => {
     let live = true;
+    resetChecks();
     setState({ status: 'loading' });
     setPicked({});
     setI(0);
@@ -116,7 +131,7 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
     return () => {
       live = false;
     };
-  }, [source, day, budget, attempt]);
+  }, [source, day, budget, attempt, resetChecks]);
 
   const questions = state.questions || [];
   const q = questions[i];
@@ -210,28 +225,48 @@ export default function PlanTest({ day, budget, onFinished, onClose }) {
       <div className="flex flex-wrap gap-2"><PyqBadge refs={q.pyq} /></div>
       <Localized value={q.stem} markdown as="div" className="text-lg font-medium text-slate-900 dark:text-white" />
       <div role="radiogroup" aria-label={PLAN_UI.questionOf(i + 1, questions.length).en} className="space-y-2">
-        {q.options.map((o, k) => (
-          <button
-            key={o.optionId}
-            type="button"
-            role="radio"
-            aria-checked={picked[q.questionId] === o.optionId}
-            onClick={() => setPicked((p) => ({ ...p, [q.questionId]: o.optionId }))}
-            className={`flex w-full items-start gap-3 rounded-xl p-3 text-left ring-1 ${picked[q.questionId] === o.optionId ? 'bg-indigo-50 ring-indigo-500 dark:bg-indigo-500/15' : 'bg-white ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:ring-slate-700'}`}
-          >
-            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm font-bold dark:bg-slate-800">{'ABCD'[k]}</span>
-            <Localized value={o.text} markdown inline />
-          </button>
-        ))}
+        {q.options.map((o, k) => {
+          const tone = checkedTone(checks[q.questionId]?.result, o.optionId);
+          return (
+            <button
+              key={o.optionId}
+              type="button"
+              role="radio"
+              aria-checked={picked[q.questionId] === o.optionId}
+              aria-disabled={tone ? true : undefined}
+              onClick={() => !isLocked(q.questionId) && !paused && setPicked((p) => ({ ...p, [q.questionId]: o.optionId }))}
+              className={`flex w-full items-start gap-3 rounded-xl p-3 text-left ring-1 ${tone ? CHECKED_OPTION[tone] : picked[q.questionId] === o.optionId ? 'bg-indigo-50 ring-indigo-500 dark:bg-indigo-500/15' : 'bg-white ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:ring-slate-700'}`}
+            >
+              <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm font-bold dark:bg-slate-800">{'ABCD'[k]}</span>
+              <Localized value={o.text} markdown inline />
+            </button>
+          );
+        })}
       </div>
+      {state.test.kind !== 'full_mock' && <CheckAnswer question={q} selectedOptionId={picked[q.questionId]} state={checks[q.questionId]} onCheck={check} disabled={paused} />}
       {state.submitError && <p role="alert" className="text-sm text-rose-700">{state.submitError.message}</p>}
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={i === 0} onClick={() => go(i - 1)} className={`${btn} ring-1 ring-slate-300 disabled:opacity-40 dark:ring-slate-700`}><Localized value={PLAN_UI.prev} /></button>
         {i < questions.length - 1 && <button type="button" onClick={() => go(i + 1)} className={`${btn} bg-slate-900 text-white dark:bg-white dark:text-slate-900`}><Localized value={PLAN_UI.next} /></button>}
-        <button type="button" onClick={submit} disabled={state.status === 'checking'} className={`${btn} ml-auto bg-emerald-600 text-white disabled:opacity-60`}>
+        <button type="button" onClick={() => setConfirming(true)} disabled={state.status === 'checking'} className={`${btn} ml-auto bg-emerald-600 text-white disabled:opacity-60`}>
           <Localized value={state.status === 'checking' ? PLAN_UI.checking : PLAN_UI.submit} />
         </button>
       </div>
+      <SubmitConfirmDialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          submit();
+        }}
+        total={questions.length}
+        answered={questions.filter((x) => picked[x.questionId]).length}
+        onGoToUnanswered={() => {
+          setConfirming(false);
+          const first = questions.findIndex((x) => !picked[x.questionId]);
+          if (first >= 0) go(first);
+        }}
+      />
       </>
     </div>
   );

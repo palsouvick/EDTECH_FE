@@ -100,6 +100,7 @@ export const CT = Object.freeze({
     mastery: t('Mastery test', 'দক্ষতা যাচাই টেস্ট'),
     challenge: t('Challenge test', 'চ্যালেঞ্জ টেস্ট'),
     followup: t('Targeted practice', 'লক্ষ্যভিত্তিক অনুশীলন'),
+    smart: t('Smart Quiz', 'Smart Quiz'),
   },
   subjects: { quant: t('Mathematics', 'গণিত'), english: t('English', 'ইংরেজি'), gs: t('General Knowledge', 'সাধারণ জ্ঞান') },
   errors: {

@@ -20,6 +20,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getPyqProgress(subject)                       -> { topics: { polity: { total, attempted, solved } } } (signed in)
  *   getStudyPlan(budget) / getPlanProgress() / startPlan({ startDate, reset, budget, examDate }) / setPlanTasks({ done, undone }) -> 60-day Clerkship plan
  *   createPlanTest(day, { budget, language }) / checkPlanTest(day, { testToken, answers }) -> plan tests
+ *   peekPlanTest(day, { testToken, questionId, selectedOptionId }) / peekIdoTest(body) / peekLearnQuiz(body)
+ *                                                 -> one question's answer + explanation mid-test (not recorded)
  *   getPriorities()                               -> { paperCount, rule, subjects: { gs: { topics: { polity: { share, papers, level } } } } }
  *   pyqPracticeSource({ exam, year, subject, topic }) -> arena source over previous-year questions
  *   createMock(payload)                           -> mock session (questions without answers)
@@ -30,6 +32,10 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getCustomTestOptions(subject, language) / previewCustomTest(body) / createCustomTest(body)
  *   checkCustomAnswer(sessionId, { questionId, selectedOptionId }) / getCustomTestReport(sessionId)
  *   getCustomTestHistory(subject)                 -> custom chapter tests (signed-in, http only)
+ *   getLearningOverview(language)                 -> Math + English learning health and current focus (signed in)
+ *   getLearningAnalysis(subject, language)        -> one subject's full learning analysis (quant | english)
+ *   logStudyTime({ subject, topic, seconds, section, sectionsTotal }) -> lesson reading heartbeat
+ *   setSkipReason(questionId, reason)             -> the student's own reason for a skipped question
  *   getMe()                                       -> { user } (user is null when signed out)
  *   login({ email, password })                    -> { user }
  *   register({ name, email, password })           -> { user }
@@ -87,6 +93,7 @@ export function createHttpDataSource() {
     getStudyPlan: (budget) => request(`/plan/clerkship-60${budget ? `?budget=${budget}` : ''}`),
     createPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test`, { method: 'POST', body }),
     checkPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test/check`, { method: 'POST', body }),
+    peekPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test/peek`, { method: 'POST', body }),
     getPlanProgress: () => request('/plan/clerkship-60/progress'),
     startPlan: (body) => request('/plan/clerkship-60/progress', { method: 'PUT', body }),
     setPlanTasks: (body) => request('/plan/clerkship-60/tasks', { method: 'POST', body }),
@@ -98,6 +105,7 @@ export function createHttpDataSource() {
     createIdoFullMock: (body) => request('/plan/ido/test/full-mock', { method: 'POST', body }),
     createIdoSectional: (section, body) => request(`/plan/ido/test/section/${section}`, { method: 'POST', body }),
     checkIdoTest: (body) => request('/plan/ido/test/check', { method: 'POST', body }),
+    peekIdoTest: (body) => request('/plan/ido/test/peek', { method: 'POST', body }),
     pyqPracticeSource: (filters) => createPyqPracticeSource(filters),
     createMock: (payload) => request('/mock/create-session', { method: 'POST', body: payload }),
     getMockSession: (sessionId) => request(`/mock/session/${sessionId}`),
@@ -111,6 +119,10 @@ export function createHttpDataSource() {
     checkCustomAnswer: (sessionId, body) => request(`/custom-tests/${sessionId}/check`, { method: 'POST', body }),
     getCustomTestReport: (sessionId) => request(`/custom-tests/${sessionId}/report`),
     getCustomTestHistory: (subject) => request(`/custom-tests/history?subject=${subject}`),
+    getLearningOverview: (language = 'en') => request(`/me/analysis?tz=${-new Date().getTimezoneOffset()}&language=${language}`),
+    getLearningAnalysis: (subject, language = 'en') => request(`/me/analysis/${subject}?tz=${-new Date().getTimezoneOffset()}&language=${language}`),
+    logStudyTime: (body) => request('/me/study-log', { method: 'POST', body }),
+    setSkipReason: (questionId, reason) => request(`/me/skips/${questionId}`, { method: 'PUT', body: { reason } }),
     // The session is an httpOnly cookie set by the server; the token in the body is for non-browser clients.
     getMe: () => request('/auth/me'),
     login: (body) => request('/auth/login', { method: 'POST', body }),
@@ -138,6 +150,7 @@ export function createHttpDataSource() {
     getLearnChapter: (subject, topic) => request(`/learn/subjects/${subject}/chapters/${topic}`),
     createLearnQuiz: (body) => request('/learn/quiz', { method: 'POST', body }),
     checkLearnQuiz: (body) => request('/learn/quiz/check', { method: 'POST', body }),
+    peekLearnQuiz: (body) => request('/learn/quiz/peek', { method: 'POST', body }),
     getLearnProgress: () => request('/learn/progress'),
     putLearnProgress: (entries) => request('/learn/progress', { method: 'PUT', body: { entries } }),
     getGkCards: () => request('/gk/cards'),
@@ -455,9 +468,15 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getPyqFilters: learnOffline,
     getPriorities: learnOffline,
     getPyqProgress: (subject) => wait({ subject, topics: {} }),
+    // The learning analysis is computed on the server from recorded answers.
+    getLearningOverview: learnOffline,
+    getLearningAnalysis: learnOffline,
+    logStudyTime: () => wait({}),
+    setSkipReason: (questionId, reason) => wait({ questionId, reason }),
     getStudyPlan: learnOffline,
     createPlanTest: learnOffline,
     checkPlanTest: learnOffline,
+    peekPlanTest: learnOffline,
     getPlanProgress: learnOffline,
     startPlan: learnOffline,
     setPlanTasks: learnOffline,
@@ -469,9 +488,11 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     createIdoFullMock: learnOffline,
     createIdoSectional: learnOffline,
     checkIdoTest: learnOffline,
+    peekIdoTest: learnOffline,
     pyqPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     createLearnQuiz: learnOffline,
     checkLearnQuiz: learnOffline,
+    peekLearnQuiz: learnOffline,
     getGkCards: learnOffline,
     listGkFacts: learnOffline,
     getGkCurrentAffairsMonths: learnOffline,

@@ -7,7 +7,7 @@ export const bnNum = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫�
 const N = (n) => L(String(n), bnNum(n));
 
 /** GK cards that have a book, and where it lives. */
-export const BOOK_FOR_CARD = Object.freeze({ indian_history: 'history' });
+export const BOOK_FOR_CARD = Object.freeze({ indian_history: 'history', geography: 'geography' });
 /** Card code from the address (`indian-history` → `indian_history`). */
 export const cardFromSlug = (slug = '') => slug.replace(/-/g, '_');
 const slugOf = (card) => card.toLowerCase().replace(/_/g, '-');
@@ -87,6 +87,10 @@ export const BOOK = {
     'পরীক্ষার নাম ও সাল শুধু এই অ্যাপে থাকা আসল পূর্ববর্তী প্রশ্নপত্র থেকে নেওয়া। WBP, KP ও SSC-র ইতিহাসের প্রশ্নপত্র এখনও অ্যাপে নেই, তাই সেগুলির ক্ষেত্রে গুরুত্ব কেবল সিলেবাস অনুযায়ী।',
   ),
   bengalConnection: L('Bengal connection', 'বাংলার যোগ'),
+  locate: L('Locate it', 'কোথায় অবস্থিত'),
+  locatePlace: L('Place', 'স্থান'),
+  locateWhere: L('Where', 'কোথায়'),
+  locateAbout: L('What to remember', 'কী মনে রাখবে'),
   quickRevision: L('Quick revision', 'দ্রুত রিভিশন'),
   pyqConnection: L('Previous-year question connection', 'পূর্ববর্তী বছরের প্রশ্নের সঙ্গে যোগ'),
   pyqConnectionNone: L('No previous-year question in the app is linked to this chapter yet.', 'এই অ্যাপের কোনও পূর্ববর্তী প্রশ্ন এখনও এই অধ্যায়ের সঙ্গে যুক্ত হয়নি।'),
@@ -123,3 +127,24 @@ export const BOOK = {
   notFound: L('This chapter is not available yet.', 'এই অধ্যায়টি এখনও পাওয়া যায় না।'),
   num: N,
 };
+
+/** Labels that name the book (History or Geography); everything else in BOOK is shared. */
+const BOOK_NAMED = Object.freeze({
+  geography: {
+    open: L('Read Geography as a book', 'ভূগোল বইয়ের মতো পড়ো'),
+    homeTitle: L('Geography: study like a book', 'ভূগোল: বইয়ের মতো পড়ো'),
+    homeIntro: L(
+      'Read each chapter in order, practise its questions, see your weak sections and revise them. Chapter text is in Bengali, based on NCERT and West Bengal school textbooks.',
+      'প্রতিটি অধ্যায় ক্রম অনুযায়ী পড়ো, তার প্রশ্ন অনুশীলন করো, দুর্বল অংশ দেখে আবার পড়ো। অধ্যায়ের লেখা বাংলায়, এনসিইআরটি ও পশ্চিমবঙ্গের স্কুল পাঠ্যবইয়ের ভিত্তিতে।',
+    ),
+    backToCard: L('Geography card', 'ভূগোল কার্ড'),
+    examFocusNote: L(
+      'Exam names and years come only from real previous-year papers in this app. For WBP, KP and SSC there are no Geography papers in the app yet, so their relevance is by syllabus only.',
+      'পরীক্ষার নাম ও সাল শুধু এই অ্যাপে থাকা আসল পূর্ববর্তী প্রশ্নপত্র থেকে নেওয়া। WBP, KP ও SSC-র ভূগোলের প্রশ্নপত্র এখনও অ্যাপে নেই, তাই সেগুলির ক্ষেত্রে গুরুত্ব কেবল সিলেবাস অনুযায়ী।',
+    ),
+    bengalConnection: L('West Bengal connection', 'পশ্চিমবঙ্গের যোগ'),
+  },
+});
+
+/** BOOK with the labels of one book (`history` keeps the original wording). */
+export const bookLabels = (book) => ({ ...BOOK, ...(BOOK_NAMED[book] || {}) });

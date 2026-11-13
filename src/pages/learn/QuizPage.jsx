@@ -5,11 +5,13 @@ import { LEARN, QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
 import { levelProgress, pushLevel, recordQuiz } from '../../lib/learnProgress';
 import { useOptionalAuth } from '../../app/AuthContext';
 import SourceCheckBadge from '../../components/practice/SourceCheckBadge';
+import CheckAnswer, { checkedTone, useAnswerChecks } from '../../components/practice/CheckAnswer';
 import { QUIZ_LEVEL_CODES, codeFromSlug, learnPaths, subjectCodeFromSlug } from '../../lib/routes';
 import PageShell from '../../components/navigation/PageShell';
 import OptionButton, { OPTION_LETTERS } from '../../components/practice/OptionButton';
 import { Localized } from '../../components/topic-hub/Localized';
 import { CheckIcon, XIcon } from '../../components/topic-hub/icons';
+import { NextSmartQuizAfterTest } from '../../components/analysis/AnalysisParts';
 import { LoadError } from '../funnel/FunnelLayout';
 
 const fmt = (ms) => {
@@ -41,7 +43,8 @@ function useCountdown(deadline, onExpire, paused = false) {
   return deadline ? Math.max(0, deadline - now) : null;
 }
 
-function QuestionCard({ question, selected, onSelect }) {
+function QuestionCard({ question, selected, onSelect, check, onCheck, paused }) {
+  const result = check?.status === 'done' ? check.result : null;
   return (
     <article className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800">
       {question.sourceCheck && (
@@ -59,13 +62,15 @@ function QuestionCard({ question, selected, onSelect }) {
             key={o.optionId}
             option={o}
             index={i}
-            status={selected === o.optionId ? 'selected' : 'idle'}
+            status={checkedTone(result, o.optionId) ?? (selected === o.optionId ? 'selected' : 'idle')}
             checked={selected === o.optionId}
             focusable
+            disabled={Boolean(result) || paused}
             onSelect={onSelect}
           />
         ))}
       </div>
+      <CheckAnswer question={question} selectedOptionId={selected} state={check} onCheck={onCheck} disabled={paused} />
     </article>
   );
 }
@@ -200,6 +205,8 @@ function Results({ subject, topic, level, quiz, outcome, timedOut, onRetry }) {
         </div>
       </section>
 
+      <NextSmartQuizAfterTest subject={subject} />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Localized value={LEARN.reviewTitle} as="h2" className="text-xl font-bold text-slate-900 dark:text-white" />
         <div role="group" className="inline-flex rounded-full bg-slate-100 p-0.5 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
@@ -251,10 +258,16 @@ export default function QuizPage() {
   const pausedAt = useRef(null);
   const timeSpent = useRef({});
   const shownAt = useRef(Date.now());
+  const peek = useCallback(
+    (questionId, selectedOptionId) => source.peekLearnQuiz({ subject, topic, quizToken: quiz.quizToken, questionId, selectedOptionId }),
+    [source, subject, topic, quiz],
+  );
+  const { checks, check, reset: resetChecks, isLocked } = useAnswerChecks(peek);
 
   useEffect(() => {
     if (!valid) return undefined;
     let alive = true;
+    resetChecks();
     setPhase('loading');
     setQuiz(null);
     setAnswers({});
@@ -292,7 +305,7 @@ export default function QuizPage() {
     return () => {
       alive = false;
     };
-  }, [valid, source, subject, topic, level, pattern, attempt]);
+  }, [valid, source, subject, topic, level, pattern, attempt, resetChecks]);
 
   const noteTime = useCallback(() => {
     const q = quiz?.questions[index];
@@ -365,7 +378,7 @@ export default function QuizPage() {
     const onKey = (e) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select')) return;
       const q = quiz.questions[index];
-      const option = q.options[Number(e.key) - 1];
+      const option = isLocked(q.questionId) ? null : q.options[Number(e.key) - 1];
       if (option) setAnswers((a) => ({ ...a, [q.questionId]: option.optionId }));
       else if (e.key === 'ArrowRight' && index < quiz.questions.length - 1) {
         noteTime();
@@ -377,7 +390,7 @@ export default function QuizPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, quiz, index, confirming, paused, noteTime]);
+  }, [phase, quiz, index, confirming, paused, noteTime, isLocked]);
 
   if (!valid) return <Navigate to="/" replace />;
 
@@ -472,7 +485,10 @@ export default function QuizPage() {
               key={question.questionId}
               question={question}
               selected={answers[question.questionId]}
-              onSelect={(optionId) => setAnswers((a) => ({ ...a, [question.questionId]: optionId }))}
+              onSelect={(optionId) => !isLocked(question.questionId) && setAnswers((a) => ({ ...a, [question.questionId]: optionId }))}
+              check={checks[question.questionId]}
+              onCheck={check}
+              paused={paused}
             />
             </>
           </>

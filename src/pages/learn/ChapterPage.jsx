@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
+import { useStudyHeartbeat } from '../../hooks/useStudyHeartbeat';
 import { useResource } from '../../hooks/useResource';
 import { LEARN, LEVEL_META, QUIZ_LEVELS, TONES } from '../../lib/learnCopy';
 import { lessonProgress, levelProgress, rememberChapter, toggleLessonBookmark, updateLessonProgress } from '../../lib/learnProgress';
@@ -145,6 +146,13 @@ function Lesson({ lesson, isMath, subject, topic, quizLevels, patternResource })
   const [bookmarks, setBookmarks] = useState(saved.bookmarks);
   const sections = guidedNav;
   const selectedIndex = Math.max(0, sections.findIndex(([key]) => key === activeSection));
+  // Reading time and sections read, for the learning analysis (signed-in Math/English only).
+  useStudyHeartbeat({
+    subject,
+    topic,
+    section: guided ? activeSection : level?.level ?? `level${active}`,
+    sectionsTotal: guided ? guidedNav.length : lesson.levels.length,
+  });
   const selectSection = (key) => {
     setActiveSection(key);
     updateLessonProgress(subject, topic, { section: key });

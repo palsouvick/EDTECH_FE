@@ -158,6 +158,11 @@ function stubSource() {
       });
       return { results, score: { correct: results.filter((r) => r.isCorrect).length, total: results.length } };
     }),
+    peekLearnQuiz: vi.fn(async ({ questionId, selectedOptionId }) => {
+      const n = questionId.slice(1);
+      const correctOptionId = `opt_a${n}aa`;
+      return { questionId, selectedOptionId, isCorrect: selectedOptionId === correctOptionId, correctOptionId, steps: [t(`Because ${n}.`, `কারণ ${n}।`)], shortcut: null, trapForSelected: null };
+    }),
   };
 }
 
@@ -355,6 +360,24 @@ describe('learn', () => {
     await user.click(screen.getByRole('button', { name: /Try again with new questions/ }));
     await screen.findByText('Question number 3?');
     expect(source.createLearnQuiz).toHaveBeenLastCalledWith(expect.objectContaining({ level: 'beginner', exclude: ['q1', 'q2'] }));
+  });
+
+  it('"Check answer" mid-quiz shows the answer and explanation, then locks the question', async () => {
+    const { user, source } = renderAt('/learn/math/percentage/quiz/beginner');
+    await screen.findByText('Question number 1?');
+    await user.click(screen.getByRole('radio', { name: /wrong 1/ }));
+    await user.click(screen.getByRole('button', { name: /Check answer & explanation/ }));
+    const result = await screen.findByTestId('check-answer-result');
+    expect(within(result).getByText(/Not quite/)).toBeInTheDocument();
+    expect(within(result).getByText(/right 1/)).toBeInTheDocument();
+    expect(within(result).getByText('Because 1.')).toBeInTheDocument();
+    expect(source.peekLearnQuiz).toHaveBeenCalledWith(expect.objectContaining({ quizToken: expect.stringMatching(/^token-/), questionId: 'q1', selectedOptionId: 'opt_b1bb' }));
+    // Locked: picking another option does not change the answer.
+    await user.click(screen.getByRole('radio', { name: /right 1/ }));
+    expect(screen.getByRole('radio', { name: /wrong 1/ })).toHaveAttribute('aria-checked', 'true');
+    // The next question has its own check button.
+    await user.click(screen.getByRole('button', { name: /Next/ }));
+    expect(screen.getByRole('button', { name: /Check answer & explanation/ })).toBeInTheDocument();
   });
 
   it('asks before finishing with unanswered questions', async () => {

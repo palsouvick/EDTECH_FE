@@ -6,7 +6,7 @@ import PracticeArena from '../../components/practice/PracticeArena';
 import { Localized, MathMarkdown } from '../../components/topic-hub/Localized';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import useBookProgress from '../../hooks/useBookProgress';
-import { BOOK, BOOK_FOR_CARD, bnNum, cardFromSlug, bookChapterPath, bookHomePath } from '../../lib/bookCopy';
+import { BOOK, BOOK_FOR_CARD, bnNum, bookLabels, cardFromSlug, bookChapterPath, bookHomePath } from '../../lib/bookCopy';
 import { chapterStatus, tally, weakSections } from '../../lib/bookProgress';
 import { ProgressBar } from './BookHomePage';
 import { gkTopicPath } from './GkChapterPage';
@@ -451,6 +451,7 @@ export default function BookChapterPage() {
 
           {depth !== 'quick' && (
             <>
+              {chapter.events.length > 0 && (
               <Block title={BOOK.events}>
                 <ol className="space-y-3">
                   {chapter.events.map((e, i) => (
@@ -462,7 +463,9 @@ export default function BookChapterPage() {
                   ))}
                 </ol>
               </Block>
+              )}
 
+              {chapter.people.length > 0 && (
               <Block title={BOOK.people}>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {chapter.people.map((p, i) => (
@@ -474,9 +477,36 @@ export default function BookChapterPage() {
                   ))}
                 </ul>
               </Block>
+              )}
             </>
           )}
 
+          {chapter.locate?.length > 0 && (
+            <Block title={BOOK.locate}>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[32rem] text-left text-sm" lang="bn">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                      <th className="py-2 pr-3"><Localized value={BOOK.locatePlace} /></th>
+                      <th className="py-2 pr-3"><Localized value={BOOK.locateWhere} /></th>
+                      <th className="py-2"><Localized value={BOOK.locateAbout} /></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chapter.locate.map((x, i) => (
+                      <tr key={i} className="border-b border-slate-100 align-top last:border-0 dark:border-slate-800">
+                        <td className="py-2 pr-3 font-bold text-slate-900 dark:text-white">{x.place}</td>
+                        <td className="py-2 pr-3 text-slate-700 dark:text-slate-200">{x.where}</td>
+                        <td className="py-2 text-slate-700 dark:text-slate-200">{x.about}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Block>
+          )}
+
+          {chapter.timeline.length > 0 && (
           <Block title={BOOK.timeline}>
             <ol className="relative space-y-3 border-l-2 border-indigo-200 pl-4 dark:border-indigo-500/40" lang="bn">
               {chapter.timeline.map((t, i) => (
@@ -488,6 +518,7 @@ export default function BookChapterPage() {
               ))}
             </ol>
           </Block>
+          )}
 
           {depth !== 'quick' && (
             <>
@@ -530,10 +561,10 @@ export default function BookChapterPage() {
                 </li>
               ))}
             </ul>
-            <Localized value={BOOK.examFocusNote} as="p" className="mt-3 text-xs text-amber-900/80 dark:text-amber-100/70" />
+            <Localized value={bookLabels(chapter.book).examFocusNote} as="p" className="mt-3 text-xs text-amber-900/80 dark:text-amber-100/70" />
           </Block>
 
-          <Block title={BOOK.bengalConnection} tone="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-200 sm:p-5 dark:bg-emerald-500/10 dark:ring-emerald-500/30">
+          <Block title={bookLabels(chapter.book).bengalConnection} tone="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-200 sm:p-5 dark:bg-emerald-500/10 dark:ring-emerald-500/30">
             <Text className="!text-emerald-950 dark:!text-emerald-100">{chapter.bengalConnection.body}</Text>
           </Block>
 

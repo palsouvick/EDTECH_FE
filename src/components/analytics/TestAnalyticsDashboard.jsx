@@ -26,6 +26,7 @@ import { ArrowRightIcon, TrophyIcon } from '../topic-hub/icons';
 import { AnswerBar, RingGauge, TimeChart, TopicAccuracyBars } from './charts';
 import ReviewMatrix from './ReviewMatrix';
 import LossReasons from './LossReasons';
+import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 
 const WEAK_TOPIC_PRACTICE = 15;
 
@@ -233,6 +234,9 @@ export default function TestAnalyticsDashboard({ sessionId, source, meta, backTo
 
       {/* Why did I lose marks? (sources without the save call, e.g. older fixtures, skip it) */}
       {source?.setLossReason && <LossReasons sessionId={sessionId} source={source} data={d} />}
+
+      {/* Your next Smart Quiz, from everything including this test (Math / English, signed in) */}
+      <NextSmartQuizAfterTest subject={d.subject.code} source={source} />
 
       {/* Retention hooks: the two things to do next */}
       <div className="grid gap-4 md:grid-cols-2">

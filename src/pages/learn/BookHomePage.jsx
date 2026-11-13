@@ -5,7 +5,7 @@ import PageShell from '../../components/navigation/PageShell';
 import { Localized } from '../../components/topic-hub/Localized';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import useBookProgress from '../../hooks/useBookProgress';
-import { BOOK, BOOK_FOR_CARD, bnNum, cardFromSlug, bookChapterPath, bookHomePath } from '../../lib/bookCopy';
+import { BOOK, BOOK_FOR_CARD, bnNum, bookLabels, cardFromSlug, bookChapterPath, bookHomePath } from '../../lib/bookCopy';
 import { bookSummary } from '../../lib/bookProgress';
 
 const box = 'rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-800';
@@ -65,13 +65,15 @@ export function BookEntryCard({ card, onlyIfStarted = false, className = '' }) {
     };
   }, [source, bookCode]);
   if (!bookCode || (onlyIfStarted && !progress.last)) return null;
+  // A book is offered as soon as its table of contents exists: chapters still being written show as
+  // "coming soon" in the contents, so the student sees the whole book from the start.
   if (book && progress.last) return <div className={className}><ContinueReading card={card} book={book} progress={progress} compact /></div>;
   if (onlyIfStarted) return null;
   return (
     <Link to={bookHomePath(card)} className={`${className} ${box} flex items-center gap-3 border-l-4 border-indigo-500 hover:bg-indigo-50/60 dark:hover:bg-slate-800/60`}>
       <span aria-hidden="true" className="text-3xl">📖</span>
       <span className="min-w-0 flex-1">
-        <Localized value={BOOK.open} className="block font-bold text-slate-900 dark:text-white" />
+        <Localized value={bookLabels(bookCode).open} className="block font-bold text-slate-900 dark:text-white" />
         <Localized value={BOOK.openHint} className="block text-sm text-slate-600 dark:text-slate-300" />
         {book && <Localized value={BOOK.chaptersReady(book.chapters.filter((c) => c.available).length, book.chapters.length)} className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400" />}
       </span>
@@ -110,7 +112,7 @@ export default function BookHomePage() {
   return (
     <PageShell className="max-w-4xl pb-16 pt-6 sm:pt-8">
       <Link to={`/learn/gk/${slug}`} className="inline-flex min-h-10 items-center text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">
-        ← <Localized value={BOOK.backToCard} />
+        ← <Localized value={bookLabels(bookCode).backToCard} />
       </Link>
       {!bookCode && <Localized value={BOOK.notFound} as="p" className="mt-4 text-slate-700 dark:text-slate-200" />}
       {state.status === 'loading' && bookCode && <CardGridSkeleton count={3} height="h-24" />}
@@ -118,8 +120,8 @@ export default function BookHomePage() {
       {book && summary && (
         <div className="mt-2 space-y-5">
           <header>
-            <Localized value={BOOK.homeTitle} as="h1" className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white" />
-            <Localized value={BOOK.homeIntro} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+            <Localized value={bookLabels(bookCode).homeTitle} as="h1" className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white" />
+            <Localized value={bookLabels(bookCode).homeIntro} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
             <div className="mt-3 space-y-1">
               <div className="flex flex-wrap justify-between gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                 <Localized value={BOOK.completed(summary.percent)} />

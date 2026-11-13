@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { AN } from '../../lib/analysisCopy';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { REVISION } from '../../lib/revisionCopy';
 import { REVIEW } from '../../lib/reviewCopy';
@@ -93,6 +94,10 @@ function AccountControl({ auth, className = '' }) {
           </div>
           <Link role="menuitem" to="/me" className={item} onClick={() => setOpen(false)}>
             <Localized value={AUTH.myPerformance} />
+          </Link>
+          <Link role="menuitem" to="/analysis" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">🧭 </span>
+            <Localized value={AN.openShort} />
           </Link>
           <Link role="menuitem" to="/mastery" className={item} onClick={() => setOpen(false)}>
             <span aria-hidden="true">🗺️ </span>

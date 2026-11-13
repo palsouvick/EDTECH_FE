@@ -7,6 +7,7 @@ import { languageStore } from '../hooks/useLanguagePreference';
 import ExamInfoPanel from '../components/exam-info/ExamInfoPanel';
 import IdoTest from '../components/ido/IdoTest';
 import { Localized } from '../components/topic-hub/Localized';
+import PageShell from '../components/navigation/PageShell';
 import { LoadError } from './funnel/FunnelLayout';
 import { box } from '../components/plan/PlanParts';
 import { chapterLink } from '../lib/studyPlan';
@@ -83,7 +84,7 @@ export default function IdoDashboardPage() {
   const daysLeft = Math.max(0, Math.ceil((APPLY_CLOSE - Date.now()) / 86400000));
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-5 px-4 py-6">
+    <PageShell className="max-w-5xl space-y-5 py-6">
       <header className="space-y-2">
         <h1 className="text-2xl font-black text-slate-900 dark:text-white">🏛️ <Localized value={IDO_UI.title} /></h1>
         <Localized value={IDO_UI.subtitle} as="p" className="text-sm text-slate-600 dark:text-slate-300" />
@@ -235,6 +236,6 @@ export default function IdoDashboardPage() {
           ))}
         </div>
       </section>
-    </main>
+    </PageShell>
   );
 }

@@ -7,7 +7,10 @@ import { MOCK } from '../../lib/i18n';
 import { IDO_UI } from '../../lib/idoCopy';
 import { chapterLink } from '../../lib/studyPlan';
 import PyqBadge from '../practice/PyqBadge';
+import CheckAnswer, { checkedTone, useAnswerChecks } from '../practice/CheckAnswer';
+import { CHECKED_OPTION } from '../plan/PlanTest';
 import { Localized } from '../topic-hub/Localized';
+import SubmitConfirmDialog from '../practice/SubmitConfirmDialog';
 import { LoadError } from '../../pages/funnel/FunnelLayout';
 
 const btn = 'inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold';
@@ -98,10 +101,15 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
   const [attempt, setAttempt] = useState(0);
   const submitted = useRef(false);
   const [paused, setPaused] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const pausedAt = useRef(null);
+  const testToken = state.test?.testToken;
+  const peek = useCallback((questionId, selectedOptionId) => source.peekIdoTest({ testToken, questionId, selectedOptionId }), [source, testToken]);
+  const { checks, check, reset: resetChecks, isLocked } = useAnswerChecks(peek);
 
   useEffect(() => {
     let live = true;
+    resetChecks();
     setState({ status: 'loading' });
     setPicked({});
     setI(0);
@@ -118,7 +126,7 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
       (error) => live && setState({ status: 'error', error }),
     );
     return () => { live = false; };
-  }, [source, createTest, attempt]);
+  }, [source, createTest, attempt, resetChecks]);
 
   const questions = state.questions || [];
   const test = state.test;
@@ -217,28 +225,46 @@ export default function IdoTest({ createTest, onFinished, onClose }) {
         <div className="mt-3 grid gap-2">
           {q.options.map((o) => {
             const active = picked[q.questionId] === o.optionId;
+            const tone = checkedTone(checks[q.questionId]?.result, o.optionId);
             return (
               <button
                 key={o.optionId}
                 type="button"
                 aria-pressed={active}
-                onClick={() => setPicked((p) => ({ ...p, [q.questionId]: o.optionId }))}
-                className={`min-h-11 rounded-xl px-4 py-2 text-left text-sm ring-1 transition-colors ${active ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-slate-800 ring-slate-200 hover:bg-indigo-50 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700'}`}
+                aria-disabled={tone ? true : undefined}
+                onClick={() => !isLocked(q.questionId) && !paused && setPicked((p) => ({ ...p, [q.questionId]: o.optionId }))}
+                className={`min-h-11 rounded-xl px-4 py-2 text-left text-sm ring-1 transition-colors ${tone ? `text-slate-800 dark:text-slate-100 ${CHECKED_OPTION[tone]}` : active ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-slate-800 ring-slate-200 hover:bg-indigo-50 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700'}`}
               >
                 <Localized value={o.text} markdown inline />
               </button>
             );
           })}
         </div>
+        {test.kind !== 'full_mock' && <CheckAnswer question={q} selectedOptionId={picked[q.questionId]} state={checks[q.questionId]} onCheck={check} disabled={paused} />}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" disabled={i === 0} onClick={() => go(i - 1)} className={`${btn} ring-1 ring-slate-300 disabled:opacity-40 dark:ring-slate-700`}>←</button>
         <button type="button" disabled={i === questions.length - 1} onClick={() => go(i + 1)} className={`${btn} ring-1 ring-slate-300 disabled:opacity-40 dark:ring-slate-700`}>→</button>
-        <button type="button" onClick={submit} disabled={state.status === 'checking'} className={`${btn} ml-auto bg-emerald-600 text-white disabled:opacity-50`}>
+        <button type="button" onClick={() => setConfirming(true)} disabled={state.status === 'checking'} className={`${btn} ml-auto bg-emerald-600 text-white disabled:opacity-50`}>
           {state.status === 'checking' ? '…' : <Localized value={PLAN_UI.submit ?? { en: 'Submit', bn: 'জমা দাও' }} />}
         </button>
         <button type="button" onClick={onClose} className={`${btn} text-slate-600 ring-1 ring-slate-200 dark:text-slate-300 dark:ring-slate-700`}><Localized value={PLAN_UI.close} /></button>
       </div>
+      <SubmitConfirmDialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          submit();
+        }}
+        total={questions.length}
+        answered={questions.filter((x) => picked[x.questionId]).length}
+        onGoToUnanswered={() => {
+          setConfirming(false);
+          const first = questions.findIndex((x) => !picked[x.questionId]);
+          if (first >= 0) go(first);
+        }}
+      />
       <div className="flex flex-wrap gap-1">
         {questions.map((qq, idx) => (
           <button

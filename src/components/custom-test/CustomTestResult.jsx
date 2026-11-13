@@ -8,6 +8,7 @@ import PageShell from '../navigation/PageShell';
 import { Localized } from '../topic-hub/Localized';
 import { LoadError } from '../../pages/funnel/FunnelLayout';
 import CustomTestDialog from './CustomTestDialog';
+import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 import { useStartCustomTest } from './useStartCustomTest';
 
 const card = 'rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-800';
@@ -270,6 +271,7 @@ export default function CustomTestResult({ sessionId }) {
       </section>
 
       {dialog && <CustomTestDialog open onClose={() => setDialog(false)} subject={subject} initial={{ topics: r.custom.topics, mode: r.custom.mode }} />}
+      <div className="mt-6"><NextSmartQuizAfterTest subject={subject} /></div>
     </PageShell>
   );
 }

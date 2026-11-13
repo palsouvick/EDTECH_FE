@@ -7,10 +7,12 @@ import { languageStore } from '../hooks/useLanguagePreference';
 import { preferencesAllowed } from '../lib/consent';
 import IdoTest from '../components/ido/IdoTest';
 import { Localized } from '../components/topic-hub/Localized';
+import PageShell from '../components/navigation/PageShell';
 import { LoadError } from './funnel/FunnelLayout';
 import { TaskCard, box } from '../components/plan/PlanParts';
 import { PLAN, PLAN_UI } from '../lib/planCopy';
 import { IDO_UI } from '../lib/idoCopy';
+import { currentPlanDay } from '../lib/studyPlan';
 
 const LOCAL_KEY = 'edtech:ido-plan';
 const DURATIONS = [30, 45, 60];
@@ -116,10 +118,13 @@ export default function IdoPlanPage() {
     } else persist({ ...progress, done: next });
   };
 
+  const calendarDay = progress.status === 'ready' && progress.startDate ? dayDiff(todayLocal(), progress.startDate) + 1 : 1;
+  // The day the student is on: the next day opens only when this one is complete.
   const currentDay = useMemo(() => {
     if (progress.status !== 'ready' || !progress.startDate) return 1;
-    return Math.min(days, Math.max(1, dayDiff(todayLocal(), progress.startDate) + 1));
-  }, [progress, days]);
+    const list = plan.data?.days;
+    return list?.length ? currentPlanDay({ days: list, done: progress.done, calendarDay }) : Math.min(days, Math.max(1, calendarDay));
+  }, [progress, days, plan.data, calendarDay]);
 
   useEffect(() => { setOpenDay(currentDay); }, [currentDay]);
 
@@ -130,7 +135,7 @@ export default function IdoPlanPage() {
   const ctx = { onStartTest: (task) => setTestFor(Number(task.id.split('-')[0].slice(1))) };
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-6">
+    <PageShell className="max-w-4xl space-y-5 py-6">
       <header className="space-y-1">
         <p className="text-sm"><Link to="/ido" className="font-semibold text-indigo-700 dark:text-indigo-300">← 🏛️ <Localized value={IDO_UI.title} /></Link></p>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white"><Localized value={IDO_UI.planTitle} /></h1>
@@ -204,11 +209,15 @@ export default function IdoPlanPage() {
                     <span className="ml-auto text-xs tabular-nums text-slate-500">{d.minutes} min · {d.tasks.filter((t) => progress.done.has(t.id)).length}/{d.tasks.length}</span>
                   </button>
                   {openDay === d.day && (
-                    <ul className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">
-                      {d.tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} done={progress.done.has(task.id)} onToggle={toggle} ctx={ctx} />
-                      ))}
-                    </ul>
+                    <>
+                      {isToday && Math.min(calendarDay, allDays.length) > currentDay && <Localized value={PLAN.behind(Math.min(calendarDay, allDays.length), currentDay)} as="p" role="status" className="mt-2 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-900 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/30" />}
+                      {progress.status === 'ready' && d.day > currentDay && <Localized value={PLAN.locked(d.day - 1)} as="p" className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400" />}
+                      <ul className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">
+                        {d.tasks.map((task) => (
+                          <TaskCard key={task.id} task={task} done={progress.done.has(task.id)} onToggle={toggle} ctx={ctx} locked={progress.status === 'ready' && Boolean(progress.startDate) && d.day > currentDay} />
+                        ))}
+                      </ul>
+                    </>
                   )}
                   {d.day && progress.tests?.[d.day] && (
                     <p className="mt-2 text-xs font-semibold tabular-nums text-slate-500">
@@ -221,6 +230,6 @@ export default function IdoPlanPage() {
           </section>
         ))
       )}
-    </main>
+    </PageShell>
   );
 }

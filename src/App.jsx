@@ -27,6 +27,8 @@ import BookmarksPage from './pages/BookmarksPage';
 import RevisePage from './pages/RevisePage';
 import MistakesPage from './pages/MistakesPage';
 import MasteryPage from './pages/MasteryPage';
+import AnalysisPage from './pages/AnalysisPage';
+import SubjectAnalysisPage from './pages/SubjectAnalysisPage';
 import ChallengePage from './pages/ChallengePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import VocabularyPage from './pages/VocabularyPage';
@@ -109,6 +111,8 @@ export function AppRoutes() {
       <Route path="/revise" element={<RevisePage />} />
       <Route path="/mistakes" element={<MistakesPage />} />
       <Route path="/mastery" element={<MasteryPage />} />
+      <Route path="/analysis" element={<AnalysisPage />} />
+      <Route path="/analysis/:subject" element={<SubjectAnalysisPage />} />
       <Route path="/challenge" element={<ChallengePage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

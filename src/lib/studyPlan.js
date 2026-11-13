@@ -12,6 +12,22 @@ export function dayNumber(startDate, today = localIsoDate()) {
   return Math.floor((b - a) / 86_400_000) + 1;
 }
 
+/** A day's tasks that must be done before the next day opens. */
+export const requiredTasks = (day) => day.tasks.filter((x) => !x.optional && x.kind !== 'rest');
+
+/**
+ * The plan day the student is on. A day opens only when every required task of the days before
+ * it is done, and never before its calendar date. A student who misses days resumes where they
+ * stopped instead of being moved ahead to the calendar day.
+ */
+export function currentPlanDay({ days, done, calendarDay }) {
+  const cap = Math.min(Math.max(calendarDay, 1), days.length);
+  for (let n = 1; n < cap; n += 1) {
+    if (requiredTasks(days[n - 1]).some((x) => !done.has(x.id))) return n;
+  }
+  return cap;
+}
+
 /** Where a task is done in the app. */
 export function taskLink(task) {
   switch (task.kind) {

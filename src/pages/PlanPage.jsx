@@ -5,7 +5,7 @@ import { useOptionalAuth } from '../app/AuthContext';
 import { useResource } from '../hooks/useResource';
 import { focusStore, useFocus } from '../lib/focusStore';
 import { PLAN, PLAN_UI } from '../lib/planCopy';
-import { adaptiveAdvice, dayNumber, daySummary, localIsoDate, localPlan, nextStep, PLAN_VERSION, readiness, taskLink, TEST_KINDS } from '../lib/studyPlan';
+import { adaptiveAdvice, currentPlanDay, dayNumber, daySummary, localIsoDate, localPlan, nextStep, PLAN_VERSION, readiness, taskLink, TEST_KINDS } from '../lib/studyPlan';
 import PageShell from '../components/navigation/PageShell';
 import PlanTest from '../components/plan/PlanTest';
 import { AdviceCard, box, DaySummaryCard, ReadinessCard, TaskCard, taskTitle } from '../components/plan/PlanParts';
@@ -151,12 +151,16 @@ export default function PlanPage() {
   }, [plan.data, user]);
 
   const days = plan.data?.days;
-  const today = progress.startDate ? dayNumber(progress.startDate) : 1;
-  const current = Math.min(Math.max(today, 1), days?.length ?? 60);
+  const today = progress.startDate ? dayNumber(progress.startDate) : 1; // calendar day
+  // The day the student is on: the next day opens only when this one is complete.
+  const current = useMemo(
+    () => (days && progress.done ? currentPlanDay({ days, done: progress.done, calendarDay: today }) : Math.min(Math.max(today, 1), days?.length ?? 60)),
+    [days, progress.done, today],
+  );
   const day = days?.[current - 1];
   const next = useMemo(
-    () => (days && progress.startDate ? nextStep({ days, done: progress.done, today, dueToday: extras.dueToday, weak: extras.weak }) : null),
-    [days, progress.startDate, progress.done, today, extras],
+    () => (days && progress.startDate ? nextStep({ days, done: progress.done, today: current, dueToday: extras.dueToday, weak: extras.weak }) : null),
+    [days, progress.startDate, progress.done, current, extras],
   );
   const totals = useMemo(() => {
     const all = days?.flatMap((d) => d.tasks.filter((x) => !x.optional && x.kind !== 'rest')) ?? [];
@@ -265,6 +269,7 @@ export default function PlanPage() {
                 <Localized value={PLAN.phaseTitle[day.phase]} />{day.title && <> · <Localized value={day.title} /></>}
               </p>
               {today < 1 && <Localized value={PLAN.notYet(1 - today)} as="p" className="mt-1 text-sm text-slate-600" />}
+              {Math.min(today, days.length) > current && <Localized value={PLAN.behind(Math.min(today, days.length), current)} as="p" role="status" className="mt-2 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-900 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/30" />}
               {today > days.length && <Localized value={PLAN.finished} as="p" className="mt-1 text-sm text-slate-600" />}
               <div className="mt-3 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
                 <Localized value={PLAN_UI.mission} as="p" className="font-bold text-amber-900 dark:text-amber-200" />
@@ -302,8 +307,9 @@ export default function PlanPage() {
                               <Localized value={PLAN.dayOf(d.day, days.length)} />{d.title && <> · <Localized value={d.title} /></>}
                               {progress.tests[d.day] && <span className="ml-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{progress.tests[d.day].correct}/{progress.tests[d.day].total}</span>}
                             </p>
+                            {d.day > current && <Localized value={PLAN.locked(d.day - 1)} as="p" className="text-xs font-semibold text-slate-500 dark:text-slate-400" />}
                             <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                              {d.tasks.map((task) => <TaskCard key={task.id} task={task} done={progress.done.has(task.id)} onToggle={toggle} ctx={{ ...ctx, onStartTest: () => setTestFor(d.day) }} />)}
+                              {d.tasks.map((task) => <TaskCard key={task.id} task={task} done={progress.done.has(task.id)} onToggle={toggle} locked={d.day > current} ctx={{ ...ctx, onStartTest: () => setTestFor(d.day) }} />)}
                             </ul>
                           </li>
                         ))}

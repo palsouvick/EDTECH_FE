@@ -20,6 +20,11 @@ export const PLAN = Object.freeze({
   guestNote: t('You are not signed in: your ticks stay on this device. Sign in to keep them on every device.', 'তুমি সাইন ইন করোনি: টিকগুলি শুধু এই ডিভাইসে থাকবে। সব ডিভাইসে রাখতে সাইন ইন করো।'),
   dayOf: (d, total) => t(`Day ${d} of ${total}`, `${bnDigits(total)} দিনের ${bnDigits(d)} নম্বর দিন`),
   notYet: (n) => t(`Your plan starts in ${n} day${n === 1 ? '' : 's'}. Here is Day 1.`, `${bnDigits(n)} দিন পরে পরিকল্পনা শুরু। এই হল প্রথম দিন।`),
+  behind: (calendarDay, d) => t(
+    `By the calendar it is Day ${calendarDay}. Finish Day ${d} first — the next day opens only when this one is complete.`,
+    `ক্যালেন্ডার অনুযায়ী আজ ${bnDigits(calendarDay)} নম্বর দিন। আগে ${bnDigits(d)} নম্বর দিনের কাজ শেষ করো — এই দিন পুরো হলে তবেই পরের দিন খুলবে।`,
+  ),
+  locked: (d) => t(`Locked — finish Day ${d} to open`, `বন্ধ — ${bnDigits(d)} নম্বর দিন শেষ করলে খুলবে`),
   finished: t('The 60 days are over. Keep revising with mocks and your mistakes.', '৬০ দিন শেষ। মক টেস্ট ও ভুলের খাতা দিয়ে রিভিশন চালিয়ে যাও।'),
   today: t("Today's target", 'আজকের লক্ষ্য'),
   minutes: (m) => t(`about ${m} min`, `প্রায় ${bnDigits(m)} মিনিট`),

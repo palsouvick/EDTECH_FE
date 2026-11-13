@@ -7,6 +7,11 @@ export function DataSourceProvider({ source, children }) {
   return <DataSourceContext.Provider value={source}>{children}</DataSourceContext.Provider>;
 }
 
+/** The data source, or null outside a provider (for optional extras on shared components). */
+export function useOptionalDataSource() {
+  return useContext(DataSourceContext);
+}
+
 export function useDataSource() {
   const source = useContext(DataSourceContext);
   if (!source) throw new Error('useDataSource must be used inside <DataSourceProvider>');
