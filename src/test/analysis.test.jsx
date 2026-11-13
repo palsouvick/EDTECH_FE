@@ -123,7 +123,11 @@ const brief = (c) => ({
 });
 
 function makeSource(extra = {}) {
-  const examIn30 = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
+  // Local calendar date 30 days out: the component parses examDate as local midnight,
+  // so a UTC-based ISO date would read as 29 days during the early IST hours.
+  const examIn30Date = new Date();
+  examIn30Date.setDate(examIn30Date.getDate() + 30);
+  const examIn30 = `${examIn30Date.getFullYear()}-${String(examIn30Date.getMonth() + 1).padStart(2, '0')}-${String(examIn30Date.getDate()).padStart(2, '0')}`;
   return {
     kind: 'test',
     getMe: vi.fn(() => Promise.resolve({ user })),
