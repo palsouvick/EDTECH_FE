@@ -11,7 +11,7 @@ export const PYQ_SUBJECTS = Object.freeze([
 ]);
 
 /** The only exams with real papers in the bank — never offer any other exam. */
-export const PYQ_EXAMS = Object.freeze(['WBCS (Exe.) Prelims', 'WBPSC Clerkship (Part-I)', 'Industrial Development Officer']);
+export const PYQ_EXAMS = Object.freeze(['WBCS (Exe.) Prelims', 'WBPSC Clerkship (Part-I)', 'WBPSC Miscellaneous (Prelims)', 'Industrial Development Officer']);
 
 export const PYQ_COUNT_CHOICES = Object.freeze([10, 20, 30, 50, 75, 100]);
 export const PYQ_TIME_CHOICES = Object.freeze([10, 20, 30, 45, 60]);

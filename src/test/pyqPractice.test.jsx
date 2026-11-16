@@ -6,6 +6,7 @@ const filters = {
   exams: [
     { name: 'WBCS (Exe.) Prelims', count: 1690, years: [2024, 2023, 2022, 2021, 2019, 2018, 2017, 2016, 2015], papers: [] },
     { name: 'WBPSC Clerkship (Part-I)', count: 893, years: [2023, 2019, 2009, 2007, 2006, 2005, 2004], papers: [] },
+    { name: 'WBPSC Miscellaneous (Prelims)', count: 96, years: [2023], papers: [] },
     { name: 'Industrial Development Officer', count: 96, years: [2019], papers: [] },
     { name: 'WBP Constable', count: 0, years: [], papers: [] },
   ],
@@ -23,10 +24,11 @@ describe('PYQ practice helpers', () => {
     expect(subjectCounts([])).toEqual({ quant: 0, english: 0, gs: 0 });
   });
 
-  it('exam options offer only the three exams with real papers', () => {
+  it('exam options offer only the exams with real papers', () => {
     expect(examOptions(filters).map((e) => e.name)).toEqual([
       'WBCS (Exe.) Prelims',
       'WBPSC Clerkship (Part-I)',
+      'WBPSC Miscellaneous (Prelims)',
       'Industrial Development Officer',
     ]);
   });
