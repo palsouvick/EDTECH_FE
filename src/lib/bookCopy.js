@@ -7,7 +7,7 @@ export const bnNum = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫�
 const N = (n) => L(String(n), bnNum(n));
 
 /** GK cards that have a book, and where it lives. */
-export const BOOK_FOR_CARD = Object.freeze({ indian_history: 'history', geography: 'geography' });
+export const BOOK_FOR_CARD = Object.freeze({ indian_history: 'history', geography: 'geography', polity: 'polity' });
 /** Card code from the address (`indian-history` → `indian_history`). */
 export const cardFromSlug = (slug = '') => slug.replace(/-/g, '_');
 const slugOf = (card) => card.toLowerCase().replace(/_/g, '-');
@@ -141,6 +141,20 @@ const BOOK_NAMED = Object.freeze({
     examFocusNote: L(
       'Exam names and years come only from real previous-year papers in this app. For WBP, KP and SSC there are no Geography papers in the app yet, so their relevance is by syllabus only.',
       'পরীক্ষার নাম ও সাল শুধু এই অ্যাপে থাকা আসল পূর্ববর্তী প্রশ্নপত্র থেকে নেওয়া। WBP, KP ও SSC-র ভূগোলের প্রশ্নপত্র এখনও অ্যাপে নেই, তাই সেগুলির ক্ষেত্রে গুরুত্ব কেবল সিলেবাস অনুযায়ী।',
+    ),
+    bengalConnection: L('West Bengal connection', 'পশ্চিমবঙ্গের যোগ'),
+  },
+  polity: {
+    open: L('Read Polity as a book', 'রাষ্ট্রব্যবস্থা বইয়ের মতো পড়ো'),
+    homeTitle: L('Indian Polity and Constitution: study like a book', 'ভারতের সংবিধান ও রাষ্ট্রব্যবস্থা: বইয়ের মতো পড়ো'),
+    homeIntro: L(
+      'Read each chapter in order, practise its questions, see your weak sections and revise them. Chapter text is in Bengali, based on the Constitution of India, NCERT and West Bengal school textbooks.',
+      'প্রতিটি অধ্যায় ক্রম অনুযায়ী পড়ো, তার প্রশ্ন অনুশীলন করো, দুর্বল অংশ দেখে আবার পড়ো। অধ্যায়ের লেখা বাংলায়, ভারতের সংবিধান, এনসিইআরটি ও পশ্চিমবঙ্গের স্কুল পাঠ্যবইয়ের ভিত্তিতে।',
+    ),
+    backToCard: L('Polity card', 'রাষ্ট্রব্যবস্থা কার্ড'),
+    examFocusNote: L(
+      'Exam names and years come only from real previous-year papers in this app. For WBP, KP and SSC there are no Polity papers in the app yet, so their relevance is by syllabus only.',
+      'পরীক্ষার নাম ও সাল শুধু এই অ্যাপে থাকা আসল পূর্ববর্তী প্রশ্নপত্র থেকে নেওয়া। WBP, KP ও SSC-র রাষ্ট্রব্যবস্থার প্রশ্নপত্র এখনও অ্যাপে নেই, তাই সেগুলির ক্ষেত্রে গুরুত্ব কেবল সিলেবাস অনুযায়ী।',
     ),
     bengalConnection: L('West Bengal connection', 'পশ্চিমবঙ্গের যোগ'),
   },
