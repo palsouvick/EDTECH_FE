@@ -10,6 +10,7 @@ import { LoadError } from '../../pages/funnel/FunnelLayout';
 import CustomTestDialog from './CustomTestDialog';
 import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 import { useStartCustomTest } from './useStartCustomTest';
+import PyqBadge from '../practice/PyqBadge';
 
 const card = 'rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-800';
 const btn = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
@@ -35,6 +36,9 @@ function ReviewItem({ item, subject, name }) {
         <Localized value={CT.qN(item.seq)} as="h3" className="font-bold text-slate-900 dark:text-white" />
         <Localized value={CT.outcomes[item.outcome] ?? CT.outcomes.UNATTEMPTED} className="text-sm font-bold" />
       </div>
+      {item.pyq?.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2"><PyqBadge refs={item.pyq} /></div>
+      )}
       {item.unavailable ? null : (
         <>
           <Localized value={item.stem} markdown as="div" className="mt-2 text-slate-900 dark:text-white" />
@@ -162,6 +166,11 @@ export default function CustomTestResult({ sessionId }) {
             {r.score}/{r.maxScore} · <Localized value={CT.marksNote(r.marking.positive, r.marking.negative)} />
           </p>
         )}
+        {r.marking.basis === 'PRACTICE' && (
+          <p className="mt-3 text-xs text-indigo-100">
+            {r.score}/{r.maxScore} · <Localized value={CT.practiceMarksNote} />
+          </p>
+        )}
         {r.masteryPct != null && r.chapters[0] && <Localized value={withNames((n) => CT.mastery(n, r.masteryPct), r.chapters[0].name)} as="p" className="mt-3 text-lg font-extrabold" />}
         {r.previous && <Localized value={CT.previous(r.previous.accuracy, r.accuracy)} as="p" className="mt-2 text-sm font-semibold" />}
       </section>
@@ -241,7 +250,7 @@ export default function CustomTestResult({ sessionId }) {
           <button type="button" disabled={Boolean(busy)} onClick={() => run('again', { subject, preset: 'followup', followUpOf: r.sessionId })} className={`${btn} bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-60`}>
             <Localized value={busy === 'again' ? CT.starting : CT.practiceAgain} />
           </button>
-          {r.challenge.unlocked && (
+          {r.challenge.unlocked && r.custom.preset !== 'pyq' && (
             <button type="button" disabled={Boolean(busy)} onClick={() => run('challenge', { subject, preset: 'challenge', topics: r.custom.topics, mode: r.custom.mode })} className={`${btn} bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:opacity-60`}>
               <Localized value={busy === 'challenge' ? CT.starting : CT.challengePreset} />
             </button>

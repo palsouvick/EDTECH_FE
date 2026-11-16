@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../app/DataSourceContext';
+import { useOptionalAuth } from '../app/AuthContext';
 import { useResource } from '../hooks/useResource';
+import { HAS_DEV_USER } from '../lib/api';
 import { PYQ, PYQ_BASIS, basisNotes } from '../lib/pyqCopy';
+import { PYQ_SUBJECTS, subjectCounts } from '../lib/pyqPractice';
+import { loginPath } from '../components/auth/AccountButton';
+import PyqPracticeSetupModal from '../components/custom-test/PyqPracticeSetupModal';
 import PageShell from '../components/navigation/PageShell';
 import PracticeArena from '../components/practice/PracticeArena';
 import { Localized } from '../components/topic-hub/Localized';
@@ -121,7 +126,11 @@ function TopicSets({ topics, onPractise }) {
  */
 export default function PyqPage() {
   const source = useDataSource();
+  const auth = useOptionalAuth();
+  const location = useLocation();
   const filters = useResource('pyq:filters', () => source.getPyqFilters());
+  const [setupSubject, setSetupSubject] = useState(null);
+  const signedIn = HAS_DEV_USER || Boolean(auth?.user);
   const [params] = useSearchParams();
   // /pyq?exam=…&year=… (from the study plan) opens that paper straight away.
   const [running, setRunning] = useState(() => {
@@ -202,6 +211,41 @@ export default function PyqPage() {
           <Localized value={PYQ.empty} as="p" className="mt-8 text-slate-600 dark:text-slate-300" />
         ) : (
           <>
+            {/* Subject-wise PYQ practice: one subject, real papers only, timed test. */}
+            <section aria-labelledby="pyq-by-subject" className="mt-8">
+              <h2 id="pyq-by-subject" className="text-2xl font-extrabold text-slate-900 dark:text-white"><Localized value={PYQ.practiceBySubject} /></h2>
+              <Localized value={PYQ.practiceBySubjectSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+              <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+                {PYQ_SUBJECTS.map(({ code, emoji }) => {
+                  const count = subjectCounts(data.topics)[code];
+                  return (
+                    <li key={code} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                      <p className="text-2xl" aria-hidden="true">{emoji}</p>
+                      <Localized value={PYQ.subjectNames[code]} as="h3" className="mt-2 text-lg font-extrabold text-slate-900 dark:text-white" />
+                      <Localized value={PYQ.nPyqsAvailable(count)} as="p" className="mt-1 text-sm font-semibold text-indigo-700 dark:text-indigo-300" />
+                      <Localized value={PYQ.subjectHints[code]} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+                      <div className="mt-auto pt-4">
+                        {signedIn ? (
+                          <button type="button" onClick={() => setSetupSubject(code)} disabled={count < 5} className={`${practiseCls} w-full disabled:opacity-50`} aria-label={`Start PYQ practice in ${PYQ.subjectNames[code].en}`}>
+                            <Localized value={PYQ.startPractice} />
+                            <ArrowRightIcon />
+                          </button>
+                        ) : (
+                          <Link to={loginPath(location)} className={`${practiseCls} w-full`}>
+                            <Localized value={PYQ.startPractice} />
+                            <ArrowRightIcon />
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {setupSubject && (
+                <PyqPracticeSetupModal open subject={setupSubject} filters={data} onClose={() => setSetupSubject(null)} />
+              )}
+            </section>
+
             {(() => {
               // Exam wise PYQ: one exam's complete set of papers in one place.
               // Only WBPSC Clerkship (Part-I) is curated here for now.

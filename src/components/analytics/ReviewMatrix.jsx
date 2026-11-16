@@ -4,6 +4,7 @@ import { Localized, MathMarkdown } from '../topic-hub/Localized';
 import { AlertIcon, BoltIcon } from '../topic-hub/icons';
 import { OUTCOME } from './charts';
 import { OPTION_LETTERS } from '../practice/OptionButton';
+import PyqBadge from '../practice/PyqBadge';
 
 const FILTERS = [
   { id: 'all', label: ANALYTICS.filterAll, test: () => true },
@@ -66,6 +67,7 @@ const QuestionReviewCard = memo(function QuestionReviewCard({ r, view, topicName
           </span>
         )}
         {topicName && <Localized value={topicName} className="text-slate-500 dark:text-slate-400" />}
+        {r.pyq?.length > 0 && <PyqBadge refs={r.pyq} />}
         <span className="ml-auto tabular-nums text-slate-500 dark:text-slate-400">
           {Math.round(r.timeSpentSec ?? 0)}s{r.expectedTimeSec ? ` / ${r.expectedTimeSec}s` : ''} ·{' '}
           <span className="font-semibold text-slate-900 dark:text-white">{r.marks > 0 ? `+${r.marks}` : r.marks}</span>

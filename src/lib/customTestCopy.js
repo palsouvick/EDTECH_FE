@@ -101,6 +101,7 @@ export const CT = Object.freeze({
     challenge: t('Challenge test', 'চ্যালেঞ্জ টেস্ট'),
     followup: t('Targeted practice', 'লক্ষ্যভিত্তিক অনুশীলন'),
     smart: t('Smart Quiz', 'Smart Quiz'),
+    pyq: t('PYQ practice test', 'PYQ অনুশীলন টেস্ট'),
   },
   subjects: { quant: t('Mathematics', 'গণিত'), english: t('English', 'ইংরেজি'), gs: t('General Knowledge', 'সাধারণ জ্ঞান') },
   errors: {
@@ -137,6 +138,7 @@ export const CT = Object.freeze({
   accuracyLabel: t('Accuracy', 'সঠিকতা'),
   timeTaken: t('Time', 'সময়'),
   marksNote: (pos, neg) => t(`Marking: +${pos} per right answer, −${neg} per wrong answer (WBPSC Clerkship official scheme)`, `নম্বর: সঠিক উত্তরে +${pos}, ভুল উত্তরে −${neg} (WBPSC ক্লার্কশিপের সরকারি নিয়ম)`),
+  practiceMarksNote: t('Practice marking: +1 correct, 0 for wrong — no negative marking', 'প্র্যাকটিস নম্বর: সঠিকে +১, ভুলে ০ — কোনো নেগেটিভ মার্কিং নেই'),
   chapterPerformance: t('Chapter performance', 'অধ্যায় অনুযায়ী ফল'),
   chapter: t('Chapter', 'অধ্যায়'),
   correctCol: t('Correct', 'সঠিক'),
