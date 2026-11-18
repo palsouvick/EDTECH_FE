@@ -51,12 +51,17 @@ describe('accounts', () => {
     expect(path()).toBe('/exams/ssc');
   });
 
-  it('registers, opens My performance, and logs out', async () => {
+  it('registers, picks (or skips) a target exam, opens My performance, and logs out', async () => {
     const user = renderApp('/register?next=/me');
     await user.type(await screen.findByLabelText(/^Full name/), 'Arjun Sen');
     await user.type(screen.getByLabelText(/^Email/), 'arjun@example.com');
     await user.type(screen.getByLabelText(/^Password/), 'secret123');
     await user.click(screen.getByRole('button', { name: /^Create account/ }));
+
+    // A new account with no target exam yet goes to the picker first; skipping lands on ?next=.
+    await screen.findByRole('heading', { name: 'Choose your target exam' });
+    expect(path()).toBe('/choose-exam?next=%2Fme');
+    await user.click(await screen.findByRole('button', { name: /Not sure yet/ }));
 
     await screen.findByRole('heading', { name: /^My performance/ });
     expect(path()).toBe('/me');

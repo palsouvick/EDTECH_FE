@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDataSource } from '../app/DataSourceContext';
+import { useResource } from '../hooks/useResource';
 import { useStudyProgress } from '../hooks/useStudyProgress';
+import { currentPlanDay, dayNumber, localIsoDate, requiredTasks, taskLink } from '../lib/studyPlan';
+import { taskTitle } from '../components/plan/PlanParts';
+import { TARGET_EXAM } from '../lib/targetExamCopy';
 import PageShell from '../components/navigation/PageShell';
 import { patternLink } from '../components/review/InsightsPanel';
 import { Localized } from '../components/topic-hub/Localized';
@@ -45,6 +49,9 @@ const partOfDay = () => {
 };
 const card = 'rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-800';
 
+/** Dismissing the "pick your target exam" card is device-local and permanent for that device. */
+const PROMPT_KEY = 'edtech:target-exam-prompt-dismissed';
+
 function PlanItem({ done, to, children }) {
   const body = (
     <>
@@ -78,6 +85,71 @@ export default function StudentHome({ user }) {
   const source = useDataSource();
   const { dailyGoal } = useStudyProgress();
   const [d, setD] = useState({});
+  const [promptDismissed, setPromptDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(PROMPT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  // The target exam shapes the plan below. A failed load (including the
+  // backend not knowing the exam yet) falls back to the generic plan.
+  const targetExam = user?.targetExam ?? null;
+  const syllabusRes = useResource(
+    targetExam && source.getTargetExamSyllabus ? `target-exam:syllabus:${targetExam.code}` : null,
+    () => source.getTargetExamSyllabus(),
+  );
+  const syllabus = syllabusRes.status === 'ready' ? syllabusRes.data : null;
+  const targetLoading = Boolean(targetExam) && syllabusRes.status === 'loading';
+
+  // For plan exams (Clerkship / IDO): the plan's current day, from the plan's
+  // own progress endpoints and studyPlan.js — no plan logic duplicated here.
+  const planRoute = syllabus?.exam?.hasPlan ? syllabus.exam.planRoute : null;
+  const [planToday, setPlanToday] = useState(null);
+  useEffect(() => {
+    if (!planRoute || !user) {
+      setPlanToday(null);
+      return undefined;
+    }
+    let live = true;
+    (async () => {
+      try {
+        let progress = null;
+        let plan = null;
+        if (planRoute === '/plan' && source.getPlanProgress && source.getStudyPlan) {
+          ({ progress } = await source.getPlanProgress());
+          plan = await source.getStudyPlan(progress?.budget ?? 180);
+        } else if (planRoute === '/plan/ido' && source.getIdoProgress && source.getIdoPlan) {
+          ({ progress } = await source.getIdoProgress());
+          plan = await source.getIdoPlan(progress?.days ?? 60, progress?.budget ?? 180);
+        } else {
+          return;
+        }
+        if (!live) return;
+        if (!progress?.startDate || !plan?.days?.length) {
+          setPlanToday({ started: false, total: plan?.days?.length ?? 60, route: planRoute });
+          return;
+        }
+        const done = new Set(progress.done ?? []);
+        const calendarDay = dayNumber(progress.startDate, localIsoDate());
+        const day = currentPlanDay({ days: plan.days, done, calendarDay });
+        const dayObj = plan.days[day - 1];
+        setPlanToday({
+          started: true,
+          day,
+          total: plan.days.length,
+          route: planRoute,
+          nextTask: dayObj ? requiredTasks(dayObj).find((x) => !done.has(x.id)) ?? null : null,
+        });
+      } catch {
+        if (live) setPlanToday(null);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [planRoute, source, user?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -104,6 +176,27 @@ export default function StudentHome({ user }) {
   const answered = ins?.today?.answered ?? 0;
   const firstName = user.name.split(/\s+/)[0];
 
+  // Syllabus numbers for the no-plan exams: overall completion, weakest chapter.
+  const syllabusChapters = syllabus?.subjects?.flatMap((s) => s.chapters) ?? [];
+  const withCompletion = syllabusChapters.filter((c) => c.completion != null);
+  const syllabusPct = withCompletion.length ? Math.round(withCompletion.reduce((a, c) => a + c.completion, 0) / withCompletion.length) : null;
+  const weakestSyllabusChapter = [...withCompletion].sort((a, b) => a.completion - b.completion).find((c) => c.completion < 100) ?? null;
+  // Days left: the server's countdown when present, else the chosen date against today.
+  const daysLeft = syllabus?.countdown?.daysLeft ?? (targetExam?.date
+    ? Math.ceil((new Date(targetExam.date).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
+    : null);
+  const readinessScore = syllabus?.readiness?.score ?? null;
+  const examName = syllabus?.exam?.name ?? (targetExam ? targetExam.code.replace(/_/g, ' ') : null);
+
+  const dismissPrompt = () => {
+    try {
+      localStorage.setItem(PROMPT_KEY, '1');
+    } catch {
+      /* private mode: the card shows again next visit */
+    }
+    setPromptDismissed(true);
+  };
+
   return (
     <PageShell className="max-w-6xl pb-16 pt-6 sm:pt-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -121,14 +214,131 @@ export default function StudentHome({ user }) {
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
         <div className="space-y-5">
+          {/* Target exam: countdown + readiness, or a one-time prompt to pick one. */}
+          {targetExam ? (
+            <section className={card} aria-labelledby="target-exam-title">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 id="target-exam-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                    <span aria-hidden="true">🎯 </span>
+                    <Localized value={TARGET_EXAM.menu} />
+                  </h2>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900 dark:text-white">
+                    {examName && typeof examName === 'object' ? <Localized value={examName} /> : examName}
+                  </p>
+                  {daysLeft != null && (
+                    <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                      {daysLeft === 0 ? <Localized value={TARGET_EXAM.examToday} /> : daysLeft < 0 ? <Localized value={TARGET_EXAM.examPassed} /> : <Localized value={TARGET_EXAM.daysLeft(daysLeft)} />}
+                    </p>
+                  )}
+                  {readinessScore != null && (
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      <Localized value={TARGET_EXAM.readinessLabel} />: <span className="font-bold tabular-nums text-slate-900 dark:text-white">{readinessScore}%</span>
+                    </p>
+                  )}
+                </div>
+                <Link to="/choose-exam" className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-500/40">
+                  <Localized value={TARGET_EXAM.change} />
+                </Link>
+              </div>
+              <Link to="/my-syllabus" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">
+                <Localized value={TARGET_EXAM.viewSyllabus} /> →
+              </Link>
+            </section>
+          ) : (
+            !promptDismissed && (
+              <section className={card} aria-labelledby="target-exam-prompt-title">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 id="target-exam-prompt-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                      <span aria-hidden="true">🎯 </span>
+                      <Localized value={TARGET_EXAM.promptTitle} />
+                    </h2>
+                    <Localized value={TARGET_EXAM.promptBody} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
+                  </div>
+                  <button type="button" onClick={dismissPrompt} aria-label={TARGET_EXAM.dismiss.en} className="shrink-0 rounded-lg px-2 py-1 text-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    ×
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <Link to="/choose-exam" className="inline-flex min-h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-500">
+                    <Localized value={TARGET_EXAM.choose} />
+                  </Link>
+                  <button type="button" onClick={dismissPrompt} className="inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800">
+                    <Localized value={TARGET_EXAM.dismiss} />
+                  </button>
+                </div>
+              </section>
+            )
+          )}
+
           {/* Today's plan */}
           <section className={card} aria-labelledby="plan-title">
             <h2 id="plan-title" className="text-lg font-bold text-slate-900 dark:text-white">
               <span aria-hidden="true">📋 </span>
               <Localized value={COPY.plan} />
             </h2>
-            {!d.ready ? (
+            {!d.ready || targetLoading ? (
               <div className="mt-4 h-40 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none dark:bg-slate-800" aria-busy="true" />
+            ) : targetExam && syllabus ? (
+              <ul className="mt-3 space-y-1">
+                {planRoute ? (
+                  planToday?.started ? (
+                    <>
+                      <PlanItem to={planToday.route}>
+                        <Localized value={TARGET_EXAM.planDay(planToday.day, planToday.total)} />
+                      </PlanItem>
+                      {planToday.nextTask ? (
+                        <PlanItem to={taskLink(planToday.nextTask) ?? planToday.route}>
+                          <Localized value={taskTitle(planToday.nextTask)} />
+                        </PlanItem>
+                      ) : (
+                        <PlanItem done to={planToday.route}>
+                          <Localized value={TARGET_EXAM.planDayDone(planToday.day, planToday.total)} />
+                        </PlanItem>
+                      )}
+                    </>
+                  ) : planToday ? (
+                    <PlanItem to={planToday.route}>
+                      <Localized value={TARGET_EXAM.startPlan(planToday.total)} />
+                    </PlanItem>
+                  ) : (
+                    <PlanItem to={planRoute}>
+                      <Localized value={TARGET_EXAM.openPlan} />
+                    </PlanItem>
+                  )
+                ) : (
+                  <>
+                    {syllabusPct != null && (
+                      <PlanItem to="/my-syllabus">
+                        <Localized value={TARGET_EXAM.syllabusProgress(syllabusPct)} />
+                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
+                          <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${syllabusPct}%` }} />
+                        </span>
+                      </PlanItem>
+                    )}
+                    {d.review?.dueToday > 0 ? (
+                      <PlanItem to="/revise">
+                        <Localized value={TARGET_EXAM.nextRevise(d.review.dueToday)} />
+                      </PlanItem>
+                    ) : weakestSyllabusChapter ? (
+                      <PlanItem to="/my-syllabus">
+                        <Localized value={TARGET_EXAM.nextChapter(weakestSyllabusChapter.name)} />
+                      </PlanItem>
+                    ) : (
+                      <PlanItem to="/pyq">
+                        <Localized value={TARGET_EXAM.nextPyq} />
+                      </PlanItem>
+                    )}
+                  </>
+                )}
+                <PlanItem done={answered >= dailyGoal} to={exam ? paths.topic(exam.category, exam.subject, exam.topic) : paths.exams()}>
+                  <Localized value={COPY.planGoal(answered, dailyGoal)} />
+                  <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
+                    <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, (answered / dailyGoal) * 100)}%` }} />
+                  </span>
+                </PlanItem>
+              </ul>
             ) : (
               <ul className="mt-3 space-y-1">
                 {d.review && (d.review.active > 0 || d.review.mastered > 0) && (
