@@ -4,6 +4,7 @@ import { useAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
 import { FUNNEL, PERF, examLabel } from '../lib/i18n';
+import { TARGET_EXAM } from '../lib/targetExamCopy';
 import { paths } from '../lib/routes';
 import { loginPath } from '../components/auth/AccountButton';
 import { useWidth } from '../components/analytics/charts';
@@ -150,6 +151,26 @@ export default function PerformancePage() {
 
           <ReviseTodayCard />
           <InsightsPanel />
+
+          {/* Target exam, with a way to change it. */}
+          <section className={`${card} flex flex-wrap items-center justify-between gap-3`}>
+            <div>
+              <Localized value={TARGET_EXAM.menu} as="h2" className="font-semibold text-slate-900 dark:text-white" />
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {user.targetExam ? (
+                  <>
+                    {examLabel(user.targetExam.code)}
+                    {user.targetExam.date && <> · {new Date(user.targetExam.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
+                  </>
+                ) : (
+                  <Localized value={TARGET_EXAM.noExamYet} />
+                )}
+              </p>
+            </div>
+            <Link to="/choose-exam" className="inline-flex min-h-10 items-center rounded-lg px-4 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-800 dark:hover:bg-indigo-950">
+              <Localized value={user.targetExam ? TARGET_EXAM.change : TARGET_EXAM.choose} />
+            </Link>
+          </section>
 
           <Link
             to="/revision"

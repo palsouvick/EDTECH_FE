@@ -37,6 +37,9 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   logStudyTime({ subject, topic, seconds, section, sectionsTotal }) -> lesson reading heartbeat
  *   setSkipReason(questionId, reason)             -> the student's own reason for a skipped question
  *   getMe()                                       -> { user } (user is null when signed out)
+ *   setTargetExam({ examCode, examDate })         -> { user } (PUT /me/target-exam)
+ *   getTargetExamOptions()                        -> [{ code, name, category, support, hasPlan, planCode, planRoute, pyqCount, hasPattern }]
+ *   getTargetExamSyllabus()                       -> { exam, pattern, subjects, readiness, countdown } (422 NO_TARGET_EXAM when none set)
  *   login({ email, password })                    -> { user }
  *   register({ name, email, password })           -> { user }
  *   logout()
@@ -88,7 +91,7 @@ export function createHttpDataSource() {
     getTopicPatterns: ({ subject, topic }) => request(`/practice/patterns?${new URLSearchParams({ subject, topic })}`),
     practiceSource: (route) => createHttpPracticeSource(route),
     getPyqFilters: () => request('/pyq/filters'),
-    getPriorities: () => request('/pyq/priorities'),
+    getPriorities: (exam) => request(exam ? `/pyq/priorities?exam=${encodeURIComponent(exam)}` : '/pyq/priorities'),
     getPyqProgress: (subject) => request(`/me/pyq-progress?subject=${subject}`),
     getStudyPlan: (budget) => request(`/plan/clerkship-60${budget ? `?budget=${budget}` : ''}`),
     createPlanTest: (day, body) => request(`/plan/clerkship-60/days/${day}/test`, { method: 'POST', body }),
@@ -124,7 +127,11 @@ export function createHttpDataSource() {
     logStudyTime: (body) => request('/me/study-log', { method: 'POST', body }),
     setSkipReason: (questionId, reason) => request(`/me/skips/${questionId}`, { method: 'PUT', body: { reason } }),
     // The session is an httpOnly cookie set by the server; the token in the body is for non-browser clients.
-    getMe: () => request('/auth/me'),
+    // GET /me returns the same { user } shape as /auth/me, including user.targetExam when set.
+    getMe: () => request('/me'),
+    setTargetExam: ({ examCode, examDate }) => request('/me/target-exam', { method: 'PUT', body: { examCode, examDate } }),
+    getTargetExamOptions: () => request('/me/target-exam/options'),
+    getTargetExamSyllabus: () => request('/me/target-exam/syllabus'),
     login: (body) => request('/auth/login', { method: 'POST', body }),
     register: (body) => request('/auth/register', { method: 'POST', body }),
     logout: () => request('/auth/logout', { method: 'POST' }),
@@ -201,7 +208,7 @@ function createFixtureAuthApi(wait) {
     if (!password || password.length < 8) {
       return Promise.reject(new ApiError(400, 'VALIDATION_ERROR', 'Password must be at least 8 characters'));
     }
-    const user = { id: 'fixture-user', name: name || email.split('@')[0], email: email.trim().toLowerCase() };
+    const user = { id: 'fixture-user', name: name || email.split('@')[0], email: email.trim().toLowerCase(), targetExam: null };
     localStorage.setItem(FIXTURE_USER_KEY, JSON.stringify(user));
     return wait({ user });
   };
@@ -445,6 +452,85 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
   // The Learn section needs the API: lessons and quizzes are not bundled offline.
   const learnOffline = () => Promise.reject(new ApiError(0, 'OFFLINE', 'Lessons and quizzes need the server (VITE_USE_FIXTURES is on).'));
 
+  const readFixtureUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem(FIXTURE_USER_KEY));
+    } catch {
+      return null;
+    }
+  };
+  // Demo target-exam data for offline use: the same shapes as GET /me/target-exam/*.
+  // 'full' = a study plan exists (Clerkship, IDO); 'partial' = PYQs exist, no plan;
+  // 'minimal' = syllabus + pattern only. PYQ counts below are the real bank counts
+  // where known (WBP/KP Constable, Miscellaneous 2023); WBCS is unknown offline.
+  const FIXTURE_TARGET_SUPPORT = {
+    WBPSC_CLERKSHIP: { support: 'full', hasPlan: true, planCode: 'clerkship-60', planRoute: '/plan' },
+    WBPSC_IDO: { support: 'full', hasPlan: true, planCode: 'ido', planRoute: '/plan/ido' },
+    WBCS: { support: 'partial', pyqCount: null },
+    WBPSC_MISC: { support: 'partial', pyqCount: 97 },
+    WBP_CONSTABLE: { support: 'partial', pyqCount: 100 },
+    KP_CONSTABLE: { support: 'partial', pyqCount: 99 },
+  };
+  const fixtureTargetOptions = () =>
+    catalogFixture.flatMap((c) =>
+      c.exams.map((e) => {
+        const known = FIXTURE_TARGET_SUPPORT[e.code] ?? {};
+        return {
+          code: e.code,
+          name: e.name,
+          category: c.code,
+          categoryName: c.name,
+          fullName: e.fullName ?? null,
+          support: known.support ?? 'minimal',
+          hasPlan: known.hasPlan ?? false,
+          planCode: known.planCode ?? null,
+          planRoute: known.planRoute ?? null,
+          pyqCount: known.pyqCount ?? null,
+          hasPattern: true,
+          patternAsOf: null,
+        };
+      }),
+    );
+  const fixtureTargetSyllabus = (targetExam) => {
+    const opt = fixtureTargetOptions().find((o) => o.code === targetExam.code);
+    if (!opt) return null;
+    const chapters = (subject, names) =>
+      names.map(([topic, name, weight, completion], i) => ({
+        topic,
+        name: { en: name, bn: name },
+        weight,
+        weightSource: weight == null ? null : 'pyq',
+        pyqCount: [12, 8, 0, 5][i % 4],
+        bankCount: [20, 15, 10, 12][i % 4],
+        answered: [6, 2, 0, 1][i % 4],
+        pyqSolved: [4, 1, 0, 0][i % 4],
+        completion,
+        hasLesson: i < 2,
+      }));
+    return {
+      exam: { code: opt.code, name: opt.name, support: opt.support, hasPlan: opt.hasPlan, planCode: opt.planCode, planRoute: opt.planRoute },
+      pattern: {
+        stageName: { en: 'Part-I', bn: 'পার্ট-I' },
+        durationMin: 90,
+        negative: 0.25,
+        sections: [
+          { subject: 'quant', name: { en: 'Arithmetic', bn: 'পাটিগণিত' }, questions: 30, marks: 30, weight: 30 },
+          { subject: 'english', name: { en: 'English', bn: 'ইংরেজি' }, questions: 30, marks: 30, weight: 30 },
+          { subject: 'gs', name: { en: 'General Studies', bn: 'সাধারণ পাঠ' }, questions: 40, marks: 40, weight: 40 },
+        ],
+      },
+      subjects: [
+        { subject: 'quant', name: { en: 'Arithmetic', bn: 'পাটিগণিত' }, weight: 30, weightSource: 'pattern', chapters: chapters('quant', [['percentage', 'Percentage', 25, 40], ['number_system', 'Number System', 20, 10], ['profit_loss', 'Profit & Loss', null, null]]) },
+        { subject: 'english', name: { en: 'English', bn: 'ইংরেজি' }, weight: 30, weightSource: 'pattern', chapters: chapters('english', [['grammar', 'Grammar', 40, 60], ['vocabulary', 'Vocabulary', 30, 0]]) },
+        { subject: 'gs', name: { en: 'General Studies', bn: 'সাধারণ পাঠ' }, weight: 40, weightSource: 'pattern', chapters: chapters('gs', [['polity', 'Polity', 30, 20], ['geography', 'Geography', 25, null]]) },
+      ],
+      readiness: { score: 24, components: { coverage: 30, accuracy: 55, pyq: 12 }, basis: 'syllabus', note: null },
+      countdown: targetExam.date
+        ? { examDate: targetExam.date, daysLeft: Math.max(0, Math.ceil((new Date(targetExam.date) - Date.now()) / 86_400_000)) }
+        : null,
+    };
+  };
+
   return {
     kind: 'fixture',
     getTopicPatterns: ({ subject, topic }) => wait({ subject, topic, patterns: [] }),
@@ -467,6 +553,24 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getLearnChapter: learnOffline,
     getPyqFilters: learnOffline,
     getPriorities: learnOffline,
+    getTargetExamOptions: () => wait(fixtureTargetOptions()),
+    async getTargetExamSyllabus() {
+      const user = readFixtureUser();
+      if (!user?.targetExam) throw new ApiError(422, 'NO_TARGET_EXAM', 'No target exam chosen yet');
+      const syllabus = fixtureTargetSyllabus(user.targetExam);
+      if (!syllabus) throw new ApiError(404, 'NOT_FOUND', 'Target exam not found');
+      return wait(syllabus);
+    },
+    async setTargetExam({ examCode, examDate }) {
+      const user = readFixtureUser();
+      if (!user) throw new ApiError(401, 'UNAUTHORIZED', 'Sign in first');
+      const next = {
+        ...user,
+        targetExam: examCode ? { code: examCode, date: examDate || null, setAt: new Date().toISOString() } : null,
+      };
+      localStorage.setItem(FIXTURE_USER_KEY, JSON.stringify(next));
+      return wait({ user: next });
+    },
     getPyqProgress: (subject) => wait({ subject, topics: {} }),
     // The learning analysis is computed on the server from recorded answers.
     getLearningOverview: learnOffline,

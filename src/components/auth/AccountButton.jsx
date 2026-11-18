@@ -6,6 +6,7 @@ import { REVIEW } from '../../lib/reviewCopy';
 import { MASTERY } from '../../lib/motivationCopy';
 import { useOptionalAuth } from '../../app/AuthContext';
 import { AUTH } from '../../lib/i18n';
+import { TARGET_EXAM } from '../../lib/targetExamCopy';
 import { NAV } from '../../lib/homeCopy';
 import { Localized } from '../topic-hub/Localized';
 
@@ -94,6 +95,10 @@ function AccountControl({ auth, className = '' }) {
           </div>
           <Link role="menuitem" to="/me" className={item} onClick={() => setOpen(false)}>
             <Localized value={AUTH.myPerformance} />
+          </Link>
+          <Link role="menuitem" to="/choose-exam" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">🎯 </span>
+            <Localized value={TARGET_EXAM.menu} />
           </Link>
           <Link role="menuitem" to="/analysis" className={item} onClick={() => setOpen(false)}>
             <span aria-hidden="true">🧭 </span>

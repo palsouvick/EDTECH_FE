@@ -1,4 +1,5 @@
 import { useDataSource } from '../../app/DataSourceContext';
+import { useOptionalAuth } from '../../app/AuthContext';
 import { useResource } from '../../hooks/useResource';
 import { Localized } from '../topic-hub/Localized';
 
@@ -16,10 +17,12 @@ const detail = (info, paperCount) => t(
   `এই বিষয়ের আগের প্রশ্নের ${bnDigits(info.share)}%; ${bnDigits(paperCount)}টি প্রশ্নপত্রের ${bnDigits(info.papers)}টিতে এসেছে`,
 );
 
-/** WBPSC PYQ priorities (GET /pyq/priorities), or null while loading or when unavailable. */
+/** WBPSC PYQ priorities (GET /pyq/priorities), scoped to the target exam when one is set, or null while loading or when unavailable. */
 export function usePriorities() {
   const source = useDataSource();
-  const res = useResource(source.getPriorities ? 'pyq:priorities' : null, () => source.getPriorities());
+  const auth = useOptionalAuth();
+  const exam = auth?.user?.targetExam?.code ?? null;
+  const res = useResource(source.getPriorities ? `pyq:priorities:${exam ?? 'all'}` : null, () => source.getPriorities(exam ?? undefined));
   return res.status === 'ready' ? res.data : null;
 }
 

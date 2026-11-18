@@ -60,8 +60,13 @@ export default function AuthPage({ mode }) {
     setBusy(true);
     setError(null);
     try {
-      await (isRegister ? register(form) : login({ email: form.email, password: form.password }));
-      navigate(next, { replace: true });
+      const user = await (isRegister ? register(form) : login({ email: form.email, password: form.password }));
+      // A new account with no target exam yet picks one first; login never forces the picker.
+      if (isRegister && !user?.targetExam) {
+        navigate(`/choose-exam?next=${encodeURIComponent(next)}`, { replace: true });
+      } else {
+        navigate(next, { replace: true });
+      }
     } catch (err) {
       setError(err);
       setBusy(false);
