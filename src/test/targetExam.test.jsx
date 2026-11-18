@@ -1,12 +1,12 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../lib/api';
 import { AppRoutes } from '../App';
 import { AuthProvider } from '../app/AuthContext';
 import { DataSourceProvider } from '../app/DataSourceContext';
-import { createFixtureDataSource } from '../lib/dataSource';
+import { createFixtureDataSource, createHttpDataSource } from '../lib/dataSource';
 import { clearResourceCache } from '../hooks/useResource';
 import { languageStore } from '../hooks/useLanguagePreference';
 import { localIsoDate } from '../lib/studyPlan';
@@ -101,6 +101,23 @@ beforeEach(() => {
   localStorage.clear();
   clearResourceCache();
   act(() => languageStore.set('en'));
+});
+
+describe('target exam HTTP data source', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('unwraps the server { language, exams } options payload to the array the picker reads', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(JSON.stringify({ success: true, data: { language: 'en', exams: options } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      ),
+    );
+    await expect(createHttpDataSource().getTargetExamOptions()).resolves.toEqual(options);
+  });
 });
 
 describe('target exam picker', () => {

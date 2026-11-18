@@ -130,7 +130,8 @@ export function createHttpDataSource() {
     // GET /me returns the same { user } shape as /auth/me, including user.targetExam when set.
     getMe: () => request('/me'),
     setTargetExam: ({ examCode, examDate }) => request('/me/target-exam', { method: 'PUT', body: { examCode, examDate } }),
-    getTargetExamOptions: () => request('/me/target-exam/options'),
+    // The server returns { language, exams } — unwrap to the array the picker reads.
+    getTargetExamOptions: () => request('/me/target-exam/options').then((d) => (Array.isArray(d) ? d : d?.exams ?? [])),
     getTargetExamSyllabus: () => request('/me/target-exam/syllabus'),
     login: (body) => request('/auth/login', { method: 'POST', body }),
     register: (body) => request('/auth/register', { method: 'POST', body }),
