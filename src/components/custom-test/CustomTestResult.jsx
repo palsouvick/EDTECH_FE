@@ -11,6 +11,7 @@ import CustomTestDialog from './CustomTestDialog';
 import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 import { useStartCustomTest } from './useStartCustomTest';
 import PyqBadge from '../practice/PyqBadge';
+import LearnThisLink from '../review/LearnThisLink';
 
 const card = 'rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-800';
 const btn = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
@@ -75,7 +76,9 @@ function ReviewItem({ item, subject, name }) {
               </div>
             )}
           </div>
-          {item.outcome !== 'CORRECT' && (
+          {/* The exact place to learn it when the question has one; otherwise the chapter. */}
+          {item.learn && <LearnThisLink learn={item.learn} className="mt-3" />}
+          {item.outcome !== 'CORRECT' && !item.learn && (
             <Link to={reviseLink(subject, item.topic)} className={`${btn} mt-3 bg-indigo-50 text-indigo-800 ring-1 ring-indigo-200 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/30`}>
               📖 <Localized value={withNames(CT.reviseBtn, name ?? { en: item.topic })} />
             </Link>

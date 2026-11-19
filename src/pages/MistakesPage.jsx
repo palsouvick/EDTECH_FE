@@ -6,6 +6,7 @@ import { loginPath } from '../components/auth/AccountButton';
 import PageShell from '../components/navigation/PageShell';
 import { OPTION_LETTERS } from '../components/practice/OptionButton';
 import AnswerExplanation from '../components/review/AnswerExplanation';
+import LearnThisLink from '../components/review/LearnThisLink';
 import { Localized } from '../components/topic-hub/Localized';
 import { CheckIcon, ChevronIcon, XIcon } from '../components/topic-hub/icons';
 import { REVIEW } from '../lib/reviewCopy';
@@ -66,6 +67,8 @@ function MistakeCard({ m }) {
       </div>
       <Localized value={m.question.stem} markdown as="div" className="mt-3 font-medium leading-relaxed text-slate-900 dark:text-white" />
       <AnswerPair m={m} />
+      {/* Where to learn it, visible without opening the details. */}
+      <LearnThisLink learn={m.learn} className="mt-3" />
 
       <button
         type="button"

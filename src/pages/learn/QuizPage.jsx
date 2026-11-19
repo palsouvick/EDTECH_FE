@@ -10,6 +10,7 @@ import { QUIZ_LEVEL_CODES, codeFromSlug, learnPaths, subjectCodeFromSlug } from 
 import PageShell from '../../components/navigation/PageShell';
 import OptionButton, { OPTION_LETTERS } from '../../components/practice/OptionButton';
 import { Localized } from '../../components/topic-hub/Localized';
+import LearnThisLink from '../../components/review/LearnThisLink';
 import { CheckIcon, XIcon } from '../../components/topic-hub/icons';
 import { NextSmartQuizAfterTest } from '../../components/analysis/AnalysisParts';
 import { LoadError } from '../funnel/FunnelLayout';
@@ -143,6 +144,7 @@ function ReviewItem({ question, result, n }) {
           </ol>
         </div>
       )}
+      <LearnThisLink learn={result.learn} className="mt-4" />
       {(question.patternName || question.difficultyLabel) && (
         <div className="mt-3 flex flex-wrap gap-2 text-sm">
           {question.patternName && (

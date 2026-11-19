@@ -169,7 +169,7 @@ export default function RevisePage() {
                   as="p"
                   className={`rounded-xl px-4 py-3 font-bold ${result.isCorrect ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-rose-50 text-rose-800 dark:bg-rose-500/10 dark:text-rose-300'}`}
                 />
-                <AnswerExplanation steps={result.explanation.items} shortcut={result.shortcut} trap={result.trapForSelected} />
+                <AnswerExplanation steps={result.explanation.items} shortcut={result.shortcut} trap={result.trapForSelected} learn={result.learn} newTab />
               </div>
             )}
             {load.actionError && <p role="alert" className="mt-3 text-sm text-rose-600">{load.actionError.message}</p>}

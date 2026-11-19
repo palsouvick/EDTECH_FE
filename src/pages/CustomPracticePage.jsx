@@ -5,6 +5,7 @@ import { CT, withNames } from '../lib/customTestCopy';
 import { learnPaths } from '../lib/routes';
 import PageShell from '../components/navigation/PageShell';
 import PyqBadge from '../components/practice/PyqBadge';
+import LearnThisLink from '../components/review/LearnThisLink';
 import { Localized } from '../components/topic-hub/Localized';
 import CustomTestResult, { reviseLink } from '../components/custom-test/CustomTestResult';
 import { LoadError } from './funnel/FunnelLayout';
@@ -36,15 +37,20 @@ function Feedback({ fb, q, subject }) {
           <Localized value={fb.explanation.shortcut} markdown as="div" className="text-slate-800 dark:text-slate-100" />
         </div>
       )}
-      <p className="text-sm">
-        <Localized value={CT.relatedConcept} className="font-bold" />: <Localized value={fb.concept.name} />
-        {fb.concept.pattern && <> · <Localized value={fb.concept.pattern} /></>}
-        {' · '}
-        {/* A new tab, so the test stays where it is (it can also be resumed later). */}
-        <a href={reviseLink(subject, fb.concept.topic)} target="_blank" rel="noopener" className="font-semibold text-indigo-700 underline dark:text-indigo-300">
-          <Localized value={withNames(CT.reviseBtn, fb.concept.name)} /> ↗
-        </a>
-      </p>
+      {/* The exact place to learn it (new tab, so the test stays where it is); the chapter otherwise. */}
+      {fb.learn ? (
+        <LearnThisLink learn={fb.learn} newTab />
+      ) : (
+        <p className="text-sm">
+          <Localized value={CT.relatedConcept} className="font-bold" />: <Localized value={fb.concept.name} />
+          {fb.concept.pattern && <> · <Localized value={fb.concept.pattern} /></>}
+          {' · '}
+          {/* A new tab, so the test stays where it is (it can also be resumed later). */}
+          <a href={reviseLink(subject, fb.concept.topic)} target="_blank" rel="noopener" className="font-semibold text-indigo-700 underline dark:text-indigo-300">
+            <Localized value={withNames(CT.reviseBtn, fb.concept.name)} /> ↗
+          </a>
+        </p>
+      )}
     </div>
   );
 }

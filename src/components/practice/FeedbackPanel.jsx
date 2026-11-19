@@ -3,6 +3,7 @@ import { ARENA, inARowLabel, percentCorrectLabel } from '../../lib/i18n';
 import { Localized } from '../topic-hub/Localized';
 import { AlertIcon, BoltIcon, CheckIcon, FlameIcon, XIcon } from '../topic-hub/icons';
 import { OPTION_LETTERS } from './OptionButton';
+import LearnThisLink from '../review/LearnThisLink';
 
 /**
  * Shown after "Check answer". Order follows what a student needs next:
@@ -68,6 +69,9 @@ const FeedbackPanel = forwardRef(function FeedbackPanel({ result, question, inAR
         </div>
       )}
 
+      {/* Wrong: where to learn it comes straight after the mistake. Right: at the end. */}
+      {!ok && <LearnThisLink learn={result.learn} newTab />}
+
       {steps.length > 0 && (
         <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -108,6 +112,8 @@ const FeedbackPanel = forwardRef(function FeedbackPanel({ result, question, inAR
           </ul>
         </div>
       )}
+
+      {ok && <LearnThisLink learn={result.learn} newTab />}
     </section>
   );
 });

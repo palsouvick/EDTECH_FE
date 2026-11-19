@@ -5,6 +5,7 @@ import { AlertIcon, BoltIcon } from '../topic-hub/icons';
 import { OUTCOME } from './charts';
 import { OPTION_LETTERS } from '../practice/OptionButton';
 import PyqBadge from '../practice/PyqBadge';
+import LearnThisLink from '../review/LearnThisLink';
 
 const FILTERS = [
   { id: 'all', label: ANALYTICS.filterAll, test: () => true },
@@ -115,6 +116,9 @@ const QuestionReviewCard = memo(function QuestionReviewCard({ r, view, topicName
               );
             })}
           </ul>
+
+          {/* Outside the collapsed solution, so "where to learn it" is visible at a glance. */}
+          <LearnThisLink learn={r.learn} className="mt-3" />
 
           <details open={open} className="group mt-3">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-indigo-700 dark:text-indigo-300">

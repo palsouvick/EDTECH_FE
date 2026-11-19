@@ -1,4 +1,5 @@
 import { Localized } from '../topic-hub/Localized';
+import LearnThisLink from './LearnThisLink';
 
 const t = (en, bn) => ({ en, bn });
 const COPY = {
@@ -8,12 +9,13 @@ const COPY = {
 };
 
 /**
- * Why-wrong note, numbered explanation steps and shortcut, as shown after an
- * answer on the revision, bookmarks and mistake-notebook pages.
+ * "Learn this topic" link (when the answer has one), why-wrong note, numbered explanation
+ * steps and shortcut, as shown after an answer on the revision, bookmarks and mistake-notebook pages.
  */
-export default function AnswerExplanation({ steps = [], shortcut, trap }) {
+export default function AnswerExplanation({ steps = [], shortcut, trap, learn = null, newTab = false }) {
   return (
     <div className="space-y-3">
+      <LearnThisLink learn={learn} newTab={newTab} />
       {trap && (
         <div className="rounded-xl bg-rose-50 p-3 text-sm text-rose-950 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-100 dark:ring-rose-500/30">
           <Localized value={COPY.whyWrong} as="p" className="font-bold" />

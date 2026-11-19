@@ -72,7 +72,7 @@ function RevisionCard({ item, onRemove }) {
             as="p"
             className={`font-bold ${result.isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}
           />
-          <AnswerExplanation steps={result.explanation?.items} shortcut={result.shortcut} trap={result.trapForSelected} />
+          <AnswerExplanation steps={result.explanation?.items} shortcut={result.shortcut} trap={result.trapForSelected} learn={result.learn} newTab />
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-sm text-rose-600">{error.message}</p>}

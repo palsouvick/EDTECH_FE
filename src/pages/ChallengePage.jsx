@@ -123,7 +123,7 @@ export default function ChallengePage() {
               </div>
               {r && (
                 <div className="mt-4">
-                  <AnswerExplanation steps={r.steps} shortcut={r.shortcut} trap={r.trapForSelected} />
+                  <AnswerExplanation steps={r.steps} shortcut={r.shortcut} trap={r.trapForSelected} learn={r.learn} />
                 </div>
               )}
             </article>
