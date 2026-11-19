@@ -3,11 +3,16 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react
 import { useAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
+import { LANGUAGES, useLanguagePreference } from '../hooks/useLanguagePreference';
 import { TARGET_EXAM } from '../lib/targetExamCopy';
 import { loginPath } from '../components/auth/AccountButton';
 import { Localized } from '../components/topic-hub/Localized';
 import PageShell from '../components/navigation/PageShell';
 import { LoadError } from './funnel/FunnelLayout';
+
+// Daily study time (minutes/day) the profile offers. Same budget set the two
+// study plans use (FE pages/IdoPlanPage.jsx, PlanPage.jsx; BE services/targetExam.service.js).
+const DAILY_MINUTES = [120, 180, 240, 360];
 
 /** Only same-site paths, so ?next= cannot send students to another site. */
 function safeNext(raw) {
@@ -42,8 +47,15 @@ export default function TargetExamPicker() {
   const [params] = useSearchParams();
   const next = safeNext(params.get('next'));
   const res = useResource(source.getTargetExamOptions ? 'target-exam:options' : null, () => source.getTargetExamOptions());
+  const { lang, setLang } = useLanguagePreference();
   const [selected, setSelected] = useState(null); // exam code, or null until the student picks one
   const [examDate, setExamDate] = useState('');
+  // An exam held with no date is "not announced", not a missing value.
+  const [notAnnounced, setNotAnnounced] = useState(() => user?.targetExam != null && user.targetExam.date == null);
+  // Profile fields (F1): daily study time and study language travel with the
+  // student, not with the exam — they survive an exam switch unchanged.
+  const [dailyMinutes, setDailyMinutes] = useState(user?.dailyStudyMinutes ?? null);
+  const [language, setLanguage] = useState(user?.preferredLanguage ?? lang);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // the option just saved
@@ -57,6 +69,15 @@ export default function TargetExamPicker() {
   // Pre-fill the date from the exam already held, once the options have loaded.
   const shownDate = examDate || (picked === currentCode ? (user.targetExam.date ?? '').slice(0, 10) : '');
 
+  // Picking an exam: re-picking the exam already held restores its date (or
+  // its "not announced" state); a different exam starts with a blank date.
+  // Daily time and language are profile-level, so they never reset here.
+  const pick = (code) => {
+    setSelected(code);
+    setExamDate('');
+    setNotAnnounced(code === currentCode ? user?.targetExam?.date == null : false);
+  };
+
   const groups = [];
   for (const o of options) {
     const g = groups.find((x) => x.category === o.category);
@@ -68,7 +89,14 @@ export default function TargetExamPicker() {
     setBusy(true);
     setError(null);
     try {
-      await setTargetExam({ examCode: code, examDate: shownDate || null });
+      const savedUser = await setTargetExam({
+        examCode: code,
+        examDate: notAnnounced ? null : (shownDate || null),
+        dailyStudyMinutes: dailyMinutes,
+        preferredLanguage: language,
+      });
+      // Apply the study language on this device once the server has it.
+      if (savedUser?.preferredLanguage) setLang(savedUser.preferredLanguage);
       setSaved(options.find((o) => o.code === code) ?? { code });
     } catch (err) {
       setError(err);
@@ -121,7 +149,7 @@ export default function TargetExamPicker() {
                         <button
                           type="button"
                           aria-pressed={active}
-                          onClick={() => setSelected(o.code)}
+                          onClick={() => pick(o.code)}
                           className={`flex w-full items-start gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 hover:ring-indigo-300 dark:bg-slate-900 ${active ? 'ring-2 ring-indigo-600 dark:ring-indigo-400' : 'ring-slate-200 dark:ring-slate-800'}`}
                         >
                           <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full ring-2 ${active ? 'bg-indigo-600 text-white ring-indigo-600' : 'ring-slate-300 dark:ring-slate-600'}`} aria-hidden="true">
@@ -154,18 +182,70 @@ export default function TargetExamPicker() {
           </div>
 
           {pickedOption && (
-            <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                <Localized value={TARGET_EXAM.examDate} />
-                <input
-                  type="date"
-                  value={shownDate}
-                  onChange={(e) => setExamDate(e.target.value)}
-                  className="mt-1 block min-h-11 w-full rounded-xl px-3 ring-1 ring-slate-300 dark:bg-slate-950 dark:ring-slate-700"
-                />
-              </label>
-              <Localized value={TARGET_EXAM.examDateHint} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />
-            </div>
+            <>
+              <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <Localized value={TARGET_EXAM.examDate} />
+                  <input
+                    type="date"
+                    value={shownDate}
+                    disabled={notAnnounced}
+                    onChange={(e) => { setExamDate(e.target.value); setNotAnnounced(false); }}
+                    className="mt-1 block min-h-11 w-full rounded-xl px-3 ring-1 ring-slate-300 disabled:opacity-50 dark:bg-slate-950 dark:ring-slate-700"
+                  />
+                </label>
+                <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={notAnnounced}
+                    onChange={(e) => { setNotAnnounced(e.target.checked); if (e.target.checked) setExamDate(''); }}
+                    className="size-4 accent-indigo-600"
+                  />
+                  <Localized value={TARGET_EXAM.dateNotAnnounced} />
+                </label>
+                <Localized value={TARGET_EXAM.examDateHint} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <Localized value={TARGET_EXAM.dailyStudy} />
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Daily study time">
+                  {DAILY_MINUTES.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={dailyMinutes === m}
+                      onClick={() => setDailyMinutes(dailyMinutes === m ? null : m)}
+                      className={`min-h-10 rounded-full px-4 text-sm font-bold ${dailyMinutes === m ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'}`}
+                    >
+                      {m / 60}h
+                    </button>
+                  ))}
+                </div>
+                <Localized value={TARGET_EXAM.dailyStudyHint} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <Localized value={TARGET_EXAM.studyLanguage} />
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Study language">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      type="button"
+                      aria-pressed={language === l.code}
+                      onClick={() => setLanguage(l.code)}
+                      className={`min-h-10 rounded-full px-4 text-sm font-bold ${language === l.code ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'}`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+                <Localized value={TARGET_EXAM.studyLanguageHint} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />
+              </div>
+            </>
           )}
 
           <Localized value={TARGET_EXAM.keptNote} as="p" className="mt-6 text-sm text-slate-600 dark:text-slate-300" />

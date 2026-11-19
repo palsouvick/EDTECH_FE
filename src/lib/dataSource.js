@@ -37,7 +37,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   logStudyTime({ subject, topic, seconds, section, sectionsTotal }) -> lesson reading heartbeat
  *   setSkipReason(questionId, reason)             -> the student's own reason for a skipped question
  *   getMe()                                       -> { user } (user is null when signed out)
- *   setTargetExam({ examCode, examDate })         -> { user } (PUT /me/target-exam)
+ *   setTargetExam({ examCode, examDate, dailyStudyMinutes, preferredLanguage })
+ *                                              -> { user } (PUT /me/target-exam)
  *   getTargetExamOptions()                        -> [{ code, name, category, support, hasPlan, planCode, planRoute, pyqCount, hasPattern }]
  *   getTargetExamSyllabus()                       -> { exam, pattern, subjects, readiness, countdown } (422 NO_TARGET_EXAM when none set)
  *   login({ email, password })                    -> { user }
@@ -129,7 +130,7 @@ export function createHttpDataSource() {
     // The session is an httpOnly cookie set by the server; the token in the body is for non-browser clients.
     // GET /me returns the same { user } shape as /auth/me, including user.targetExam when set.
     getMe: () => request('/me'),
-    setTargetExam: ({ examCode, examDate }) => request('/me/target-exam', { method: 'PUT', body: { examCode, examDate } }),
+    setTargetExam: ({ examCode, examDate, dailyStudyMinutes, preferredLanguage }) => request('/me/target-exam', { method: 'PUT', body: { examCode, examDate, dailyStudyMinutes, preferredLanguage } }),
     // The server returns { language, exams } — unwrap to the array the picker reads.
     getTargetExamOptions: () => request('/me/target-exam/options').then((d) => (Array.isArray(d) ? d : d?.exams ?? [])),
     getTargetExamSyllabus: () => request('/me/target-exam/syllabus'),
@@ -209,7 +210,7 @@ function createFixtureAuthApi(wait) {
     if (!password || password.length < 8) {
       return Promise.reject(new ApiError(400, 'VALIDATION_ERROR', 'Password must be at least 8 characters'));
     }
-    const user = { id: 'fixture-user', name: name || email.split('@')[0], email: email.trim().toLowerCase(), targetExam: null };
+    const user = { id: 'fixture-user', name: name || email.split('@')[0], email: email.trim().toLowerCase(), targetExam: null, dailyStudyMinutes: null, preferredLanguage: null };
     localStorage.setItem(FIXTURE_USER_KEY, JSON.stringify(user));
     return wait({ user });
   };
@@ -562,12 +563,15 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
       if (!syllabus) throw new ApiError(404, 'NOT_FOUND', 'Target exam not found');
       return wait(syllabus);
     },
-    async setTargetExam({ examCode, examDate }) {
+    async setTargetExam({ examCode, examDate, dailyStudyMinutes, preferredLanguage }) {
       const user = readFixtureUser();
       if (!user) throw new ApiError(401, 'UNAUTHORIZED', 'Sign in first');
+      // Partial update, like the server: absent fields stay, null clears them.
       const next = {
         ...user,
-        targetExam: examCode ? { code: examCode, date: examDate || null, setAt: new Date().toISOString() } : null,
+        ...(examCode !== undefined ? { targetExam: examCode ? { code: examCode, date: examDate || null, setAt: new Date().toISOString() } : null } : {}),
+        ...(dailyStudyMinutes !== undefined ? { dailyStudyMinutes: dailyStudyMinutes ?? null } : {}),
+        ...(preferredLanguage !== undefined ? { preferredLanguage: preferredLanguage ?? null } : {}),
       };
       localStorage.setItem(FIXTURE_USER_KEY, JSON.stringify(next));
       return wait({ user: next });

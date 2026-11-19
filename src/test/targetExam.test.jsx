@@ -63,8 +63,13 @@ function stubSource({ user: initialUser, syllabus = clerkshipSyllabus, planProgr
       if (!currentUser?.targetExam) throw new ApiError(422, 'NO_TARGET_EXAM', 'No target exam chosen yet');
       return syllabus;
     }),
-    setTargetExam: vi.fn(async ({ examCode, examDate }) => {
-      currentUser = { ...currentUser, targetExam: examCode ? { code: examCode, date: examDate || null, setAt: '2026-11-18T00:00:00.000Z' } : null };
+    setTargetExam: vi.fn(async ({ examCode, examDate, dailyStudyMinutes, preferredLanguage }) => {
+      currentUser = {
+        ...currentUser,
+        targetExam: examCode ? { code: examCode, date: examDate || null, setAt: '2026-11-18T00:00:00.000Z' } : null,
+        ...(dailyStudyMinutes !== undefined ? { dailyStudyMinutes: dailyStudyMinutes ?? null } : {}),
+        ...(preferredLanguage !== undefined ? { preferredLanguage: preferredLanguage ?? null } : {}),
+      };
       return { user: currentUser };
     }),
     getReviewSummary: vi.fn(async () => ({ dueToday, active: dueToday, mastered: 0, mistakesActive: 0, nextDueAt: null })),
@@ -140,12 +145,39 @@ describe('target exam picker', () => {
     await user.click(screen.getByRole('button', { name: /Clerkship/ }));
     await user.click(screen.getByRole('button', { name: /Save my target exam/ }));
     await screen.findByText('Saved — this is your target exam now.');
-    expect(source.setTargetExam).toHaveBeenCalledWith({ examCode: 'WBPSC_CLERKSHIP', examDate: null });
+    expect(source.setTargetExam).toHaveBeenCalledWith({ examCode: 'WBPSC_CLERKSHIP', examDate: null, dailyStudyMinutes: null, preferredLanguage: 'en' });
 
     await user.click(screen.getByRole('link', { name: /View my syllabus/ }));
     expect(path()).toBe('/my-syllabus');
     await screen.findByText('Percentage');
     expect(screen.getByText('No weight data — the paper does not publish one, and we have not measured it from past papers yet.')).toBeInTheDocument();
+  });
+
+  it('saves daily study time, study language and "not announced" with the exam', async () => {
+    const source = stubSource();
+    const user = renderAt('/choose-exam', source);
+    await screen.findByRole('heading', { name: 'Choose your target exam' });
+    await user.click(screen.getByRole('button', { name: /Clerkship/ }));
+
+    // "Not announced" instead of a date: the date input disables.
+    const notAnnounced = await screen.findByRole('checkbox', { name: /Exam date not announced/ });
+    await user.click(notAnnounced);
+    expect(screen.getByLabelText(/Exam date \(if you know it\)/)).toBeDisabled();
+
+    // 3 hours a day, in Bengali medium.
+    await user.click(within(screen.getByRole('group', { name: 'Daily study time' })).getByRole('button', { name: '3h' }));
+    await user.click(within(screen.getByRole('group', { name: 'Study language' })).getByRole('button', { name: 'বাংলা' }));
+
+    await user.click(screen.getByRole('button', { name: /Save my target exam/ }));
+    await screen.findByText('Saved — this is your target exam now.');
+    expect(source.setTargetExam).toHaveBeenCalledWith({
+      examCode: 'WBPSC_CLERKSHIP',
+      examDate: null,
+      dailyStudyMinutes: 180,
+      preferredLanguage: 'bn',
+    });
+    // The study language applies on this device once the server has it.
+    expect(languageStore.get()).toBe('bn');
   });
 
   it('works offline: the fixture source lists real catalogue exams and remembers the choice', async () => {
@@ -286,6 +318,26 @@ describe('target exam elsewhere', () => {
     await screen.findByRole('heading', { name: /^My performance/ });
     expect(await screen.findByText(/No target exam chosen yet/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Choose your exam/ })).toHaveAttribute('href', '/choose-exam');
+  });
+
+  it('/me shows the target exam with "Not announced", daily study time and study language', async () => {
+    renderAt('/me', stubSource({
+      user: {
+        id: 'u1', name: 'Riya Sen', email: 'riya@example.com',
+        targetExam: { code: 'WBCS', date: null, setAt: '2026-11-18T00:00:00.000Z' },
+        dailyStudyMinutes: 180,
+        preferredLanguage: 'bn',
+      },
+    }));
+    await screen.findByRole('heading', { name: /^My performance/ });
+    // The profile section loads with the performance data, after the heading.
+    const heading = await screen.findByRole('heading', { name: 'Target exam' });
+    const section = heading.closest('section');
+    expect(within(section).getByText('WBCS')).toBeInTheDocument();
+    expect(within(section).getByText('Not announced')).toBeInTheDocument();
+    expect(within(section).getByText('3h a day')).toBeInTheDocument();
+    expect(within(section).getByText('বাংলা')).toBeInTheDocument();
+    expect(within(section).getByRole('link', { name: /Change exam/ })).toHaveAttribute('href', '/choose-exam');
   });
 
   it('priorities are scoped to the target exam', async () => {

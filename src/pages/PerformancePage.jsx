@@ -4,6 +4,7 @@ import { useAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
 import { FUNNEL, PERF, examLabel } from '../lib/i18n';
+import { LANGUAGES } from '../hooks/useLanguagePreference';
 import { TARGET_EXAM } from '../lib/targetExamCopy';
 import { paths } from '../lib/routes';
 import { loginPath } from '../components/auth/AccountButton';
@@ -152,20 +153,42 @@ export default function PerformancePage() {
           <ReviseTodayCard />
           <InsightsPanel />
 
-          {/* Target exam, with a way to change it. */}
+          {/* Target exam and profile (F1), with a way to change it. */}
           <section className={`${card} flex flex-wrap items-center justify-between gap-3`}>
             <div>
               <Localized value={TARGET_EXAM.menu} as="h2" className="font-semibold text-slate-900 dark:text-white" />
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                {user.targetExam ? (
-                  <>
-                    {examLabel(user.targetExam.code)}
-                    {user.targetExam.date && <> · {new Date(user.targetExam.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
-                  </>
-                ) : (
+              {user.targetExam ? (
+                <dl className="mt-1 space-y-0.5 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex gap-2">
+                    <dt className="shrink-0 font-semibold text-slate-700 dark:text-slate-200"><Localized value={TARGET_EXAM.profileExam} /></dt>
+                    <dd>{examLabel(user.targetExam.code)}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="shrink-0 font-semibold text-slate-700 dark:text-slate-200"><Localized value={TARGET_EXAM.profileExamDate} /></dt>
+                    <dd>
+                      {user.targetExam.date
+                        ? new Date(user.targetExam.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : <Localized value={TARGET_EXAM.notAnnounced} />}
+                    </dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="shrink-0 font-semibold text-slate-700 dark:text-slate-200"><Localized value={TARGET_EXAM.dailyStudy} /></dt>
+                    <dd>
+                      {user.dailyStudyMinutes ? <Localized value={TARGET_EXAM.studyHours(user.dailyStudyMinutes)} /> : <Localized value={TARGET_EXAM.notSet} />}
+                    </dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="shrink-0 font-semibold text-slate-700 dark:text-slate-200"><Localized value={TARGET_EXAM.studyLanguage} /></dt>
+                    <dd>
+                      {LANGUAGES.find((l) => l.code === user.preferredLanguage)?.label ?? <Localized value={TARGET_EXAM.notSet} />}
+                    </dd>
+                  </div>
+                </dl>
+              ) : (
+                <p className="text-sm text-slate-600 dark:text-slate-300">
                   <Localized value={TARGET_EXAM.noExamYet} />
-                )}
-              </p>
+                </p>
+              )}
             </div>
             <Link to="/choose-exam" className="inline-flex min-h-10 items-center rounded-lg px-4 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-800 dark:hover:bg-indigo-950">
               <Localized value={user.targetExam ? TARGET_EXAM.change : TARGET_EXAM.choose} />

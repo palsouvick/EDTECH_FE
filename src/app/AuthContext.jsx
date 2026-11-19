@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useDataSource } from './DataSourceContext';
+import { languageStore } from '../hooks/useLanguagePreference';
 import { syncLearnProgress } from '../lib/learnProgress';
 
 const AuthContext = createContext(null);
@@ -8,7 +9,13 @@ const AuthContext = createContext(null);
  * The signed-in student, from GET /me on load. The session itself is an
  * httpOnly cookie, so nothing secret is kept in page storage.
  *
- * status: 'loading' | 'ready'. user: { id, name, email, targetExam: { code, date, setAt } | null } | null.
+ * status: 'loading' | 'ready'. user: { id, name, email, targetExam: { code, date, setAt } | null,
+ * dailyStudyMinutes: number | null, preferredLanguage: 'en' | 'bn' | null } | null.
+ *
+ * A study language stored on the account wins over this device's language:
+ * the server is the source of truth for a signed-in student, and the
+ * language store (localStorage) follows it. The nav switcher itself stays
+ * device-local — only the profile save writes the server value.
  */
 export function AuthProvider({ children }) {
   const source = useDataSource();
@@ -58,14 +65,20 @@ export function AuthProvider({ children }) {
   }, [source, state.user]);
 
   /** PUT /me/target-exam, then hold the returned user (examCode null clears the exam and its date). */
-  const setTargetExam = useCallback(async ({ examCode, examDate }) => {
-    const res = await source.setTargetExam({ examCode, examDate });
+  const setTargetExam = useCallback(async ({ examCode, examDate, dailyStudyMinutes, preferredLanguage }) => {
+    const res = await source.setTargetExam({ examCode, examDate, dailyStudyMinutes, preferredLanguage });
     if (res?.user) {
       setState({ status: 'ready', user: res.user });
       return res.user;
     }
     return refreshUser();
   }, [source, refreshUser]);
+
+  // The account's stored study language wins over this device's language.
+  const serverLanguage = state.user?.preferredLanguage;
+  useEffect(() => {
+    if (serverLanguage && serverLanguage !== languageStore.get()) languageStore.set(serverLanguage);
+  }, [serverLanguage]);
 
   // Signed in: bring this device's Learn progress and the account's copy together.
   const userId = state.user?.id;

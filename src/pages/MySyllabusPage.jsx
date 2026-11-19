@@ -80,9 +80,13 @@ export default function MySyllabusPage() {
           {d ? (
             <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
               <Name value={d.exam.name} />
-              {countdown && (
+              {countdown ? (
                 <span className="ml-3 rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-800 dark:bg-indigo-500/15 dark:text-indigo-300">
                   {countdown.daysLeft === 0 ? <Localized value={TARGET_EXAM.examToday} /> : <Localized value={TARGET_EXAM.daysLeft(countdown.daysLeft)} />}
+                </span>
+              ) : (
+                <span className="ml-3 rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  <Localized value={TARGET_EXAM.notAnnounced} />
                 </span>
               )}
             </p>
