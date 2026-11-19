@@ -135,6 +135,9 @@ export function createHttpDataSource() {
     getTargetExamOptions: () => request('/me/target-exam/options').then((d) => (Array.isArray(d) ? d : d?.exams ?? [])),
     getTargetExamSyllabus: () => request('/me/target-exam/syllabus'),
     getSyllabusMap: (examCode) => request(`/me/target-exam/syllabus-map/${encodeURIComponent(examCode)}`),
+    // F3: the ONE "Today's Study" list (revision, plan day, weak/unfinished
+    // priorities, PYQ, GK) — the home page renders exactly this.
+    getToday: () => request(`/me/today?tz=${-new Date().getTimezoneOffset()}`),
     login: (body) => request('/auth/login', { method: 'POST', body }),
     register: (body) => request('/auth/register', { method: 'POST', body }),
     logout: () => request('/auth/logout', { method: 'POST' }),
@@ -558,6 +561,14 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getPriorities: learnOffline,
     getTargetExamOptions: () => wait(fixtureTargetOptions()),
     getSyllabusMap: learnOffline,
+    getToday: () => {
+      const items = [
+        { id: 'today-1', kind: 'learn', source: 'unfinished_priority', subject: 'quant', topic: 'percentage', title: { en: 'Learn — Percentage', bn: 'শেখো — শতকরা (Percentage)' }, minutes: 20 },
+        { id: 'today-2', kind: 'practice', source: 'unfinished_priority', subject: 'quant', topic: 'percentage', title: { en: 'Practice — Percentage', bn: 'অনুশীলন — শতকরা (Percentage)' }, minutes: 15 },
+        { id: 'today-3', kind: 'general', source: 'daily_goal', title: { en: 'Answer 30 questions today (0/30)', bn: 'আজ ৩০টি প্রশ্নের উত্তর দাও (০/৩০)' }, minutes: 15 },
+      ];
+      return wait({ date: null, exam: null, plan: null, items, totalMinutes: 50, budgetMinutes: null, trimmedCount: 0, primary: items[0] });
+    },
     async getTargetExamSyllabus() {
       const user = readFixtureUser();
       if (!user?.targetExam) throw new ApiError(422, 'NO_TARGET_EXAM', 'No target exam chosen yet');

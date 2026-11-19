@@ -51,7 +51,25 @@ const priorities = {
   subjects: { gs: { topics: { polity: { share: 30, papers: 8, level: 'MUST' } } } },
 };
 
-function stubSource({ user: initialUser, syllabus = clerkshipSyllabus, planProgress = null, dueToday = 0 } = {}) {
+/** The server's ONE Today list (F3), as GET /me/today returns it. */
+function mkToday(items, plan = null) {
+  return {
+    date: '2026-11-19',
+    exam: null,
+    plan,
+    items,
+    totalMinutes: items.reduce((a, i) => a + i.minutes, 0),
+    budgetMinutes: null,
+    trimmedCount: 0,
+    primary: items[0] ?? null,
+  };
+}
+const defaultToday = mkToday([
+  { id: 'today-1', kind: 'learn', source: 'unfinished_priority', subject: 'quant', topic: 'percentage', title: t('Learn — Percentage', 'শেখো — শতকরা'), minutes: 20 },
+  { id: 'today-2', kind: 'general', source: 'daily_goal', title: t('Answer 30 questions today (0/30)', 'আজ ৩০টি প্রশ্নের উত্তর দাও (০/৩০)'), minutes: 15 },
+]);
+
+function stubSource({ user: initialUser, syllabus = clerkshipSyllabus, planProgress = null, dueToday = 0, today = defaultToday } = {}) {
   let currentUser = initialUser === undefined
     ? { id: 'u1', name: 'Riya Sen', email: 'riya@example.com', targetExam: null }
     : initialUser;
@@ -73,6 +91,7 @@ function stubSource({ user: initialUser, syllabus = clerkshipSyllabus, planProgr
       return { user: currentUser };
     }),
     getReviewSummary: vi.fn(async () => ({ dueToday, active: dueToday, mastered: 0, mistakesActive: 0, nextDueAt: null })),
+    getToday: vi.fn(async () => today),
     getPlanProgress: vi.fn(async () => ({ progress: planProgress })),
     getStudyPlan: vi.fn(async () => plan),
     getIdoProgress: vi.fn(async () => ({ progress: null })),
@@ -236,43 +255,58 @@ describe('home target-exam card and prompt', () => {
     expect(screen.queryByText('Pick your target exam')).toBeNull();
   });
 
-  it('plan exam, not started: offers to start the plan', async () => {
+  it('home shows the ONE Today list from the server, with a single Continue button', async () => {
     renderAt('/', stubSource({
       user: { id: 'u1', name: 'Riya Sen', email: 'riya@example.com', targetExam: { code: 'WBPSC_CLERKSHIP', date: null, setAt: '2026-11-18T00:00:00.000Z' } },
       planProgress: null,
     }));
-    const cta = await screen.findByRole('link', { name: /Start your 2-day plan/ });
-    expect(cta).toHaveAttribute('href', '/plan');
+    await screen.findByRole('heading', { name: /Today's Study/ });
+    // The Continue button and the first list item lead to the same first task.
+    const cont = await screen.findByRole('link', { name: /Continue Studying/ });
+    const first = await screen.findByRole('link', { name: /Learn — Percentage/ });
+    expect(cont).toHaveAttribute('href', first.getAttribute('href'));
+    expect(screen.getByText('About 35 minutes today')).toBeInTheDocument();
+    // The home page no longer builds a competing plan of its own.
+    expect(screen.queryByText(/Start your 2-day plan/)).toBeNull();
+    expect(screen.queryByText(/Syllabus .*% complete/)).toBeNull();
   });
 
-  it('plan exam, started: shows the current day and its next task', async () => {
+  it('plan exam, started: the Today list carries the plan day and its next task', async () => {
     renderAt('/', stubSource({
       user: { id: 'u1', name: 'Riya Sen', email: 'riya@example.com', targetExam: { code: 'WBPSC_CLERKSHIP', date: null, setAt: '2026-11-18T00:00:00.000Z' } },
-      planProgress: { startDate: localIsoDate(), done: [], budget: 180, examDate: null, tests: {} },
+      today: mkToday(
+        [{ id: 'today-1', kind: 'plan', source: 'plan', planKind: 'learn', day: 1, task: planDays[0].tasks[0], subject: 'gs', topic: 'polity', title: t('Polity', 'Polity'), minutes: 30 }],
+        { code: 'WBPSC_CLERKSHIP', route: '/plan', day: 1, total: 2, dayDone: false },
+      ),
     }));
-    expect(await screen.findByRole('link', { name: /Day 1 of 2/ })).toHaveAttribute('href', '/plan');
+    expect(await screen.findByText(/Day 1 of 2/)).toBeInTheDocument();
     const task = await screen.findByRole('link', { name: /Study: Polity/ });
     expect(task).toHaveAttribute('href', '/learn/gk/polity');
+    expect(screen.getByRole('link', { name: /Continue Studying/ })).toHaveAttribute('href', '/learn/gk/polity');
   });
 
-  it('no-plan exam: syllabus progress and the weakest chapter as the next action', async () => {
+  it('no-plan exam: the Today list comes from the engine, not from syllabus progress', async () => {
     renderAt('/', stubSource({
       user: { id: 'u1', name: 'Riya Sen', email: 'riya@example.com', targetExam: { code: 'WBCS', date: null, setAt: '2026-11-18T00:00:00.000Z' } },
       syllabus: wbcsSyllabus,
     }));
-    expect(await screen.findByText('Syllabus 25% complete')).toBeInTheDocument();
-    const next = await screen.findByRole('link', { name: /Work on Algebra/ });
-    expect(next).toHaveAttribute('href', '/my-syllabus');
+    await screen.findByRole('heading', { name: /Today's Study/ });
+    expect(await screen.findByRole('link', { name: /Learn — Percentage/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Work on Algebra/)).toBeNull();
   });
 
-  it('no-plan exam: due revision jumps the queue', async () => {
+  it('due revision from the engine leads the Today list and the Continue button', async () => {
     renderAt('/', stubSource({
       user: { id: 'u1', name: 'Riya Sen', email: 'riya@example.com', targetExam: { code: 'WBCS', date: null, setAt: '2026-11-18T00:00:00.000Z' } },
       syllabus: wbcsSyllabus,
-      dueToday: 3,
+      today: mkToday([
+        { id: 'today-1', kind: 'revise', source: 'overdue_revision', title: t('Revise 3 questions due today', 'আজ বাকি ৩টি প্রশ্ন রিভিশন করো'), count: 3, overdue: 1, minutes: 6 },
+        { id: 'today-2', kind: 'learn', source: 'unfinished_priority', subject: 'quant', topic: 'percentage', title: t('Learn — Percentage', 'শেখো — শতকরা'), minutes: 20 },
+      ]),
     }));
     const next = await screen.findByRole('link', { name: /Revise 3 questions due today/ });
     expect(next).toHaveAttribute('href', '/revise');
+    expect(screen.getByRole('link', { name: /Continue Studying/ })).toHaveAttribute('href', '/revise');
   });
 });
 

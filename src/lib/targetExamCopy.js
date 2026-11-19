@@ -1,5 +1,6 @@
 /** Copy for the target-exam picker, home prompt, and syllabus page. English + Bengali. */
 const t = (en, bn) => ({ en, bn });
+const bn = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
 export const TARGET_EXAM = Object.freeze({
   menu: t('Target exam', 'লক্ষ্য পরীক্ষা'),
@@ -118,4 +119,21 @@ export const SYLLABUS_MAP = Object.freeze({
   ),
   noChaptersMatch: t('No chapters match this filter.', 'এই ফিল্টারে কোনো অধ্যায় মিলছে না।'),
   subjectNotInPattern: t('No section in the official pattern', 'অফিসিয়াল প্যাটার্নে আলাদা বিভাগ নেই'),
+});
+
+/**
+ * F3 — the ONE "Today's Study" list on the home page. The list itself comes
+ * from the server (GET /me/today); this is only its chrome: the heading, the
+ * single Continue Studying button and the time summary.
+ */
+export const TODAY = Object.freeze({
+  title: t("Today's Study", 'আজ কী পড়ব?'),
+  continueBtn: t('Continue Studying', 'পড়া শুরু করো'),
+  totalTime: (mins) => t(`About ${mins} minutes today`, `আজ প্রায় ${bn(mins)} মিনিট`),
+  heldBack: (n) => t(
+    `${n} more ${n === 1 ? 'item is' : 'items are'} held back to fit your daily study time.`,
+    `তোমার দৈনিক পড়ার সময়ে কুলোতে আরও ${bn(n)}টি বিষয় রাখা হয়নি।`,
+  ),
+  empty: t('Nothing is due right now. Pick anything below and keep the streak going.', 'এখন কিছু বাকি নেই। নিচে থেকে যেকোনো একটা বেছে নিয়ে ধারাবাহিকতা ধরে রাখো।'),
+  minutes: (mins) => t(`${mins} min`, `${bn(mins)} মিনিট`),
 });

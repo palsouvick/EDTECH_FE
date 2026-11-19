@@ -104,17 +104,28 @@ beforeEach(() => {
 });
 
 describe('revision queue and mistake notebook', () => {
-  it('a signed-in student lands on their dashboard: plan, continue, weakest spot', async () => {
+  it('a signed-in student lands on their dashboard: today list, continue, weakest spot', async () => {
     lastVisitedStore.set({ category: 'SSC', subject: 'quant', topic: 'percentage', names: { topic: t('Percentage', 'শতকরা'), category: t('SSC', 'SSC') } });
-    renderAt('/', { ...stubSource(), getInsights: async () => INSIGHTS, getChallenge: async () => ({ day: '2026-10-23', questions: [question(1)], done: { correct: 4, total: 5 } }) });
+    // F3: the home Today list is the server's single list — due revision
+    // first, then the weak chapter, then the daily goal.
+    const todayItems = [
+      { id: 'today-1', kind: 'revise', source: 'revision_due', title: t('Revise 2 questions due today', 'আজ বাকি ২টি প্রশ্ন রিভিশন করো'), count: 2, minutes: 6 },
+      { id: 'today-2', kind: 'practice', source: 'weak_priority', subject: 'quant', topic: 'percentage', title: t('Practice — Percentage', 'অনুশীলন — শতকরা'), minutes: 15 },
+      { id: 'today-3', kind: 'general', source: 'daily_goal', title: t('Answer 30 questions today (7/30)', 'আজ ৩০টি প্রশ্নের উত্তর দাও (৭/৩০)'), minutes: 15 },
+    ];
+    renderAt('/', {
+      ...stubSource(),
+      getInsights: async () => INSIGHTS,
+      getToday: async () => ({ date: '2026-10-23', exam: null, plan: null, items: todayItems, totalMinutes: 36, budgetMinutes: null, trimmedCount: 0, primary: todayItems[0] }),
+    });
     expect(await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening), Riya/ })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /^Crack SSC/ })).toBeNull();
 
-    const plan = screen.getByRole('region', { name: /Today's plan/ });
-    // The greeting shows first; the plan fills in once the data arrives.
-    expect(await within(plan).findByRole('link', { name: /Revise 2 questions from your queue/ })).toHaveAttribute('href', '/revise');
-    expect(within(plan).getByText('Daily challenge done: 4/5')).toBeInTheDocument();
-    expect(within(plan).getByRole('link', { name: /Practise 10 questions: Successive percentage change/ })).toHaveAttribute('href', '/exams/ssc/quant/percentage?pattern=successive_change&practice=10');
+    const plan = screen.getByRole('region', { name: /Today's Study/ });
+    // The greeting shows first; the Today list fills in once the data arrives.
+    expect(await within(plan).findByRole('link', { name: /Revise 2 questions due today/ })).toHaveAttribute('href', '/revise');
+    expect(within(plan).getByRole('link', { name: /Continue Studying/ })).toHaveAttribute('href', '/revise');
+    expect(within(plan).getByRole('link', { name: /Practice — Percentage/ })).toBeInTheDocument();
     expect(within(plan).getByText(/Answer 30 questions today \(7\/30\)/)).toBeInTheDocument();
 
     const cont = screen.getByRole('region', { name: /Continue where you left off/ });

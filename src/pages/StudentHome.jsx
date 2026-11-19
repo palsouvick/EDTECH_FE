@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
-import { useStudyProgress } from '../hooks/useStudyProgress';
-import { currentPlanDay, dayNumber, localIsoDate, requiredTasks, taskLink } from '../lib/studyPlan';
+import { chapterLink, taskLink } from '../lib/studyPlan';
 import { taskTitle } from '../components/plan/PlanParts';
-import { TARGET_EXAM } from '../lib/targetExamCopy';
+import { TARGET_EXAM, TODAY } from '../lib/targetExamCopy';
 import PageShell from '../components/navigation/PageShell';
 import { patternLink } from '../components/review/InsightsPanel';
 import { Localized } from '../components/topic-hub/Localized';
-import { ArrowRightIcon, CheckIcon } from '../components/topic-hub/icons';
+import { ArrowRightIcon } from '../components/topic-hub/icons';
 import { lastVisitedStore } from '../lib/lastVisited';
 import { lastChapter } from '../lib/learnProgress';
-import { playedOnDevice } from './ChallengePage';
 import { MASTERY, WEAK } from '../lib/motivationCopy';
 import { REVIEW } from '../lib/reviewCopy';
 import { learnPaths, paths } from '../lib/routes';
@@ -28,15 +26,6 @@ const COPY = {
   exam: t('Exam practice', 'পরীক্ষার অনুশীলন'),
   basics: t('Learn Basics', 'বেসিক শেখো'),
   nothingYet: t('Pick an exam or start Learn Basics, and your place will be kept here.', 'একটা পরীক্ষা বা বেসিক শেখো শুরু করো, তোমার জায়গা এখানে মনে রাখা হবে।'),
-  plan: t("Today's plan", 'আজকের পরিকল্পনা'),
-  planRevise: (n) => t(`Revise ${n} ${n === 1 ? 'question' : 'questions'} from your queue`, `তালিকা থেকে ${n}টি প্রশ্ন রিভিশন করো`),
-  planRevised: t('Revision done for today', 'আজকের রিভিশন শেষ'),
-  planChallenge: t('Play the daily challenge (5 questions)', 'দৈনিক চ্যালেঞ্জ খেলো (5টি প্রশ্ন)'),
-  planChallengeDone: (c, n) => t(`Daily challenge done: ${c}/${n}`, `দৈনিক চ্যালেঞ্জ হয়ে গেছে: ${c}/${n}`),
-  // name: a localized { en, bn } chapter or pattern name.
-  planPattern: (name) => t(`Practise 10 questions: ${name.en}`, `10টি প্রশ্ন অনুশীলন: ${name.bn ?? name.en}`),
-  planChapter: (name) => t(`Practise ${name.en}`, `${name.bn ?? name.en} অনুশীলন করো`),
-  planGoal: (a, g) => t(`Answer ${g} questions today (${Math.min(a, g)}/${g})`, `আজ ${g}টি প্রশ্নের উত্তর দাও (${Math.min(a, g)}/${g})`),
   weakest: t('Your weakest spot', 'তোমার সবচেয়ে দুর্বল জায়গা'),
   noWeak: t('Answer a few more questions and your weakest spot will show up here.', 'আরও কিছু প্রশ্নের উত্তর দিলে তোমার দুর্বল জায়গা এখানে দেখাবে।'),
   map: t('Your chapters', 'তোমার অধ্যায়গুলো'),
@@ -52,38 +41,40 @@ const card = 'rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 da
 /** Dismissing the "pick your target exam" card is device-local and permanent for that device. */
 const PROMPT_KEY = 'edtech:target-exam-prompt-dismissed';
 
-function PlanItem({ done, to, children }) {
-  const body = (
-    <>
-      <span className={`grid size-7 shrink-0 place-items-center rounded-full ring-2 ${done ? 'bg-emerald-500 text-white ring-emerald-500' : 'ring-slate-300 dark:ring-slate-600'}`} aria-hidden="true">
-        {done && <CheckIcon width={14} height={14} strokeWidth={3} />}
-      </span>
-      <span className={`min-w-0 flex-1 font-semibold ${done ? 'text-slate-400 line-through dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{children}</span>
-      {!done && to && <ArrowRightIcon className="shrink-0 text-indigo-500" />}
-      <span className="sr-only">{done ? '(done)' : ''}</span>
-    </>
-  );
-  return (
-    <li>
-      {to && !done ? (
-        <Link to={to} className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
-          {body}
-        </Link>
-      ) : (
-        <div className="flex min-h-12 items-center gap-3 px-3 py-2">{body}</div>
-      )}
-    </li>
-  );
+const TODAY_ICON = { revise: '🔁', plan: '🗓️', learn: '📖', practice: '✍️', pyq: '📝', gk: '🧠', general: '🎯' };
+
+/**
+ * Where a Today item is done. The list itself is the server's (GET /me/today,
+ * F3) — this only turns an item into the app's existing route for that work,
+ * reusing the plan's own task links for plan tasks.
+ */
+function todayHref(item, today) {
+  switch (item.kind) {
+    case 'revise':
+      return '/revise';
+    case 'plan':
+      return (item.task && taskLink(item.task)) || today?.plan?.route || '/plan';
+    case 'learn':
+      return chapterLink(item.subject, item.topic);
+    case 'practice':
+      return today?.exam?.category ? paths.topic(today.exam.category, item.subject, item.topic) : chapterLink(item.subject, item.topic);
+    case 'pyq':
+      return '/pyq';
+    case 'gk':
+      return '/learn/gk';
+    default:
+      return paths.exams();
+  }
 }
 
 /**
- * "/" for a signed-in student: greeting and streak, continue where you left
- * off, today's plan (revision, daily challenge, weakest pattern, daily goal),
+ * "/" for a signed-in student: greeting and streak, the ONE "Today's Study"
+ * list from the server (F3 — GET /me/today; no plan is computed here any
+ * more, so home and /plan can never disagree), continue where you left off,
  * weakest spot, and a mastery snapshot. Each block hides itself if its data fails.
  */
 export default function StudentHome({ user }) {
   const source = useDataSource();
-  const { dailyGoal } = useStudyProgress();
   const [d, setD] = useState({});
   const [promptDismissed, setPromptDismissed] = useState(() => {
     try {
@@ -101,64 +92,15 @@ export default function StudentHome({ user }) {
     () => source.getTargetExamSyllabus(),
   );
   const syllabus = syllabusRes.status === 'ready' ? syllabusRes.data : null;
-  const targetLoading = Boolean(targetExam) && syllabusRes.status === 'loading';
-
-  // For plan exams (Clerkship / IDO): the plan's current day, from the plan's
-  // own progress endpoints and studyPlan.js — no plan logic duplicated here.
-  const planRoute = syllabus?.exam?.hasPlan ? syllabus.exam.planRoute : null;
-  const [planToday, setPlanToday] = useState(null);
-  useEffect(() => {
-    if (!planRoute || !user) {
-      setPlanToday(null);
-      return undefined;
-    }
-    let live = true;
-    (async () => {
-      try {
-        let progress = null;
-        let plan = null;
-        if (planRoute === '/plan' && source.getPlanProgress && source.getStudyPlan) {
-          ({ progress } = await source.getPlanProgress());
-          plan = await source.getStudyPlan(progress?.budget ?? 180);
-        } else if (planRoute === '/plan/ido' && source.getIdoProgress && source.getIdoPlan) {
-          ({ progress } = await source.getIdoProgress());
-          plan = await source.getIdoPlan(progress?.days ?? 60, progress?.budget ?? 180);
-        } else {
-          return;
-        }
-        if (!live) return;
-        if (!progress?.startDate || !plan?.days?.length) {
-          setPlanToday({ started: false, total: plan?.days?.length ?? 60, route: planRoute });
-          return;
-        }
-        const done = new Set(progress.done ?? []);
-        const calendarDay = dayNumber(progress.startDate, localIsoDate());
-        const day = currentPlanDay({ days: plan.days, done, calendarDay });
-        const dayObj = plan.days[day - 1];
-        setPlanToday({
-          started: true,
-          day,
-          total: plan.days.length,
-          route: planRoute,
-          nextTask: dayObj ? requiredTasks(dayObj).find((x) => !done.has(x.id)) ?? null : null,
-        });
-      } catch {
-        if (live) setPlanToday(null);
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [planRoute, source, user?.id]);
 
   useEffect(() => {
     let alive = true;
-    Promise.allSettled([source.getInsights(), source.getReviewSummary(), source.getChallenge()]).then(([ins, rev, ch]) => {
+    Promise.allSettled([source.getInsights(), source.getReviewSummary(), source.getToday()]).then(([ins, rev, td]) => {
       if (!alive) return;
       setD({
         insights: ins.status === 'fulfilled' ? ins.value : null,
         review: rev.status === 'fulfilled' ? rev.value : null,
-        challenge: ch.status === 'fulfilled' ? ch.value : null,
+        today: td.status === 'fulfilled' ? td.value : null,
         ready: true,
       });
     });
@@ -172,15 +114,9 @@ export default function StudentHome({ user }) {
   const ins = d.insights;
   const weak = ins?.weakPatterns?.[0];
   const weakChapter = !weak ? ins?.mastery?.find((m) => m.status === 'weak') ?? ins?.mastery?.find((m) => m.status === 'improving') : null;
-  const challengeDone = d.challenge ? d.challenge.done ?? playedOnDevice(d.challenge.day) : null;
-  const answered = ins?.today?.answered ?? 0;
   const firstName = user.name.split(/\s+/)[0];
+  const today = d.today;
 
-  // Syllabus numbers for the no-plan exams: overall completion, weakest chapter.
-  const syllabusChapters = syllabus?.subjects?.flatMap((s) => s.chapters) ?? [];
-  const withCompletion = syllabusChapters.filter((c) => c.completion != null);
-  const syllabusPct = withCompletion.length ? Math.round(withCompletion.reduce((a, c) => a + c.completion, 0) / withCompletion.length) : null;
-  const weakestSyllabusChapter = [...withCompletion].sort((a, b) => a.completion - b.completion).find((c) => c.completion < 100) ?? null;
   // Days left: the server's countdown when present, else the chosen date against today.
   const daysLeft = syllabus?.countdown?.daysLeft ?? (targetExam?.date
     ? Math.ceil((new Date(targetExam.date).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
@@ -272,102 +208,76 @@ export default function StudentHome({ user }) {
             )
           )}
 
-          {/* Today's plan */}
-          <section className={card} aria-labelledby="plan-title">
-            <h2 id="plan-title" className="text-lg font-bold text-slate-900 dark:text-white">
-              <span aria-hidden="true">📋 </span>
-              <Localized value={COPY.plan} />
-            </h2>
-            {!d.ready || targetLoading ? (
+          {/* Today's Study — the ONE list, from the server (F3). The home
+              page computes no plan of its own any more. */}
+          <section className={card} aria-labelledby="today-title">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="today-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                  <span aria-hidden="true">📋 </span>
+                  <Localized value={TODAY.title} />
+                </h2>
+                {today?.plan && (
+                  <p className="mt-1 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                    <Localized value={TARGET_EXAM.planDay(today.plan.day, today.plan.total)} />
+                  </p>
+                )}
+                {today && today.items.length > 0 && (
+                  <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
+                    <Localized value={TODAY.totalTime(today.totalMinutes)} />
+                  </p>
+                )}
+              </div>
+              {today?.plan && (
+                <Link to={today.plan.route} className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-500/40">
+                  <Localized value={TARGET_EXAM.openPlan} />
+                </Link>
+              )}
+            </div>
+            {!d.ready ? (
               <div className="mt-4 h-40 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none dark:bg-slate-800" aria-busy="true" />
-            ) : targetExam && syllabus ? (
-              <ul className="mt-3 space-y-1">
-                {planRoute ? (
-                  planToday?.started ? (
-                    <>
-                      <PlanItem to={planToday.route}>
-                        <Localized value={TARGET_EXAM.planDay(planToday.day, planToday.total)} />
-                      </PlanItem>
-                      {planToday.nextTask ? (
-                        <PlanItem to={taskLink(planToday.nextTask) ?? planToday.route}>
-                          <Localized value={taskTitle(planToday.nextTask)} />
-                        </PlanItem>
-                      ) : (
-                        <PlanItem done to={planToday.route}>
-                          <Localized value={TARGET_EXAM.planDayDone(planToday.day, planToday.total)} />
-                        </PlanItem>
-                      )}
-                    </>
-                  ) : planToday ? (
-                    <PlanItem to={planToday.route}>
-                      <Localized value={TARGET_EXAM.startPlan(planToday.total)} />
-                    </PlanItem>
-                  ) : (
-                    <PlanItem to={planRoute}>
-                      <Localized value={TARGET_EXAM.openPlan} />
-                    </PlanItem>
-                  )
-                ) : (
-                  <>
-                    {syllabusPct != null && (
-                      <PlanItem to="/my-syllabus">
-                        <Localized value={TARGET_EXAM.syllabusProgress(syllabusPct)} />
-                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
-                          <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${syllabusPct}%` }} />
-                        </span>
-                      </PlanItem>
-                    )}
-                    {d.review?.dueToday > 0 ? (
-                      <PlanItem to="/revise">
-                        <Localized value={TARGET_EXAM.nextRevise(d.review.dueToday)} />
-                      </PlanItem>
-                    ) : weakestSyllabusChapter ? (
-                      <PlanItem to="/my-syllabus">
-                        <Localized value={TARGET_EXAM.nextChapter(weakestSyllabusChapter.name)} />
-                      </PlanItem>
-                    ) : (
-                      <PlanItem to="/pyq">
-                        <Localized value={TARGET_EXAM.nextPyq} />
-                      </PlanItem>
-                    )}
-                  </>
-                )}
-                <PlanItem done={answered >= dailyGoal} to={exam ? paths.topic(exam.category, exam.subject, exam.topic) : paths.exams()}>
-                  <Localized value={COPY.planGoal(answered, dailyGoal)} />
-                  <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
-                    <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, (answered / dailyGoal) * 100)}%` }} />
-                  </span>
-                </PlanItem>
-              </ul>
+            ) : !today || today.items.length === 0 ? (
+              <Localized value={TODAY.empty} as="p" className="mt-3 text-slate-600 dark:text-slate-300" />
             ) : (
-              <ul className="mt-3 space-y-1">
-                {d.review && (d.review.active > 0 || d.review.mastered > 0) && (
-                  <PlanItem done={d.review.dueToday === 0} to="/revise">
-                    <Localized value={d.review.dueToday ? COPY.planRevise(d.review.dueToday) : COPY.planRevised} />
-                  </PlanItem>
+              <>
+                <Link
+                  to={todayHref(today.primary, today)}
+                  className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 text-base font-bold text-white shadow-sm hover:bg-indigo-500"
+                >
+                  <Localized value={TODAY.continueBtn} />
+                  <ArrowRightIcon />
+                </Link>
+                <ul className="mt-3 space-y-1">
+                  {today.items.map((item) => (
+                    <li key={item.id}>
+                      <Link to={todayHref(item, today)} className="flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-lg dark:bg-slate-800" aria-hidden="true">
+                          {TODAY_ICON[item.kind] ?? '📌'}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-semibold text-slate-800 dark:text-slate-100">
+                            <Localized value={item.kind === 'plan' && item.task ? taskTitle(item.task) : item.title} />
+                          </span>
+                          {item.reason && (
+                            <span className="block text-sm font-normal text-slate-500 dark:text-slate-400">
+                              <Localized value={item.reason} />
+                            </span>
+                          )}
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                          <Localized value={TODAY.minutes(item.minutes)} />
+                        </span>
+                        <ArrowRightIcon className="shrink-0 text-indigo-500" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {today.trimmedCount > 0 && (
+                  <p className="mt-2 px-3 text-sm text-slate-500 dark:text-slate-400">
+                    <Localized value={TODAY.heldBack(today.trimmedCount)} />
+                  </p>
                 )}
-                {d.challenge && (
-                  <PlanItem done={Boolean(challengeDone)} to="/challenge">
-                    <Localized value={challengeDone ? COPY.planChallengeDone(challengeDone.correct, challengeDone.total) : COPY.planChallenge} />
-                  </PlanItem>
-                )}
-                {weak && (
-                  <PlanItem to={patternLink(weak, true)}>
-                    <Localized value={COPY.planPattern(weak.patternName)} />
-                  </PlanItem>
-                )}
-                {!weak && weakChapter && (
-                  <PlanItem to={paths.topic(weakChapter.category, weakChapter.subject, weakChapter.topic)}>
-                    <Localized value={COPY.planChapter(weakChapter.name)} />
-                  </PlanItem>
-                )}
-                <PlanItem done={answered >= dailyGoal} to={exam ? paths.topic(exam.category, exam.subject, exam.topic) : paths.exams()}>
-                  <Localized value={COPY.planGoal(answered, dailyGoal)} />
-                  <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
-                    <span className="block h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, (answered / dailyGoal) * 100)}%` }} />
-                  </span>
-                </PlanItem>
-              </ul>
+              </>
             )}
           </section>
 
