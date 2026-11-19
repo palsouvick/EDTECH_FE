@@ -43,7 +43,8 @@ describe('phone menu', () => {
     await user.click(open);
     const sheet = screen.getByRole('dialog', { name: 'Menu' });
     const links = within(sheet).getAllByRole('link');
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/', '/exams', '/plan', '/ido', '/learn', '/pyq', '/vocabulary', '/tips', '/me']);
+    // F13: one "Revision" entry joins the menu. Phase 12: Plan and IDO are one "Plan" entry.
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/', '/exams', '/plan', '/learn', '/pyq', '/revision', '/vocabulary', '/tips', '/me']);
     expect(within(sheet).getByRole('link', { name: /Exams/ })).toHaveAttribute('aria-current', 'page');
     expect(within(sheet).getByRole('radiogroup', { name: /Language/ })).toBeInTheDocument();
     expect(document.body.style.overflow).toBe('hidden');

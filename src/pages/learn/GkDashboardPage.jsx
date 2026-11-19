@@ -13,6 +13,7 @@ import { SubjectTabs } from './SubjectPage';
 import { BookEntryCard } from './BookHomePage';
 import CustomTestLauncher from '../../components/custom-test/CustomTestLauncher';
 import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
+import StageChip from '../../components/mastery/StageChip';
 
 export const gkCardPath = (code) => `/learn/gk/${toSlug(code)}`;
 export const GK_REVISION_PATH = '/learn/gk/revision';
@@ -35,7 +36,7 @@ export function CompletionBar({ progress, total, signedIn, compact = false }) {
   );
 }
 
-function GkCard({ card, signedIn }) {
+function GkCard({ card, signedIn, stage }) {
   return (
     <Link
       to={gkCardPath(card.code)}
@@ -45,7 +46,10 @@ function GkCard({ card, signedIn }) {
         <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-500/10">{card.emoji}</span>
         <div className="min-w-0">
           <Localized value={card.title} as="h3" className="text-lg font-extrabold leading-snug text-slate-900 dark:text-white" />
-          <PriorityBadge subject="gs" topics={card.topics} className="mt-1.5" />
+          <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <PriorityBadge subject="gs" topics={card.topics} />
+            {signedIn && <StageChip stage={stage} />}
+          </span>
           <Localized value={card.description} as="p" className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300" />
         </div>
       </div>
@@ -74,7 +78,7 @@ function GkCard({ card, signedIn }) {
   );
 }
 
-function Section({ section, cards, signedIn, onMock }) {
+function Section({ section, cards, signedIn, onMock, stages }) {
   return (
     <section aria-labelledby={`gk-section-${section.code}`} className="mt-10">
       <div className="flex flex-col gap-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:flex-row sm:items-end sm:justify-between dark:bg-slate-900 dark:ring-slate-800">
@@ -100,7 +104,7 @@ function Section({ section, cards, signedIn, onMock }) {
       <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <li key={c.code}>
-            <GkCard card={c} signedIn={signedIn} />
+            <GkCard card={c} signedIn={signedIn} stage={stages?.get(c.code) ?? stages?.get(c.topics?.[0])} />
           </li>
         ))}
       </ul>
@@ -134,6 +138,19 @@ export default function GkDashboardPage() {
     };
   }, [source, userKey, attempt]);
   const { status, data, error } = state;
+  // F9/F10: each card's unified mastery stage (same definition as every other screen).
+  const [stages, setStages] = useState(null);
+  useEffect(() => {
+    if (!auth?.user || !source.getMastery) return undefined;
+    let alive = true;
+    source.getMastery('gs').then(
+      (d) => alive && setStages(new Map(d.chapters.map((c) => [c.topic, c.stage]))),
+      () => {},
+    );
+    return () => {
+      alive = false;
+    };
+  }, [source, auth?.user, attempt]);
   const topicNames = useMemo(
     () => (data ? Object.fromEntries(data.cards.flatMap((c) => c.topics.map((t) => [t, c.title]))) : {}),
     [data],
@@ -170,6 +187,7 @@ export default function GkDashboardPage() {
           cards={data.cards.filter((c) => c.section === s.code)}
           signedIn={data.signedIn}
           onMock={setMock}
+          stages={stages}
         />
       ))}
 

@@ -6,7 +6,7 @@ import { NAV } from '../../lib/homeCopy';
 import LanguageSwitcher from '../topic-hub/LanguageSwitcher';
 import { Localized } from '../topic-hub/Localized';
 import { XIcon } from '../topic-hub/icons';
-import { ITEMS } from './SiteNav';
+import { useNavItems } from './SiteNav';
 
 /**
  * Phones only (below md): a Menu button that opens a sheet with every site section
@@ -20,6 +20,7 @@ import { ITEMS } from './SiteNav';
 export default function MobileMenu({ showLanguage = true }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const navItems = useNavItems();
   const { lang } = useLanguagePreference();
   const button = useRef(null);
   const sheet = useRef(null);
@@ -91,7 +92,7 @@ export default function MobileMenu({ showLanguage = true }) {
               </div>
 
               <nav aria-label="Site" className="mt-3 grid grid-cols-2 gap-2">
-                {ITEMS.map((i) => (
+                {navItems.map((i) => (
                   <NavLink
                     key={i.key}
                     to={i.to}

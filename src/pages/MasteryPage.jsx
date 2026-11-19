@@ -5,7 +5,7 @@ import { useDataSource } from '../app/DataSourceContext';
 import { loginPath } from '../components/auth/AccountButton';
 import PageShell from '../components/navigation/PageShell';
 import { Localized } from '../components/topic-hub/Localized';
-import { MASTERY } from '../lib/motivationCopy';
+import { MASTERY, STAGE_ORDER } from '../lib/motivationCopy';
 import { paths } from '../lib/routes';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
 
@@ -17,6 +17,18 @@ export const STATUS_STYLE = {
   not_started: { tile: 'bg-white text-slate-500 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-700', dot: 'bg-slate-300 dark:bg-slate-600', icon: '○' },
 };
 const LEGEND = ['weak', 'improving', 'strong', 'started', 'not_started'];
+
+/** F9/F10: colours of the unified stages — the one scale Home, subject pages and Today share. */
+export const STAGE_STYLE = {
+  mastered: { tile: 'bg-violet-600 text-white ring-violet-700', dot: 'bg-violet-600', icon: '🏆' },
+  strong: { tile: 'bg-emerald-500 text-white ring-emerald-600', dot: 'bg-emerald-500', icon: '💪' },
+  developing: { tile: 'bg-amber-300 text-amber-950 ring-amber-400', dot: 'bg-amber-400', icon: '📈' },
+  practising: { tile: 'bg-orange-100 text-orange-950 ring-orange-300 dark:bg-orange-500/15 dark:text-orange-100 dark:ring-orange-500/30', dot: 'bg-orange-400', icon: '✍️' },
+  learning: { tile: 'bg-sky-100 text-sky-900 ring-sky-200 dark:bg-sky-500/15 dark:text-sky-200 dark:ring-sky-500/30', dot: 'bg-sky-300', icon: '🌱' },
+  not_started: STATUS_STYLE.not_started,
+};
+/** A chapter's stage, or null for data from before the unified definition (offline fixtures). */
+export const stageOf = (m) => (m?.stage && STAGE_STYLE[m.stage] ? m.stage : null);
 
 /** /mastery: every chapter as a coloured tile, grouped by subject. */
 export default function MasteryPage() {
@@ -58,13 +70,21 @@ export default function MasteryPage() {
         <Localized value={MASTERY.sub} as="p" className="mt-2 max-w-2xl leading-relaxed text-white/95" />
         {state.data && (
           <ul className="mt-5 flex flex-wrap gap-2" aria-label="Legend">
-            {LEGEND.map((s) => (
-              <li key={s} className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold ring-1 ring-white/25">
-                <span className={`size-3 rounded-full ${STATUS_STYLE[s].dot}`} aria-hidden="true" />
-                <Localized value={MASTERY.status[s]} />
-                <span className="tabular-nums opacity-90">{state.data.counts[s] ?? 0}</span>
-              </li>
-            ))}
+            {state.data.stageCounts
+              ? [...STAGE_ORDER].reverse().map((s) => (
+                <li key={s} className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold ring-1 ring-white/25">
+                  <span className={`size-3 rounded-full ${STAGE_STYLE[s].dot}`} aria-hidden="true" />
+                  <Localized value={MASTERY.stage[s]} />
+                  <span className="tabular-nums opacity-90">{state.data.stageCounts[s] ?? 0}</span>
+                </li>
+              ))
+              : LEGEND.map((s) => (
+                <li key={s} className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold ring-1 ring-white/25">
+                  <span className={`size-3 rounded-full ${STATUS_STYLE[s].dot}`} aria-hidden="true" />
+                  <Localized value={MASTERY.status[s]} />
+                  <span className="tabular-nums opacity-90">{state.data.counts[s] ?? 0}</span>
+                </li>
+              ))}
           </ul>
         )}
       </header>
@@ -79,7 +99,8 @@ export default function MasteryPage() {
             </h2>
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {g.chapters.map((m) => {
-                const st = STATUS_STYLE[m.status];
+                const stage = stageOf(m);
+                const st = stage ? STAGE_STYLE[stage] : STATUS_STYLE[m.status];
                 return (
                   <li key={m.topic}>
                     <Link
@@ -91,7 +112,8 @@ export default function MasteryPage() {
                         <span aria-hidden="true">{st.icon}</span>
                       </div>
                       <div className="mt-auto pt-2 text-xs font-semibold opacity-90">
-                        <Localized value={MASTERY.status[m.status]} as="span" className="block" />
+                        <Localized value={stage ? MASTERY.stage[stage] : MASTERY.status[m.status]} as="span" className="block"/>
+                        {stage && m.score != null && <Localized value={MASTERY.score(m.score)} as="span" className="block tabular-nums" />}
                         {m.accuracyPct != null && (
                           <span className="block tabular-nums">
                             <Localized value={MASTERY.accuracy(m.accuracyPct)} />

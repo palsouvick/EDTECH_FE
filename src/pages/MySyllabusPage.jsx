@@ -3,6 +3,7 @@ import { useAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
 import { TARGET_EXAM, SYLLABUS_MAP } from '../lib/targetExamCopy';
+import { DIAG } from '../lib/diagnosticCopy';
 import { chapterLink } from '../lib/studyPlan';
 import { subjectSlugFromCode } from '../lib/routes';
 import { loginPath } from '../components/auth/AccountButton';
@@ -122,6 +123,14 @@ export default function MySyllabusPage() {
             </span>
           </Link>
 
+          {/* F7: the optional starting-level check is always reachable here. */}
+          <Link to="/starting-level" className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 hover:ring-indigo-300 sm:p-5 dark:bg-slate-900 dark:ring-slate-800">
+            <span className="block text-lg font-bold text-slate-900 dark:text-white">
+              <span aria-hidden="true">🧭 </span>
+              <Localized value={DIAG.takeIt} /> →
+            </span>
+          </Link>
+
           {/* Readiness */}
           {readiness && (
             <section className={card} aria-labelledby="readiness-title">
@@ -134,7 +143,7 @@ export default function MySyllabusPage() {
               <ul className="mt-3 space-y-2">
                 {[
                   [TARGET_EXAM.coverage, readiness.components?.coverage],
-                  [TARGET_EXAM.accuracy, readiness.components?.accuracy],
+                  [TARGET_EXAM.masteryComponent, readiness.components?.mastery ?? readiness.components?.accuracy],
                   [TARGET_EXAM.pyq, readiness.components?.pyq],
                 ].map(([label, value]) => (
                   <li key={label.en} className="flex items-center justify-between gap-3 text-sm">

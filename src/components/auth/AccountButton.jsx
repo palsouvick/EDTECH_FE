@@ -1,8 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { AN } from '../../lib/analysisCopy';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { REVISION } from '../../lib/revisionCopy';
-import { REVIEW } from '../../lib/reviewCopy';
 import { MASTERY } from '../../lib/motivationCopy';
 import { useOptionalAuth } from '../../app/AuthContext';
 import { AUTH } from '../../lib/i18n';
@@ -108,18 +106,7 @@ function AccountControl({ auth, className = '' }) {
             <span aria-hidden="true">🗺️ </span>
             <Localized value={MASTERY.title} />
           </Link>
-          <Link role="menuitem" to="/revise" className={item} onClick={() => setOpen(false)}>
-            <span aria-hidden="true">🔁 </span>
-            <Localized value={REVIEW.title} />
-          </Link>
-          <Link role="menuitem" to="/mistakes" className={item} onClick={() => setOpen(false)}>
-            <span aria-hidden="true">📒 </span>
-            <Localized value={REVIEW.notebook} />
-          </Link>
-          <Link role="menuitem" to="/revision" className={item} onClick={() => setOpen(false)}>
-            <span aria-hidden="true">📌 </span>
-            <Localized value={REVISION.title} />
-          </Link>
+          {/* Revision is a top-level tab (Phase 12): not repeated here. */}
           <button
             role="menuitem"
             type="button"

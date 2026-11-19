@@ -30,6 +30,8 @@ export default function RevisePage() {
   const { status: authStatus, user } = useAuth();
   const source = useDataSource();
   const location = useLocation();
+  // F13 PYQ revision (/revise?pyq=1): the same queue and schedule, previous-year questions only.
+  const pyqOnly = new URLSearchParams(location.search).get('pyq') === '1';
   const [load, setLoad] = useState({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [index, setIndex] = useState(0);
@@ -43,14 +45,14 @@ export default function RevisePage() {
     if (!user) return undefined;
     let alive = true;
     setLoad({ status: 'loading' });
-    Promise.all([source.getReviewDue(), source.getReviewSummary()]).then(
+    Promise.all([source.getReviewDue(pyqOnly ? { pyq: true } : undefined), source.getReviewSummary()]).then(
       ([due, summary]) => alive && setLoad({ status: 'ready', items: due.items, masterAfter: due.masterAfter, summary }),
       (error) => alive && setLoad({ status: 'error', error }),
     );
     return () => {
       alive = false;
     };
-  }, [user, source, attempt]);
+  }, [user, source, attempt, pyqOnly]);
 
   if (authStatus === 'ready' && !user) return <Navigate to={loginPath(location)} replace />;
 

@@ -43,7 +43,7 @@ export const TARGET_EXAM = Object.freeze({
     'কোন পরীক্ষার জন্য প্রস্তুতি নিচ্ছ জানালে তোমার দৈনিক পরিকল্পনা ও সিলেবাস সেই অনুযায়ী সাজিয়ে দেব।',
   ),
   dismiss: t('Not now', 'এখন নয়'),
-  readinessLabel: t('Readiness (syllabus + accuracy + PYQs)', 'প্রস্তুতি (সিলেবাস + নির্ভুলতা + আগের প্রশ্ন)'),
+  readinessLabel: t('Readiness (syllabus + mastery + PYQs)', 'প্রস্তুতি (সিলেবাস + দক্ষতা + আগের প্রশ্ন)'),
   daysLeft: (n) => t(`${n} day${n === 1 ? '' : 's'} left`, `${n} দিন বাকি`),
   examToday: t('Exam today', 'আজই পরীক্ষা'),
   examPassed: t('Exam date has passed', 'পরীক্ষার তারিখ পেরিয়ে গেছে'),
@@ -66,6 +66,8 @@ export const TARGET_EXAM = Object.freeze({
   readinessBreakdown: t('Readiness breakdown', 'প্রস্তুতির হিসাব'),
   coverage: t('Syllabus coverage', 'সিলেবাস শেষ হয়েছে'),
   accuracy: t('Accuracy', 'নির্ভুলতা'),
+  // F9/F10: readiness uses the unified mastery score, not raw accuracy.
+  masteryComponent: t('Mastery', 'দক্ষতা'),
   pyq: t('Previous papers', 'আগের প্রশ্নপত্র'),
   noData: t('No data yet', 'এখনও তথ্য নেই'),
   noWeight: t('No weight data — the paper does not publish one, and we have not measured it from past papers yet.', 'গুরুত্বের তথ্য নেই — প্রশ্নপত্রে এটা দেওয়া থাকে না, আর আগের প্রশ্ন থেকে আমরা এখনও মাপিনি।'),

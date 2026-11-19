@@ -5,6 +5,7 @@ import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
 import { LANGUAGES, useLanguagePreference } from '../hooks/useLanguagePreference';
 import { TARGET_EXAM } from '../lib/targetExamCopy';
+import { DIAG } from '../lib/diagnosticCopy';
 import { loginPath } from '../components/auth/AccountButton';
 import { Localized } from '../components/topic-hub/Localized';
 import PageShell from '../components/navigation/PageShell';
@@ -126,6 +127,32 @@ export default function TargetExamPicker() {
               <Localized value={TARGET_EXAM.continue} /> →
             </Link>
           </div>
+          {/* F7: offer the optional starting-level check for the exam just chosen. */}
+          {source.startDiagnostic && (
+            <section aria-labelledby="diag-offer-title" className="mt-6 rounded-2xl bg-violet-50 p-5 ring-1 ring-violet-200 dark:bg-violet-500/10 dark:ring-violet-500/30">
+              <h2 id="diag-offer-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                <span aria-hidden="true">🧭 </span>
+                <Localized value={DIAG.title} />
+              </h2>
+              <Localized value={DIAG.offerShort} as="p" className="mt-1 text-sm text-slate-700 dark:text-slate-200" />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link to="/starting-level" className="inline-flex min-h-11 items-center rounded-xl bg-violet-700 px-5 text-sm font-bold text-white hover:bg-violet-600">
+                  <Localized value={DIAG.start} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // "Not now" is remembered on the server for this exam; it never blocks continuing.
+                    Promise.resolve(source.skipDiagnostic?.()).catch(() => {}).finally(() => navigate(next));
+                  }}
+                  className="inline-flex min-h-11 items-center rounded-xl px-5 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-white dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
+                >
+                  <Localized value={DIAG.notNow} />
+                </button>
+              </div>
+              <Localized value={DIAG.later} as="p" className="mt-2 text-xs text-slate-500 dark:text-slate-400" />
+            </section>
+          )}
         </div>
       ) : res.status === 'error' ? (
         <div className="mt-6"><LoadError error={res.error} onRetry={res.retry} /></div>

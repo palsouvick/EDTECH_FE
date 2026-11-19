@@ -28,13 +28,13 @@ const clerkshipSyllabus = {
   exam: { code: 'WBPSC_CLERKSHIP', name: t('Clerkship', 'ক্লার্কশিপ'), support: 'full', hasPlan: true, planCode: 'clerkship-60', planRoute: '/plan' },
   pattern: { stageName: t('Part-I', 'পার্ট-I'), durationMin: 90, negative: 0.25, sections: [{ subject: 'quant', name: t('Arithmetic', 'পাটিগণিত'), questions: 30, marks: 30, weight: 30 }] },
   subjects: [{ subject: 'quant', name: t('Arithmetic', 'পাটিগণিত'), weight: 30, weightSource: 'pattern', chapters }],
-  readiness: { score: 42, components: { coverage: 30, accuracy: 55, pyq: 12 }, basis: 'syllabus', note: null },
+  readiness: { score: 42, components: { coverage: 30, mastery: 55, pyq: 12 }, basis: 'syllabus', note: null },
   countdown: { examDate: '2027-03-01', daysLeft: 42 },
 };
 const wbcsSyllabus = {
   ...clerkshipSyllabus,
   exam: { code: 'WBCS', name: t('WBCS', 'WBCS'), support: 'partial', hasPlan: false, planCode: null, planRoute: null },
-  readiness: { score: 18, components: { coverage: 25, accuracy: 50, pyq: null }, basis: 'syllabus', note: null },
+  readiness: { score: 18, components: { coverage: 25, mastery: 50, pyq: null }, basis: 'syllabus', note: null },
   countdown: null,
 };
 
@@ -249,8 +249,10 @@ describe('home target-exam card and prompt', () => {
     }));
     await screen.findByText('Clerkship');
     expect(await screen.findByText('42 days left')).toBeInTheDocument();
-    expect(screen.getByText('42%')).toBeInTheDocument();
-    expect(screen.getByText('Readiness (syllabus + accuracy + PYQs)')).toBeInTheDocument();
+    // Phase 12: readiness is its own Home block, with its parts in words.
+    expect(screen.getByTestId('home-readiness').textContent).toBe('42%');
+    expect(screen.getByRole('heading', { name: /Exam readiness/ })).toBeInTheDocument();
+    expect(screen.getByText(/Syllabus covered 30% · mastery 55% · PYQs 12%/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /View my syllabus/ })).toHaveAttribute('href', '/my-syllabus');
     expect(screen.queryByText('Pick your target exam')).toBeNull();
   });
@@ -324,7 +326,7 @@ describe('my syllabus page', () => {
     await screen.findByRole('heading', { name: 'My syllabus' });
     expect(await screen.findByText('Exam pattern')).toBeInTheDocument();
     expect(await screen.findByText('30 questions')).toBeInTheDocument();
-    expect(screen.getByText('Readiness (syllabus + accuracy + PYQs)')).toBeInTheDocument();
+    expect(screen.getByText('Readiness (syllabus + mastery + PYQs)')).toBeInTheDocument();
     expect(await screen.findByText('12 PYQs')).toBeInTheDocument();
     expect(await screen.findByText('6 of 20 answered')).toBeInTheDocument();
     expect(await screen.findByText('40% complete')).toBeInTheDocument();

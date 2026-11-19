@@ -20,6 +20,7 @@ import {
   WhyList,
 } from '../components/analysis/AnalysisParts';
 import { AN, formatDuration } from '../lib/analysisCopy';
+import StageChip from '../components/mastery/StageChip';
 import { learnPaths, subjectCodeFromSlug, subjectSlugFromCode } from '../lib/routes';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
 
@@ -155,7 +156,10 @@ function StudyNow({ d }) {
               {i === 0 && <Localized value={AN.nextTask} as="p" className="mb-1 text-xs font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-300" />}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white"><Localized value={c.title} /></h3>
-                <BandBadge band={c.band} score={c.score} />
+                <span className="flex flex-wrap items-center gap-1.5">
+                  <StageChip stage={c.stage} />
+                  <BandBadge band={c.band} score={c.score} />
+                </span>
               </div>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 <Localized value={AN.mastery} />: <strong className="tabular-nums">{c.mastery == null ? '—' : `${c.mastery}%`}</strong>

@@ -100,7 +100,8 @@ export default function VocabularyPage() {
   const auth = useOptionalAuth();
   const user = auth?.user;
   const location = useLocation();
-  const [tab, setTab] = useState('browse');
+  // ?tab=review opens the due & missed review directly (the Revision page links here, F13).
+  const [tab, setTab] = useState(() => (new URLSearchParams(location.search).get('tab') === 'review' ? 'review' : 'browse'));
   const [words, setWords] = useState([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);

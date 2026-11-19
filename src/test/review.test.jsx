@@ -116,6 +116,8 @@ describe('revision queue and mistake notebook', () => {
     renderAt('/', {
       ...stubSource(),
       getInsights: async () => INSIGHTS,
+      // F13/Phase 12: Today's revision counts everything due (questions, GK facts, words).
+      getRevisionHub: async () => ({ dueToday: { total: 2, questions: 2, gkFacts: 0, vocabulary: 0 }, mistakes: { open: 0, repeating: 0, mastered: 0, bySubject: [] }, bookmarked: { questions: 0, gkFacts: 0, words: 0 }, weakTopics: [], pyq: { inQueue: 0, dueToday: 0 }, vocabulary: null }),
       getToday: async () => ({ date: '2026-10-23', exam: null, plan: null, items: todayItems, totalMinutes: 36, budgetMinutes: null, trimmedCount: 0, primary: todayItems[0] }),
     });
     expect(await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening), Riya/ })).toBeInTheDocument();
@@ -128,10 +130,11 @@ describe('revision queue and mistake notebook', () => {
     expect(within(plan).getByRole('link', { name: /Practice — Percentage/ })).toBeInTheDocument();
     expect(within(plan).getByText(/Answer 30 questions today \(7\/30\)/)).toBeInTheDocument();
 
-    const cont = screen.getByRole('region', { name: /Continue where you left off/ });
+    const cont = screen.getByRole('region', { name: /Continue learning/ });
     expect(within(cont).getByRole('link', { name: /Percentage/ })).toHaveAttribute('href', '/exams/ssc/quant/percentage');
     expect(screen.getByText('🔥 9-day streak')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /2 to revise today/ })).toHaveAttribute('href', '/revise');
+    // F13: the home revision card opens the one Revision page.
+    expect(screen.getByRole('link', { name: /2 to revise today/ })).toHaveAttribute('href', '/revision');
   });
 
   it('a revision session: right twice masters, wrong comes back tomorrow, then a summary', async () => {

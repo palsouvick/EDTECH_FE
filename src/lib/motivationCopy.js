@@ -4,8 +4,8 @@ const t = (en, bn) => ({ en, bn });
 export const MASTERY = Object.freeze({
   title: t('Mastery map', 'দক্ষতার মানচিত্র'),
   sub: t(
-    'Every chapter at a glance, from your last 30 answers in it. Spend your time on the red and amber ones.',
-    'সব অধ্যায় এক নজরে, প্রতিটিতে তোমার শেষ 30টি উত্তরের ভিত্তিতে। লাল আর হলুদগুলোতে বেশি সময় দাও।',
+    'Every chapter at a glance, from real evidence: what you have read, how you answer, previous-year questions, mistakes, revision and chapter tests.',
+    'সব অধ্যায় এক নজরে, আসল প্রমাণ থেকে: কী পড়েছ, কেমন উত্তর দিচ্ছ, আগের বছরের প্রশ্ন, ভুল, রিভিশন আর অধ্যায়ের টেস্ট।',
   ),
   status: {
     strong: t('Strong', 'দক্ষ'),
@@ -20,10 +20,24 @@ export const MASTERY = Object.freeze({
   open: t('Open the mastery map', 'দক্ষতার মানচিত্র খোলো'),
   legendTitle: t('How it is worked out', 'কীভাবে হিসাব হয়'),
   legend: t(
-    'Strong: at least 10 answers, 75%+ right, and 60%+ on the harder questions. Weak: under 50% right. Needs at least 5 answers.',
-    'দক্ষ: অন্তত 10টি উত্তর, 75%+ ঠিক, আর কঠিন প্রশ্নে 60%+। দুর্বল: 50%-এর কম ঠিক। অন্তত 5টি উত্তর লাগে।',
+    'One rule for every subject. Learning: you have read some of the chapter or answered a few questions. Practising: 5+ answers, score under 50. Developing: score 50+. Strong: score 70+, 15+ answers on 2+ different days, few open mistakes, and at least half the study material read. Mastered: score 85+, 30+ answers on 3+ days in the last month, the study material read, previous-year questions answered well, mistakes revised, and the chapter test passed. Stages are worked out again every time, so a chapter you stop practising can drop back — one good quiz is never permanent mastery.',
+    'সব বিষয়ের জন্য একই নিয়ম। শিখছ: অধ্যায়ের কিছুটা পড়েছ বা কয়েকটি প্রশ্নের উত্তর দিয়েছ। অনুশীলন: ৫+ উত্তর, স্কোর ৫০-এর নিচে। উন্নতি: স্কোর ৫০+। দক্ষ: স্কোর ৭০+, ২+ আলাদা দিনে ১৫+ উত্তর, খোলা ভুল কম, আর পড়ার অংশের অন্তত অর্ধেক পড়া। আয়ত্ত: স্কোর ৮৫+, গত এক মাসে ৩+ দিনে ৩০+ উত্তর, পড়ার অংশ পড়া, আগের বছরের প্রশ্নে ভালো ফল, ভুলগুলো রিভিশন করা, আর অধ্যায়ের টেস্টে পাশ। প্রতিবার নতুন করে হিসাব হয়, তাই অনুশীলন বন্ধ করলে অধ্যায় পিছিয়ে যেতে পারে — একটা ভালো কুইজ কখনও স্থায়ী আয়ত্ত নয়।',
   ),
+  // F9/F10: the one stage scale every screen shows.
+  stage: {
+    not_started: t('Not started', 'শুরু হয়নি'),
+    learning: t('Learning', 'শিখছ'),
+    practising: t('Practising', 'অনুশীলন'),
+    developing: t('Developing', 'উন্নতি হচ্ছে'),
+    strong: t('Strong', 'দক্ষ'),
+    mastered: t('Mastered', 'আয়ত্ত'),
+  },
+  score: (n) => t(`score ${n}`, `স্কোর ${n}`),
+  needsWork: t('needs work', 'আরও অনুশীলন দরকার'),
 });
+
+/** Order and colours of the unified mastery stages (F9). */
+export const STAGE_ORDER = Object.freeze(['not_started', 'learning', 'practising', 'developing', 'strong', 'mastered']);
 
 export const WEAK = Object.freeze({
   title: t('Weak question patterns', 'দুর্বল প্রশ্নের ধরন'),

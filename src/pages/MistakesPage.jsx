@@ -218,7 +218,7 @@ export default function MistakesPage() {
           <Link to="/revise" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-bold text-rose-700 shadow-sm hover:bg-rose-50">
             <span aria-hidden="true">🔁</span> <Localized value={REVIEW.title} />
           </Link>
-          <Link to="/revision" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/15 px-4 text-sm font-bold ring-1 ring-white/30 hover:bg-white/25">
+          <Link to="/revision/bookmarks" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/15 px-4 text-sm font-bold ring-1 ring-white/30 hover:bg-white/25">
             <span aria-hidden="true">📌</span> <Localized value={REVIEW.bookmarks} />
           </Link>
         </div>

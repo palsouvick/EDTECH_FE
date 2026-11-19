@@ -196,7 +196,7 @@ export default function PerformancePage() {
           </section>
 
           <Link
-            to="/revision"
+            to="/revision/bookmarks"
             className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 p-4 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
           >
             <span className="text-3xl" aria-hidden="true">📌</span>

@@ -25,6 +25,7 @@ import AdminPage from './pages/AdminPage';
 import AdminLogin from './pages/AdminLogin';
 import BookmarksPage from './pages/BookmarksPage';
 import RevisePage from './pages/RevisePage';
+import RevisionPage from './pages/RevisionPage';
 import MistakesPage from './pages/MistakesPage';
 import MasteryPage from './pages/MasteryPage';
 import AnalysisPage from './pages/AnalysisPage';
@@ -37,6 +38,7 @@ import PlanPage from './pages/PlanPage';
 import TargetExamPicker from './pages/TargetExamPicker';
 import MySyllabusPage from './pages/MySyllabusPage';
 import SyllabusMapPage from './pages/SyllabusMapPage';
+import DiagnosticPage from './pages/DiagnosticPage';
 import IdoDashboardPage from './pages/IdoDashboardPage';
 import IdoPlanPage from './pages/IdoPlanPage';
 import GkTopicPage from './pages/learn/GkTopicPage';
@@ -97,6 +99,7 @@ export function AppRoutes() {
       <Route path="/choose-exam" element={<TargetExamPicker />} />
       <Route path="/my-syllabus" element={<MySyllabusPage />} />
       <Route path="/syllabus-map/:examCode" element={<SyllabusMapPage />} />
+      <Route path="/starting-level" element={<DiagnosticPage />} />
       <Route path="/ido" element={<IdoDashboardPage />} />
       <Route path="/plan/ido" element={<IdoPlanPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -113,7 +116,9 @@ export function AppRoutes() {
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route path="/me" element={<PerformancePage />} />
-      <Route path="/revision" element={<BookmarksPage />} />
+      {/* F13: /revision is the ONE revision page; the bookmark list moved under it. */}
+      <Route path="/revision" element={<RevisionPage />} />
+      <Route path="/revision/bookmarks" element={<BookmarksPage />} />
       <Route path="/revise" element={<RevisePage />} />
       <Route path="/mistakes" element={<MistakesPage />} />
       <Route path="/mastery" element={<MasteryPage />} />

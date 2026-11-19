@@ -40,6 +40,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   setTargetExam({ examCode, examDate, dailyStudyMinutes, preferredLanguage })
  *                                              -> { user } (PUT /me/target-exam)
  *   getTargetExamOptions()                        -> [{ code, name, category, support, hasPlan, planCode, planRoute, pyqCount, hasPattern }]
+ *   getDiagnostic() / startDiagnostic({ language }) / submitDiagnostic({ testToken, answers }) / skipDiagnostic()
+ *                                                 -> F7 starting-level diagnostic: offer/state, test, result
  *   getTargetExamSyllabus()                       -> { exam, pattern, subjects, readiness, countdown } (422 NO_TARGET_EXAM when none set)
  *   login({ email, password })                    -> { user }
  *   register({ name, email, password })           -> { user }
@@ -138,6 +140,13 @@ export function createHttpDataSource() {
     // F3: the ONE "Today's Study" list (revision, plan day, weak/unfinished
     // priorities, PYQ, GK) — the home page renders exactly this.
     getToday: () => request(`/me/today?tz=${-new Date().getTimezoneOffset()}`),
+    // F7 Find My Starting Level: optional diagnostic for the target exam.
+    // F9/F10 unified mastery: every chapter's stage, score and evidence (optional subject).
+    getMastery: (subject) => request(subject ? `/me/mastery?subject=${subject}` : '/me/mastery'),
+    getDiagnostic: () => request('/me/diagnostic'),
+    startDiagnostic: (body) => request('/me/diagnostic/start', { method: 'POST', body }),
+    submitDiagnostic: (body) => request('/me/diagnostic/submit', { method: 'POST', body }),
+    skipDiagnostic: () => request('/me/diagnostic/skip', { method: 'POST' }),
     login: (body) => request('/auth/login', { method: 'POST', body }),
     register: (body) => request('/auth/register', { method: 'POST', body }),
     logout: () => request('/auth/logout', { method: 'POST' }),
@@ -149,7 +158,10 @@ export function createHttpDataSource() {
     setBookmark: (questionId, on) => request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' }),
     // tz = minutes east of UTC, so "today" follows the student's clock.
     getReviewSummary: () => request(`/review/summary?tz=${-new Date().getTimezoneOffset()}`),
-    getReviewDue: () => request(`/review/due?tz=${-new Date().getTimezoneOffset()}`),
+    // { pyq: true } = F13 PYQ revision: the same queue, real previous-year questions only.
+    getReviewDue: ({ pyq = false } = {}) => request(`/review/due?tz=${-new Date().getTimezoneOffset()}${pyq ? '&pyq=1' : ''}`),
+    // F13: the one Revision page summary (due today, mistakes, bookmarks, weak topics, PYQs, words).
+    getRevisionHub: () => request(`/me/revision?tz=${-new Date().getTimezoneOffset()}`),
     answerReview: (body) => request('/review/answer', { method: 'POST', body }),
     getInsights: () => request(`/me/insights?tz=${-new Date().getTimezoneOffset()}`),
     getLeaderboard: () => request('/me/leaderboard'),
@@ -530,7 +542,7 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
         { subject: 'english', name: { en: 'English', bn: 'ইংরেজি' }, weight: 30, weightSource: 'pattern', chapters: chapters('english', [['grammar', 'Grammar', 40, 60], ['vocabulary', 'Vocabulary', 30, 0]]) },
         { subject: 'gs', name: { en: 'General Studies', bn: 'সাধারণ পাঠ' }, weight: 40, weightSource: 'pattern', chapters: chapters('gs', [['polity', 'Polity', 30, 20], ['geography', 'Geography', 25, null]]) },
       ],
-      readiness: { score: 24, components: { coverage: 30, accuracy: 55, pyq: 12 }, basis: 'syllabus', note: null },
+      readiness: { score: 24, components: { coverage: 30, mastery: 55, pyq: 12 }, basis: 'syllabus', note: null },
       countdown: targetExam.date
         ? { examDate: targetExam.date, daysLeft: Math.max(0, Math.ceil((new Date(targetExam.date) - Date.now()) / 86_400_000)) }
         : null,
@@ -547,6 +559,7 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     // Offline fixtures keep no revision queue.
     getReviewSummary: () => wait({ dueToday: 0, active: 0, mastered: 0, mistakesActive: 0, nextDueAt: null, masterAfter: 2 }),
     getReviewDue: () => wait({ items: [], masterAfter: 2 }),
+    getRevisionHub: () => wait({ dueToday: { total: 0, questions: 0, gkFacts: 0, vocabulary: 0, nextDueAt: null }, mistakes: { open: 0, repeating: 0, mastered: 0, bySubject: [] }, bookmarked: { questions: 0, gkFacts: 0, words: 0 }, weakTopics: [], pyq: { inQueue: 0, dueToday: 0 }, vocabulary: null, queue: null, gk: null }),
     answerReview: learnOffline,
     getMistakes: () => wait({ counts: { active: 0, mastered: 0 }, total: 0, hasMore: false, groups: [], items: [] }),
     getInsights: () => wait({ mastery: [], counts: {}, weakPatterns: [], badges: [], allBadges: 9, streak: { days: 0, freezes: 0, protectedDays: [], freezeEvery: 7 } }),
@@ -561,6 +574,12 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getPriorities: learnOffline,
     getTargetExamOptions: () => wait(fixtureTargetOptions()),
     getSyllabusMap: learnOffline,
+    // The diagnostic is built and marked on the server only.
+    getMastery: learnOffline,
+    getDiagnostic: () => wait({ exam: null, state: 'no_target', offer: false, preview: null, result: null }),
+    startDiagnostic: learnOffline,
+    submitDiagnostic: learnOffline,
+    skipDiagnostic: () => wait({ exam: null, state: 'no_target', offer: false, preview: null, result: null }),
     getToday: () => {
       const items = [
         { id: 'today-1', kind: 'learn', source: 'unfinished_priority', subject: 'quant', topic: 'percentage', title: { en: 'Learn — Percentage', bn: 'শেখো — শতকরা (Percentage)' }, minutes: 20 },

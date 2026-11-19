@@ -265,7 +265,7 @@ export default function PracticeArena({ source, topicName, onLaunchMock, onActiv
           {isBookmarked && !bookmarkError && (
             <p className="mt-2 text-sm text-amber-800 dark:text-amber-300">
               📌 <Localized value={REVISION.savedInArena} /> ·{' '}
-              <Link to="/revision" className="font-semibold underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100">
+              <Link to="/revision/bookmarks" className="font-semibold underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100">
                 <Localized value={REVISION.open} />
               </Link>
             </p>

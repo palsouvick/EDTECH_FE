@@ -69,7 +69,8 @@ function renderAt(source) {
   render(
     <DataSourceProvider source={source}>
       <AuthProvider>
-        <MemoryRouter initialEntries={['/revision']}>
+        {/* F13: the bookmark list lives under the Revision page. */}
+        <MemoryRouter initialEntries={['/revision/bookmarks']}>
           <AppRoutes />
           <Location />
         </MemoryRouter>
