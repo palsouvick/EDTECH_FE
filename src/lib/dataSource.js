@@ -134,6 +134,7 @@ export function createHttpDataSource() {
     // The server returns { language, exams } — unwrap to the array the picker reads.
     getTargetExamOptions: () => request('/me/target-exam/options').then((d) => (Array.isArray(d) ? d : d?.exams ?? [])),
     getTargetExamSyllabus: () => request('/me/target-exam/syllabus'),
+    getSyllabusMap: (examCode) => request(`/me/target-exam/syllabus-map/${encodeURIComponent(examCode)}`),
     login: (body) => request('/auth/login', { method: 'POST', body }),
     register: (body) => request('/auth/register', { method: 'POST', body }),
     logout: () => request('/auth/logout', { method: 'POST' }),
@@ -556,6 +557,7 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getPyqFilters: learnOffline,
     getPriorities: learnOffline,
     getTargetExamOptions: () => wait(fixtureTargetOptions()),
+    getSyllabusMap: learnOffline,
     async getTargetExamSyllabus() {
       const user = readFixtureUser();
       if (!user?.targetExam) throw new ApiError(422, 'NO_TARGET_EXAM', 'No target exam chosen yet');

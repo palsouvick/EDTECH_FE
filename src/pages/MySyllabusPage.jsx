@@ -2,7 +2,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import { useResource } from '../hooks/useResource';
-import { TARGET_EXAM } from '../lib/targetExamCopy';
+import { TARGET_EXAM, SYLLABUS_MAP } from '../lib/targetExamCopy';
 import { chapterLink } from '../lib/studyPlan';
 import { subjectSlugFromCode } from '../lib/routes';
 import { loginPath } from '../components/auth/AccountButton';
@@ -112,6 +112,15 @@ export default function MySyllabusPage() {
               </span>
             </Link>
           )}
+
+          <Link to={`/syllabus-map/${d.exam.code}`} className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 hover:ring-indigo-300 sm:p-5 dark:bg-slate-900 dark:ring-slate-800">
+            <span className="block text-lg font-bold text-slate-900 dark:text-white">
+              <Localized value={SYLLABUS_MAP.openMap} /> →
+            </span>
+            <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-300">
+              <Localized value={SYLLABUS_MAP.sub} />
+            </span>
+          </Link>
 
           {/* Readiness */}
           {readiness && (

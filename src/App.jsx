@@ -36,6 +36,7 @@ import PyqPage from './pages/PyqPage';
 import PlanPage from './pages/PlanPage';
 import TargetExamPicker from './pages/TargetExamPicker';
 import MySyllabusPage from './pages/MySyllabusPage';
+import SyllabusMapPage from './pages/SyllabusMapPage';
 import IdoDashboardPage from './pages/IdoDashboardPage';
 import IdoPlanPage from './pages/IdoPlanPage';
 import GkTopicPage from './pages/learn/GkTopicPage';
@@ -95,6 +96,7 @@ export function AppRoutes() {
       <Route path="/plan" element={<PlanPage />} />
       <Route path="/choose-exam" element={<TargetExamPicker />} />
       <Route path="/my-syllabus" element={<MySyllabusPage />} />
+      <Route path="/syllabus-map/:examCode" element={<SyllabusMapPage />} />
       <Route path="/ido" element={<IdoDashboardPage />} />
       <Route path="/plan/ido" element={<IdoPlanPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
