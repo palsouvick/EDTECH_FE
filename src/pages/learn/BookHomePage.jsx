@@ -67,10 +67,12 @@ export function BookEntryCard({ card, onlyIfStarted = false, className = '' }) {
   if (!bookCode || (onlyIfStarted && !progress.last)) return null;
   // A book is offered as soon as its table of contents exists: chapters still being written show as
   // "coming soon" in the contents, so the student sees the whole book from the start.
-  if (book && progress.last) return <div className={className}><ContinueReading card={card} book={book} progress={progress} compact /></div>;
-  if (onlyIfStarted) return null;
-  return (
-    <Link to={bookHomePath(card)} className={`${className} ${box} flex items-center gap-3 border-l-4 border-indigo-500 hover:bg-indigo-50/60 dark:hover:bg-slate-800/60`}>
+  const resume = book && progress.last ? <ContinueReading card={card} book={book} progress={progress} compact /> : null;
+  // The GK dashboard shows only "Continue reading"; a subject page always keeps the way into the whole book
+  // (its contents), with "Continue reading" below it once the student has started.
+  if (onlyIfStarted) return resume ? <div className={className}>{resume}</div> : null;
+  const entry = (
+    <Link to={bookHomePath(card)} className={`${resume ? '' : className} ${box} flex items-center gap-3 border-l-4 border-indigo-500 hover:bg-indigo-50/60 dark:hover:bg-slate-800/60`}>
       <span aria-hidden="true" className="text-3xl">📖</span>
       <span className="min-w-0 flex-1">
         <Localized value={bookLabels(bookCode).open} className="block font-bold text-slate-900 dark:text-white" />
@@ -79,6 +81,13 @@ export function BookEntryCard({ card, onlyIfStarted = false, className = '' }) {
       </span>
       <span aria-hidden="true" className="text-indigo-600">→</span>
     </Link>
+  );
+  if (!resume) return entry;
+  return (
+    <div className={`${className} space-y-3`}>
+      {entry}
+      {resume}
+    </div>
   );
 }
 

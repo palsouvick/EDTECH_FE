@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import katex from 'katex';
 import { UI } from '../../lib/i18n';
@@ -8,7 +9,9 @@ import { UI } from '../../lib/i18n';
 // Must match the language switcher (hooks/useLanguagePreference.js).
 const UI_LANGS = ['en', 'bn'];
 
-const REMARK_PLUGINS = [remarkMath];
+// GFM for tables (study books use them for lists of facts). singleTilde off: content writes "~২,৫০০ কিমি"
+// for "about", and two such "~" on one line must not turn into strikethrough.
+const REMARK_PLUGINS = [[remarkGfm, { singleTilde: false }], remarkMath];
 // strict:'ignore' so editor typos degrade to red source text instead of breaking the page.
 const REHYPE_PLUGINS = [[rehypeKatex, { throwOnError: false, strict: 'ignore' }]];
 // Links in content are sources (e.g. a current-affairs question's PIB release):
@@ -18,7 +21,13 @@ const Anchor = ({ href, children }) => (
     {children}
   </a>
 );
-const BLOCK_COMPONENTS = { a: Anchor };
+// Wide tables scroll sideways inside their own box instead of widening the page on phones.
+const Table = ({ children }) => (
+  <div className="md-table">
+    <table>{children}</table>
+  </div>
+);
+const BLOCK_COMPONENTS = { a: Anchor, table: Table };
 const INLINE_COMPONENTS = { p: ({ children }) => children, a: Anchor };
 
 /**

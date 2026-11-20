@@ -113,7 +113,7 @@ describe('plan page (guest)', () => {
 
     const next = screen.getByRole('region', { name: /What should I study next/ });
     expect(within(next).getByText('Study: polity (session 1 of 4)')).toBeInTheDocument();
-    expect(within(next).getByRole('link', { name: /Open/ })).toHaveAttribute('href', '/learn/gk/polity');
+    expect(within(next).getByRole('link', { name: /Open/ })).toHaveAttribute('href', '/learn/gk/polity/book');
 
     const today = screen.getByRole('region', { name: /Today's target/ });
     expect(within(today).getByText(/Day 1 of 4/, { selector: 'span' })).toBeInTheDocument();

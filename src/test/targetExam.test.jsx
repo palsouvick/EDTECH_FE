@@ -283,8 +283,8 @@ describe('home target-exam card and prompt', () => {
     }));
     expect(await screen.findByText(/Day 1 of 2/)).toBeInTheDocument();
     const task = await screen.findByRole('link', { name: /Study: Polity/ });
-    expect(task).toHaveAttribute('href', '/learn/gk/polity');
-    expect(screen.getByRole('link', { name: /Continue Studying/ })).toHaveAttribute('href', '/learn/gk/polity');
+    expect(task).toHaveAttribute('href', '/learn/gk/polity/book');
+    expect(screen.getByRole('link', { name: /Continue Studying/ })).toHaveAttribute('href', '/learn/gk/polity/book');
   });
 
   it('no-plan exam: the Today list comes from the engine, not from syllabus progress', async () => {

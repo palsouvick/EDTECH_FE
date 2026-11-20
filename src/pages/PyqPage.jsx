@@ -14,6 +14,7 @@ import { Localized } from '../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
 import PriorityBadge, { PriorityLegend } from '../components/priority/PriorityBadge';
+import TopicBarChart from '../components/pyq/TopicBarChart';
 
 // The Commission's own list of published papers.
 const WBPSC_PYQ_PAGE = 'https://psc.wb.gov.in/previous_year_question_paper.jsp';
@@ -65,7 +66,7 @@ function PaperCard({ exam, paper, onPractise }) {
   );
 }
 
-function TopicSets({ topics, onPractise }) {
+function TopicSets({ topics, paperCount, onPractise }) {
   const subjects = useMemo(() => {
     const seen = new Map();
     for (const t of topics) if (!seen.has(t.subject)) seen.set(t.subject, t.subjectName);
@@ -89,6 +90,7 @@ function TopicSets({ topics, onPractise }) {
           </button>
         ))}
       </div>
+      <TopicBarChart topics={shown} paperCount={paperCount} />
       <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((t) => (
           <li key={`${t.subject}.${t.topic}`} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -299,7 +301,7 @@ export default function PyqPage() {
               <h2 id="pyq-topics" className="text-2xl font-extrabold text-slate-900 dark:text-white"><Localized value={PYQ.byTopic} /></h2>
               <Localized value={PYQ.byTopicSub} as="p" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
               <PriorityLegend className="mt-2 max-w-3xl" />
-              <TopicSets topics={data.topics} onPractise={(t) => start(t.name, { subject: t.subject, topic: t.topic })} />
+              <TopicSets topics={data.topics} paperCount={paperCount} onPractise={(t) => start(t.name, { subject: t.subject, topic: t.topic })} />
             </section>
           </>
         )

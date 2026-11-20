@@ -75,11 +75,33 @@ function DepthSwitch({ depth, onDepth, hasDeep }) {
   );
 }
 
+/**
+ * A map or diagram from Wikimedia Commons, with its caption, credit and licence. Opens the Commons page (full size,
+ * licence) in a new tab. If the image cannot load (offline), the figure is hidden instead of showing a broken image.
+ */
+function Figure({ figure }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <figure className="overflow-hidden rounded-xl ring-1 ring-slate-200 dark:ring-slate-700">
+      <a href={figure.page} target="_blank" rel="noopener noreferrer" className="block bg-white" title={BOOK.figureOpen.en}>
+        <img src={figure.src} alt={figure.alt} lang="bn" loading="lazy" decoding="async" onError={() => setFailed(true)} className="mx-auto max-h-[32rem] w-auto max-w-full object-contain" />
+      </a>
+      <figcaption className="space-y-1 bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
+        <p lang="bn" className="text-sm text-slate-800 dark:text-slate-100">{figure.caption}</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          <Localized value={BOOK.figureCredit} />: {figure.credit} · {figure.license} ·{' '}
+          <a href={figure.page} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Wikimedia Commons</a>
+        </p>
+      </figcaption>
+    </figure>
+  );
+}
+
 /** One section of the detailed explanation, at the chosen depth, with its boxes, sources and "read" state. */
 function ChapterSection({ index, section, depth, sources, read, onRead, observe }) {
-  const end = useRef(null);
   const head = useRef(null);
-  useEffect(() => observe?.(section.id, head.current, end.current), [observe, section.id]);
+  useEffect(() => observe?.(section.id, head.current), [observe, section.id]);
   return (
     <section id={sectionAnchor(section.id)} className={`${box} scroll-mt-24`} aria-labelledby={`${sectionAnchor(section.id)}-h`}>
       <h2 ref={head} id={`${sectionAnchor(section.id)}-h`} lang="bn" className="text-xl font-bold text-slate-900 dark:text-white">
@@ -88,6 +110,7 @@ function ChapterSection({ index, section, depth, sources, read, onRead, observe 
       </h2>
       <div className="mt-3 space-y-3">
         {depth === 'quick' ? <Text>{section.quick}</Text> : <Text>{section.standard}</Text>}
+        {section.figures?.map((f) => <Figure key={f.src} figure={f} />)}
         {depth === 'deep' && section.deep && (
           <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700">
             <Localized value={BOOK.deepMore} as="p" className="text-sm font-bold text-indigo-800 dark:text-indigo-300" />
@@ -120,7 +143,7 @@ function ChapterSection({ index, section, depth, sources, read, onRead, observe 
           </p>
         )}
       </div>
-      <div ref={end} className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end">
         <button
           type="button"
           onClick={() => onRead(section.id)}
@@ -323,7 +346,8 @@ export default function BookChapterPage() {
     document.getElementById(location.hash.slice(1))?.scrollIntoView?.({ block: 'start' });
   }, [chapter, location.hash]);
 
-  // Remember the section on screen (where the student stopped) and count a section read when its end is reached.
+  // Remember the section on screen (where the student stopped), for "Continue reading". A section counts as
+  // read ONLY when the student presses its "read" button: scrolling past it proves nothing about reading it.
   const lastSeen = useRef(null);
   const observer = useRef(null);
   const targets = useRef(new Map());
@@ -338,15 +362,14 @@ export default function BookChapterPage() {
           lastSeen.current = t.id;
           recordReading({ chapter: chapter.code, section: t.id });
         }
-        if (t.kind === 'end') recordReading({ chapter: chapter.code, read: [t.id] });
       }
     }, { rootMargin: '0px 0px -40% 0px' });
     observer.current = io;
     for (const el of targets.current.keys()) io.observe(el);
     return () => io.disconnect();
   }, [chapter, recordReading]);
-  const observe = useCallback((id, head, end) => {
-    const pairs = [[head, 'head'], [end, 'end']].filter(([el]) => el);
+  const observe = useCallback((id, head) => {
+    const pairs = [[head, 'head']].filter(([el]) => el);
     for (const [el, kind] of pairs) {
       targets.current.set(el, { id, kind });
       observer.current?.observe(el);

@@ -225,6 +225,66 @@ export const TIPS_PAGE = Object.freeze({
   subtitle: t('Small habits that add up to a higher score.', 'ছোট ছোট অভ্যাস, বড় স্কোর।', 'छोटी आदतें, बड़ा स्कोर।'),
 });
 
+/** Exam-hall techniques, by section. Kept to methods that hold in every exam (no marking schemes or timings). */
+export const EXAM_TRICKS_PAGE = Object.freeze({
+  title: t('Exam-hall tricks', 'পরীক্ষার হলের কৌশল', 'परीक्षा हॉल की तरकीबें'),
+  subtitle: t('Techniques that save time and marks on the day.', 'পরীক্ষার দিনে সময় আর নম্বর বাঁচানোর কৌশল।', 'परीक्षा के दिन समय और अंक बचाने की तरकीबें।'),
+});
+
+export const EXAM_TRICKS = [
+  {
+    icon: '🧭',
+    title: t('Whole paper', 'পুরো প্রশ্নপত্র', 'पूरा प्रश्नपत्र'),
+    items: [
+      t('Go through the paper twice: answer what you are sure of first, mark the doubtful ones, then come back.', 'দুবার ঘুরে উত্তর দাও: প্রথমে নিশ্চিত প্রশ্নগুলো করো, সন্দেহেরগুলো চিহ্ন দিয়ে রাখো, পরে ফিরে এসো।', 'प्रश्नपत्र को दो बार में हल करें: पहले पक्के प्रश्न, संदिग्ध पर निशान लगाकर बाद में लौटें।'),
+      t('Underline NOT, EXCEPT, INCORRECT and "which is false" before you read the options.', 'অপশন পড়ার আগে NOT, EXCEPT, INCORRECT, "কোনটি ভুল" — এই শব্দগুলোর নিচে দাগ দাও।', 'विकल्प पढ़ने से पहले NOT, EXCEPT, INCORRECT, "कौन-सा गलत है" को रेखांकित करें।'),
+      t('Do not spend long on one question: if it takes more than twice your usual time, move on.', 'একটি প্রশ্নে আটকে থেকো না: স্বাভাবিকের দ্বিগুণ সময় লাগলে পরের প্রশ্নে চলে যাও।', 'एक प्रश्न पर अटकें नहीं: सामान्य से दोगुना समय लगे तो आगे बढ़ें।'),
+      t('Change an answer only when you find a concrete reason, not on a vague feeling.', 'উত্তর বদলাও কেবল তখনই, যখন নির্দিষ্ট কারণ খুঁজে পাও — শুধু মনে হওয়ায় নয়।', 'उत्तर तभी बदलें जब ठोस कारण मिले, केवल अंदाज़े पर नहीं।'),
+      t('On an answer sheet, check every few questions that the question number matches the row you are marking.', 'উত্তরপত্রে কয়েকটি প্রশ্ন পরপর মিলিয়ে নাও — প্রশ্ন নম্বর আর যে ঘরে দাগ দিচ্ছ তা এক কিনা।', 'उत्तर-पत्रक पर हर कुछ प्रश्नों में मिलाएँ कि प्रश्न संख्या और भरी जा रही पंक्ति एक ही है।'),
+    ],
+  },
+  {
+    icon: '🔢',
+    title: t('Maths', 'গণিত', 'गणित'),
+    items: [
+      t('Work backwards from the options: put each option into the question (ages, numbers, word problems).', 'অপশন থেকে উল্টো দিকে কাজ করো: প্রতিটি অপশন প্রশ্নে বসিয়ে দেখো (বয়স, সংখ্যা, শব্দ-সমস্যা)।', 'विकल्पों से उल्टा हल करें: हर विकल्प को प्रश्न में रखकर जाँचें (आयु, संख्या, शब्द-समस्याएँ)।'),
+      t('In percentage and profit questions, take the starting value as 100.', 'শতকরা ও লাভ-ক্ষতির প্রশ্নে শুরুর মান ১০০ ধরে নাও।', 'प्रतिशत और लाभ-हानि के प्रश्नों में आरंभिक मान 100 मानें।'),
+      t('When the options are far apart, round the numbers and estimate.', 'অপশনগুলো দূরে দূরে হলে সংখ্যা গোল করে আন্দাজ করো।', 'जब विकल्प दूर-दूर हों, संख्याएँ पूर्णांकित कर अनुमान लगाएँ।'),
+      t('Use the last digit and divisibility (by 2, 3, 5, 9, 11) to strike out wrong options fast.', 'শেষ অঙ্ক আর বিভাজ্যতা (২, ৩, ৫, ৯, ১১) দিয়ে ভুল অপশন দ্রুত বাদ দাও।', 'अंतिम अंक और विभाज्यता (2, 3, 5, 9, 11) से गलत विकल्प जल्दी हटाएँ।'),
+      t('Write units next to numbers (km/h vs m/s, minutes vs hours) — most slips are unit slips.', 'সংখ্যার পাশে একক লিখে রাখো (কিমি/ঘণ্টা বনাম মি/সেকেন্ড, মিনিট বনাম ঘণ্টা) — বেশিরভাগ ভুল এককের ভুল।', 'संख्याओं के साथ इकाई लिखें (किमी/घंटा बनाम मी/से, मिनट बनाम घंटे) — ज़्यादातर गलतियाँ इकाई की होती हैं।'),
+    ],
+  },
+  {
+    icon: '🔤',
+    title: t('English', 'ইংরেজি', 'अंग्रेज़ी'),
+    items: [
+      t('Read the whole sentence before filling a blank: the words after the blank often decide the answer.', 'শূন্যস্থান পূরণের আগে পুরো বাক্য পড়ো: শূন্যস্থানের পরের শব্দই প্রায়ই উত্তর ঠিক করে দেয়।', 'रिक्त स्थान भरने से पहले पूरा वाक्य पढ़ें: रिक्त के बाद के शब्द अक्सर उत्तर तय करते हैं।'),
+      t('Learn verbs with their fixed prepositions (accede to, account for, preference for) — past papers ask them often.', 'ক্রিয়াপদকে তার নির্দিষ্ট preposition সহ শেখো (accede to, account for, preference for) — আগের প্রশ্নপত্রে এগুলো প্রায়ই আসে।', 'क्रियाओं को उनके निश्चित prepositions के साथ सीखें (accede to, account for, preference for) — पिछले प्रश्नपत्रों में ये अक्सर आते हैं।'),
+      t('In synonym and antonym questions, check twice which one is asked before you choose.', 'Synonym আর antonym প্রশ্নে বেছে নেওয়ার আগে আরেকবার দেখে নাও কোনটা চাওয়া হয়েছে।', 'Synonym और antonym प्रश्नों में चुनने से पहले दोबारा देखें कि क्या पूछा गया है।'),
+      t('Look-alike words (later/latter, extant/extent): say the meaning of each option in your head before choosing.', 'দেখতে একরকম শব্দ (later/latter, extant/extent): বাছার আগে প্রতিটি অপশনের অর্থ মনে মনে বলো।', 'मिलते-जुलते शब्द (later/latter, extant/extent): चुनने से पहले हर विकल्प का अर्थ मन में बोलें।'),
+    ],
+  },
+  {
+    icon: '🌏',
+    title: t('General Studies', 'সাধারণ জ্ঞান', 'सामान्य अध्ययन'),
+    items: [
+      t('Statement questions: judge each statement on its own; one statement you know is wrong removes every option that contains it.', 'বিবৃতি-প্রশ্নে প্রতিটি বিবৃতি আলাদা করে যাচাই করো; একটি বিবৃতি ভুল জানলেই যে সব অপশনে সেটি আছে, সেগুলো বাদ।', 'कथन-प्रश्नों में हर कथन अलग से जाँचें; एक कथन गलत पता हो तो जिन विकल्पों में वह है, सब हट जाते हैं।'),
+      t('Be careful with absolute words like "only", "always" and "never" in a statement — check them closely.', 'বিবৃতিতে "কেবল", "সবসময়", "কখনো নয়"-এর মতো চরম শব্দ থাকলে বিশেষ খেয়াল করে যাচাই করো।', 'कथन में "केवल", "हमेशा", "कभी नहीं" जैसे निरपेक्ष शब्दों को ध्यान से जाँचें।'),
+      t('Match-the-following: fill in the pair you are surest of first; it usually leaves one or two options.', 'মিলকরণে আগে যে জোড়াটি সবচেয়ে নিশ্চিত সেটি বসাও; তাতেই সাধারণত এক-দুটি অপশন বাকি থাকে।', 'सुमेलन में पहले सबसे पक्की जोड़ी भरें; अक्सर इससे एक-दो विकल्प ही बचते हैं।'),
+      t('Solve old papers: exams repeat questions — WBCS 2022 asked nine questions almost word for word from the 2015 and 2016 papers.', 'পুরনো প্রশ্নপত্র সমাধান করো: প্রশ্ন ফিরে আসে — WBCS ২০২২-এ ২০১৫ ও ২০১৬-র প্রশ্নপত্র থেকে নয়টি প্রশ্ন প্রায় হুবহু এসেছিল।', 'पुराने प्रश्नपत्र हल करें: प्रश्न दोहराए जाते हैं — WBCS 2022 में 2015 और 2016 के प्रश्नपत्रों से नौ प्रश्न लगभग हूबहू आए थे।'),
+    ],
+  },
+  {
+    icon: '🧩',
+    title: t('Reasoning', 'রিজনিং', 'रीज़निंग'),
+    items: [
+      t('Number series: check differences first, then ratios, then the odd and even positions separately.', 'সংখ্যা শ্রেণিতে আগে পার্থক্য দেখো, তারপর অনুপাত, তারপর বিজোড় ও জোড় স্থান আলাদা করে।', 'संख्या श्रेणी में पहले अंतर देखें, फिर अनुपात, फिर विषम और सम स्थान अलग से।'),
+      t('Letter series and coding: write the alphabet with positions (A=1 … Z=26) at the top of your rough sheet.', 'অক্ষর শ্রেণি ও কোডিং-এ রাফ কাগজের মাথায় বর্ণমালা ও তার ক্রম (A=1 … Z=26) লিখে নাও।', 'अक्षर श्रेणी और कोडिंग में रफ़ शीट के ऊपर वर्णमाला और स्थान (A=1 … Z=26) लिख लें।'),
+      t('Blood relations and directions: always draw — a family tree or a small compass sketch.', 'রক্তের সম্পর্ক আর দিক নির্ণয়ে সবসময় এঁকে নাও — পারিবারিক বৃক্ষ বা ছোট দিক-নকশা।', 'रक्त संबंध और दिशा में हमेशा चित्र बनाएँ — परिवार-वृक्ष या छोटा दिशा-चित्र।'),
+    ],
+  },
+];
+
 export const TIPS = [
   { icon: '⏳', title: t('Practise daily, even 15 minutes', 'প্রতিদিন অনুশীলন করুন, ১৫ মিনিটও যথেষ্ট', 'रोज़ अभ्यास करें, 15 मिनट भी काफ़ी'), body: t('A daily streak beats a weekend marathon. Hit your daily goal to keep it alive.', 'সপ্তাহান্তের ম্যারাথনের চেয়ে প্রতিদিনের অভ্যাস ভালো। দৈনিক লক্ষ্য পূরণ করে স্ট্রিক ধরে রাখুন।', 'सप्ताहांत की मैराथन से रोज़ की आदत बेहतर है। स्ट्रीक बनाए रखने के लिए दैनिक लक्ष्य पूरा करें।') },
   { icon: '🧠', title: t('Learn formulas before questions', 'প্রশ্নের আগে সূত্র শিখুন', 'प्रश्नों से पहले सूत्र सीखें'), body: t('Read the revision notes first; then every question becomes pattern recognition.', 'আগে রিভিশন নোট পড়ুন; তারপর প্রতিটি প্রশ্নই হবে প্যাটার্ন চেনা।', 'पहले रिवीज़न नोट्स पढ़ें; फिर हर प्रश्न पैटर्न पहचानना बन जाता है।') },

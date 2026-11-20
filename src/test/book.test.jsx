@@ -180,6 +180,18 @@ describe('book pages', () => {
     expect(screen.queryByText('Important people')).toBeNull();
   });
 
+  it('a section map shows with its caption, credit and licence, and links to its Commons page', async () => {
+    const page = 'https://commons.wikimedia.org/wiki/File:Major_Rivers_in_India.jpg';
+    const figure = { src: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Major_Rivers_in_India.jpg', page, alt: 'ভারতের প্রধান নদীর মানচিত্র', caption: 'উত্তরে হিমালয়ের নদী', credit: 'NCERT', license: 'CC BY-SA 3.0' };
+    const withMap = { ...chapter, sections: chapter.sections.map((s, i) => ({ ...s, figures: i === 0 ? [figure] : [] })) };
+    renderAt('/learn/gk/indian-history/book/HIS-02', { getBookChapter: vi.fn(async () => withMap) });
+    const img = await screen.findByRole('img', { name: 'ভারতের প্রধান নদীর মানচিত্র' });
+    expect(img).toHaveAttribute('loading', 'lazy');
+    expect(img.closest('a')).toHaveAttribute('href', page);
+    expect(screen.getByText('উত্তরে হিমালয়ের নদী')).toBeInTheDocument();
+    expect(screen.getByText(/NCERT · CC BY-SA 3\.0/)).toBeInTheDocument();
+  });
+
   it('a GK card offers its book even before any chapter is ready (contents show "coming soon")', async () => {
     const empty = { ...book, chapters: book.chapters.map((c) => ({ ...c, available: false })) };
     const { BookEntryCard } = await import('../pages/learn/BookHomePage');

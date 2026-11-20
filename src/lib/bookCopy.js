@@ -66,6 +66,8 @@ export const BOOK = {
   readFirst: L('Read first', 'আগে পড়ে নাও'),
   sectionsNav: L('Sections', 'অংশগুলি'),
   deepMore: L('Deep study', 'গভীর পাঠ'),
+  figureCredit: L('Image', 'ছবি'),
+  figureOpen: L('Open the full-size image and its licence', 'পূর্ণ আকারের ছবি ও লাইসেন্স দেখো'),
   markRead: L('Mark section as read', 'এই অংশ পড়া হয়েছে'),
   isRead: L('Read ✓', 'পড়া হয়েছে ✓'),
   sectionPyq: L('Asked in previous papers', 'আগের প্রশ্নপত্রে এসেছে'),

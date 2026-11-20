@@ -1,5 +1,6 @@
 import { learnPaths, toSlug } from './routes';
 import { PLAN } from './planCopy';
+import { BOOK_FOR_CARD, bookHomePath } from './bookCopy';
 
 /** Days are counted in the student's local calendar: "2026-11-06" → Day 1 on that date. */
 export function localIsoDate(d = new Date()) {
@@ -32,7 +33,9 @@ export function currentPlanDay({ days, done, calendarDay }) {
 export function taskLink(task) {
   switch (task.kind) {
     case 'learn':
-      return task.subject === 'gs' ? `/learn/gk/${toSlug(task.topic)}` : learnPaths.chapter(task.subject, task.topic);
+      // GK chapters with a study book open the book, whose contents page the plan's "Learn" list follows.
+      if (task.subject === 'gs') return BOOK_FOR_CARD[task.topic] ? bookHomePath(task.topic) : `/learn/gk/${toSlug(task.topic)}`;
+      return learnPaths.chapter(task.subject, task.topic);
     case 'mock':
       return `/exams/wbpsc/${toSlug(task.subject)}`;
     case 'pyq_paper':
