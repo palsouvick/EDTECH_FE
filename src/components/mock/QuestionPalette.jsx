@@ -75,7 +75,7 @@ function PaletteBody({ entries, current, onSelect, linear }) {
                   isCurrent ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''
                 }`}
               >
-                <StatusChip status={status} className={`h-10 w-full text-sm ${e.locked ? 'opacity-50' : ''}`}>
+                <StatusChip status={status} className={`h-11 w-full text-sm lg:h-10 ${e.locked ? 'opacity-50' : ''}`}>
                   {i + 1}
                 </StatusChip>
               </button>
@@ -116,7 +116,7 @@ const QuestionPalette = memo(function QuestionPalette({ entries, current, onSele
         aria-label="Question palette"
         // Off-screen drawer on phones: keep its buttons out of the tab order until opened.
         inert={!desktop && !open}
-        className={`fixed inset-y-0 right-0 z-50 flex w-[min(20rem,88vw)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none dark:bg-slate-900 lg:sticky lg:top-[4.25rem] lg:z-auto lg:h-[calc(100dvh-5.25rem)] lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:shadow-none lg:ring-1 lg:ring-slate-200 dark:lg:ring-slate-800 ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[min(20rem,88vw)] flex-col bg-white pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none dark:bg-slate-900 lg:sticky lg:top-[4.25rem] lg:z-auto lg:h-[calc(100dvh-5.25rem)] lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:p-0 lg:shadow-none lg:ring-1 lg:ring-slate-200 dark:lg:ring-slate-800 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

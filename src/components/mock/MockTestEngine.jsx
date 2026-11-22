@@ -10,6 +10,7 @@ import { Localized } from '../topic-hub/Localized';
 import { TimerIcon } from '../topic-hub/icons';
 import OptionButton from '../practice/OptionButton';
 import PyqBadge from '../practice/PyqBadge';
+import { PracticeTypeChip } from '../analysis/AdaptiveParts';
 import SourceCheckBadge from '../practice/SourceCheckBadge';
 import Dialog from '../practice/Dialog';
 import QuestionPalette, { StatusChip } from './QuestionPalette';
@@ -251,7 +252,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
     <div className="flex min-h-dvh flex-col bg-slate-50 dark:bg-slate-950">
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 pt-[env(safe-area-inset-top)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-4">
+        <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center gap-1 px-2 sm:gap-3 sm:px-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
               <Localized value={state.meta?.examName ?? MOCK.mockTest} />
@@ -264,14 +265,14 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
           <div
             role="timer"
             aria-label={untimed ? `${say(MOCK.noTimeLimit)} · ${formatClock(elapsedMs)}` : `${say(perQuestion ? MOCK.questionTime : MOCK.timeLeft)} ${formatClock(timer.remainingMs)}`}
-            className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 font-mono text-base font-bold tabular-nums transition-colors sm:text-lg ${
+            className={`flex shrink-0 items-center gap-1 rounded-xl px-1.5 py-1.5 font-mono text-sm font-bold tabular-nums transition-colors sm:gap-1.5 sm:px-2.5 sm:text-lg ${
               lowTime
                 ? 'animate-pulse bg-rose-100 text-rose-700 ring-1 ring-rose-300 motion-reduce:animate-none dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/40'
                 : 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
             }`}
             data-low-time={lowTime || undefined}
           >
-            <TimerIcon width={18} height={18} aria-hidden="true" />
+            <TimerIcon width={16} height={16} aria-hidden="true" />
             {formatClock(untimed ? elapsedMs : timer.remainingMs, { compact: perQuestion })}
           </div>
 
@@ -280,7 +281,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
               type="button"
               onClick={phase === 'paused' ? resume : pause}
               disabled={phase !== 'active' && phase !== 'paused'}
-              className="min-h-11 rounded-xl px-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-50 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
+              className="min-h-11 shrink-0 rounded-xl px-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-50 sm:px-3 sm:text-sm dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
             >
               <Localized value={phase === 'paused' ? MOCK.resume : MOCK.pause} />
             </button>
@@ -335,6 +336,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
                 <h2 className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   <Localized value={questionOfLabel(current + 1, entries.length)} />
                 </h2>
+                <PracticeTypeChip type={q.practiceType} />
                 <PyqBadge refs={q.pyq} />
                 <SourceCheckBadge check={q.sourceCheck} />
               </div>

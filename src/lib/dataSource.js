@@ -1,5 +1,5 @@
 import { ApiError, request } from './api';
-import { createFixturePracticeSource, createGkFactPracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
+import { createFixturePracticeSource, createGkFactPracticeSource, createGkDrillPracticeSource, createHttpPracticeSource, createPyqPracticeSource } from './practiceSource';
 import { bookApi, createBookPracticeSource } from './bookSource';
 import { catalogFixture, markingFixture } from '../fixtures/catalog';
 import { profitLossTopic } from '../fixtures/profitLoss';
@@ -68,6 +68,7 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   listGkFacts({ card, subtopic, q, difficulty, exam, year, month, offset, limit }) -> { facts, pagination }
  *   getGkCurrentAffairsMonths()                   -> { months }
  *   getGkFact(code) / getGkCardPacks(card) / getGkFactPyqs(code) / gkFactPracticeSource(code) -> GK topic packs
+ *   getGkDrills() / gkDrillPracticeSource(id) -> GK confusion drills
  *   getImportantDays()                            -> { months: [{ month, rows, sources }], similarNames, confusedPairs }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
@@ -186,6 +187,8 @@ export function createHttpDataSource() {
     getGkCardPacks: (card) => request(`/gk/cards/${card}/packs`),
     getGkFactPyqs: (code) => request(`/gk/facts/${code}/pyqs`),
     gkFactPracticeSource: (code) => createGkFactPracticeSource(code),
+    getGkDrills: () => request('/gk/drills'),
+    gkDrillPracticeSource: (id) => createGkDrillPracticeSource(id),
     countGkQuestions: (params) => request(`/gk/questions/count?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== false))}`),
     setGkFactBookmark: (code, on) => request(`/gk/facts/${code}/bookmark`, { method: 'PUT', body: { on } }),
     reviewGkFact: (code, result) => request(`/gk/facts/${code}/review`, { method: 'POST', body: { result, tz: -new Date().getTimezoneOffset() } }),
@@ -642,6 +645,8 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getGkCardPacks: () => wait({ packs: [] }),
     getGkFactPyqs: learnOffline,
     gkFactPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
+    getGkDrills: () => wait({ drills: [] }),
+    gkDrillPracticeSource: () => createFixturePracticeSource([], { latencyMs }),
     countGkQuestions: learnOffline,
     setGkFactBookmark: learnOffline,
     reviewGkFact: learnOffline,

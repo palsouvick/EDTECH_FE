@@ -84,6 +84,8 @@ export const AN = Object.freeze({
 
   // Study now
   studyNow: t('What should I study now?', 'এখন কী পড়ব?'),
+  studyNowTop: (n, total) => t(`Your top ${n} priorities out of ${total} chapters. Every chapter is in the Chapters tab.`, `${bnNum(total)}টি অধ্যায়ের মধ্যে তোমার সবচেয়ে জরুরি ${bnNum(n)}টি। সব অধ্যায় 'অধ্যায়' ট্যাবে আছে।`),
+  seeAllChaptersN: (total) => t(`See all ${total} chapters`, `সব ${bnNum(total)}টি অধ্যায় দেখো`),
   studyNowSub: t('Ranked from your own answers, skips and mistakes, not from the syllabus order.', 'সিলেবাসের ক্রমে নয়, তোমার নিজের উত্তর, ছেড়ে দেওয়া প্রশ্ন আর ভুল থেকে সাজানো।'),
   nextTask: t('Your next task', 'তোমার পরের কাজ'),
   band: {

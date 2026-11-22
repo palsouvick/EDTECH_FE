@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDataSource } from '../../app/DataSourceContext';
 import { useLanguagePreference } from '../../hooks/useLanguagePreference';
 import { CT, reasonText } from '../../lib/customTestCopy';
-import { COUNT_CHOICES, DEFAULTS, TIME_CHOICES, buildRequest, defaultCount, parseCount, pctBand, smartMinutes } from '../../lib/customTest';
+import { COUNT_CHOICES, DEFAULTS, SPEED_COUNTS, SPEED_TIMES, TIME_CHOICES, buildRequest, defaultCount, parseCount, pctBand, smartMinutes } from '../../lib/customTest';
 import { Localized } from '../topic-hub/Localized';
 import { useStartCustomTest } from './useStartCustomTest';
 
@@ -183,6 +183,9 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
     }
     if (preset === 'quick10') update({ preset, difficulty: 'mixed', time: 'smart' });
     if (preset === 'challenge') update({ preset, difficulty: 'hard' });
+    // Hard Quiz: 10 questions, each chapter at its own level (the server decides); no chapters = all.
+    if (preset === 'hard') update({ preset, count: 10, countTouched: true, customCount: false, mode: 'practice' });
+    if (preset === 'speed') update({ preset, count: 10, countTouched: true, customCount: false, mode: 'exam', time: 10 });
     setStep(STEPS);
   };
 
@@ -200,7 +203,7 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
   };
 
   const errorText = error && (CT.errors[error.code] ?? (error.message ? { en: error.message } : CT.errors.generic));
-  const canStart = s.topics.size > 0 && (!s.customCount || parseCount(s.countText) != null) && !busy;
+  const canStart = (s.topics.size > 0 || s.preset === 'hard') && (!s.customCount || parseCount(s.countText) != null) && !busy;
   const diffLabel = CT.difficulties[s.difficulty].label;
   const hasMistakes = (data?.mistakesTotal ?? 0) > 0;
 
@@ -283,6 +286,21 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
                       onClick={() => usePreset('quick10')}
                       tone="bg-sky-50 text-sky-900 ring-sky-200 hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-100 dark:ring-sky-500/30"
                     />
+                    {subject === 'quant' && (
+                      <PresetCard
+                        title={CT.hardPreset}
+                        hint={CT.hardPresetHint}
+                        onClick={() => usePreset('hard')}
+                        tone="bg-violet-50 text-violet-900 ring-violet-200 hover:bg-violet-100 dark:bg-violet-500/10 dark:text-violet-100 dark:ring-violet-500/30"
+                      />
+                    )}
+                    <PresetCard
+                      title={CT.speedPreset}
+                      hint={s.topics.size ? CT.speedPresetHint : CT.noneSelected}
+                      disabled={!s.topics.size}
+                      onClick={() => usePreset('speed')}
+                      tone="bg-amber-50 text-amber-900 ring-amber-200 hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-100 dark:ring-amber-500/30"
+                    />
                     {data.history?.challengeUnlocked && (
                       <PresetCard
                         title={CT.challengePreset}
@@ -358,8 +376,33 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
               </>
             )}
 
+            {options.status === 'ready' && step === 3 && s.preset === 'speed' && (
+              <>
+                <Section title={CT.speedCount}>
+                  <div role="radiogroup" aria-label={CT.speedCount.en} className="flex flex-wrap gap-2">
+                    {SPEED_COUNTS.map((n) => (
+                      <Choice key={n} selected={s.count === n} onClick={() => update({ count: n, ...(typeof s.time === 'number' && s.time * 60 < n * 10 && { time: Math.ceil((n * 10) / 60) }) })}>{n}</Choice>
+                    ))}
+                  </div>
+                </Section>
+                <Section title={CT.speedTime}>
+                  <div role="radiogroup" aria-label={CT.speedTime.en} className="flex flex-wrap gap-2">
+                    {SPEED_TIMES.map((m) => (
+                      <Choice key={m} selected={s.time === m} onClick={() => update({ time: m })} disabled={m * 60 < s.count * 10}>
+                        <span aria-hidden="true">⏱</span> <Localized value={CT.minutes(m)} />
+                      </Choice>
+                    ))}
+                  </div>
+                  <Localized value={CT.speedNote} as="p" className="text-xs text-slate-500 dark:text-slate-400" />
+                </Section>
+              </>
+            )}
+
             {options.status === 'ready' && step === 3 && (
               <>
+                {s.preset === 'hard' && <Localized value={CT.hardNote} as="p" className="rounded-xl bg-violet-50 p-3 text-sm text-violet-900 ring-1 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-100 dark:ring-violet-500/30" />}
+                {s.preset !== 'speed' && (
+                <>
                 <Section title={CT.mode}>
                   <div role="radiogroup" aria-label={CT.mode.en} className="grid gap-2 sm:grid-cols-2">
                     {['exam', 'practice'].map((m) => {
@@ -386,6 +429,8 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
                   <Localized value={CT.smartTimeHint(preview?.questionCount ?? count, (diffLabel[lang] ?? diffLabel.en).toLowerCase(), recommended)} as="p" className="text-xs text-slate-500 dark:text-slate-400" />
                   {s.mode === 'practice' && <Localized value={CT.untimedPractice} as="p" className="text-xs text-slate-500 dark:text-slate-400" />}
                 </Section>
+                </>
+                )}
 
                 <section aria-labelledby="ct-summary" className="rounded-2xl bg-white p-4 ring-1 ring-indigo-200 dark:bg-slate-900 dark:ring-indigo-500/30">
                   <h3 id="ct-summary" className="text-base font-extrabold text-slate-900 dark:text-white"><Localized value={CT.yourTest} /></h3>
@@ -393,11 +438,11 @@ export default function CustomTestDialog({ open, onClose, subject, initial = {} 
                     <Localized value={CT.subject} as="dt" className="font-semibold text-slate-500" />
                     <dd><Localized value={CT.subjects[subject]} /> · <Localized value={CT.presetNames[s.preset]} /></dd>
                     <Localized value={CT.chapters} as="dt" className="font-semibold text-slate-500" />
-                    <dd>{selected.map((c, i) => <span key={c.topic}>{i > 0 && ', '}<Localized value={c.title} /></span>)}</dd>
+                    <dd>{selected.length ? selected.map((c, i) => <span key={c.topic}>{i > 0 && ', '}<Localized value={c.title} /></span>) : <Localized value={CT.allChapters} />}</dd>
                     <Localized value={CT.questions} as="dt" className="font-semibold text-slate-500" />
                     <dd className="tabular-nums">{preview?.questionCount ?? count}</dd>
                     <Localized value={CT.difficulty} as="dt" className="font-semibold text-slate-500" />
-                    <dd>{CT.difficulties[s.difficulty].icon} <Localized value={diffLabel} /></dd>
+                    <dd>{s.preset === 'hard' ? <Localized value={CT.byLevel} /> : <>{CT.difficulties[s.difficulty].icon} <Localized value={diffLabel} /></>}</dd>
                     <Localized value={CT.modeLabel} as="dt" className="font-semibold text-slate-500" />
                     <dd>{CT.modes[s.mode].icon} <Localized value={CT.modes[s.mode].label} /></dd>
                     <Localized value={CT.timeLabel} as="dt" className="font-semibold text-slate-500" />

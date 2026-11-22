@@ -64,7 +64,9 @@ export default function RevisePage() {
     setBusy(true);
     try {
       const r = await source.answerReview({
-        questionId: item.question.questionId,
+        // A GK fact may be asked another way: the queued question moves, the asked one is graded.
+        questionId: item.itemQuestionId ?? item.question.questionId,
+        ...(item.itemQuestionId && item.itemQuestionId !== item.question.questionId && { askedQuestionId: item.question.questionId }),
         selectedOptionId: picked,
         timeSpentSec: Math.min(3600, Math.round((Date.now() - shownAt.current) / 100) / 10),
       });
@@ -151,6 +153,7 @@ export default function RevisePage() {
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
               <Localized value={item.topicName} className="rounded-full bg-indigo-50 px-3 py-0.5 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" />
               <Localized value={reason} className="rounded-full bg-amber-100 px-3 py-0.5 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" />
+              {item.askedAnotherWay && <Localized value={REVIEW.askedAnotherWay} className="rounded-full bg-sky-100 px-3 py-0.5 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300" />}
               {item.wrongCount > 1 && <Localized value={REVIEW.wrongTimes(item.wrongCount)} className="rounded-full bg-rose-100 px-3 py-0.5 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300" />}
               <span className="ml-auto inline-flex items-center gap-2 font-semibold text-slate-500">
                 <MasteryDots streak={result?.review.streak ?? item.streak} of={load.masterAfter} />

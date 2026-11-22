@@ -98,7 +98,7 @@ export default function SubjectAnalysisPage() {
             ))}
           </div>
           <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="mt-4 space-y-6">
-            {tab === 'now' && <StudyNow d={d} />}
+            {tab === 'now' && <StudyNow d={d} onShowAll={() => setTab('chapters')} />}
             {tab === 'chapters' && <Chapters d={d} lang={lang} />}
             {tab === 'weak' && <WeakQuestions d={d} />}
             {tab === 'skipped' && <Skipped d={d} source={source} lang={lang} />}
@@ -142,13 +142,16 @@ function SummaryRow({ s }) {
 
 /* ------------------------------------------------------------------ Study now */
 
-function StudyNow({ d }) {
+function StudyNow({ d, onShowAll }) {
   const list = d.studyNow;
+  const total = d.chapters?.length ?? 0;
   return (
     <>
       <section aria-labelledby="study-now">
         <h2 id="study-now" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={AN.studyNow} /></h2>
         <Localized value={AN.studyNowSub} as="p" className="text-sm text-slate-600 dark:text-slate-300" />
+        {/* A priority list, not the chapter list: say so, and link to every chapter. */}
+        {list.length > 0 && total > list.length && <Localized value={AN.studyNowTop(list.length, total)} as="p" className="text-sm font-semibold text-slate-700 dark:text-slate-200" />}
         {!list.length && <Localized value={AN.nothingToFocus} as="p" className={`${card} mt-3`} />}
         <ol className="mt-3 grid gap-4 lg:grid-cols-2">
           {list.map((c, i) => (
@@ -187,6 +190,11 @@ function StudyNow({ d }) {
             </li>
           ))}
         </ol>
+        {total > list.length && (
+          <button type="button" onClick={onShowAll} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-bold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:bg-slate-900 dark:text-indigo-300 dark:ring-indigo-500/40">
+            📚 <Localized value={AN.seeAllChaptersN(total)} className="ml-1" /> →
+          </button>
+        )}
       </section>
       <Areas d={d} />
       <NextSmartQuizCard subject={d.subject} quiz={d.nextSmartQuiz} />

@@ -6,10 +6,11 @@ import AdminQuestionImport from './AdminQuestionImport';
 import AdminVocabularyReview from './AdminVocabularyReview';
 import AdminGkContent from './AdminGkContent';
 import AdminBooks from './AdminBooks';
+import AdminMathCoverage from './AdminMathCoverage';
 import QuestionEditor from '../components/admin/QuestionEditor';
 
-const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review', 'gk-content', 'books'];
-const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review', 'gk-content': 'GK content' };
+const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review', 'gk-content', 'books', 'math-coverage'];
+const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review', 'gk-content': 'GK content', 'math-coverage': 'Math coverage' };
 const STATUSES = ['IN_REVIEW', 'DRAFT', 'PUBLISHED', 'ARCHIVED'];
 const btn = 'min-h-9 rounded-lg px-3 text-xs font-semibold';
 const tx = (v) => v?.en || v?.bn || v?.hi || '';
@@ -406,6 +407,7 @@ export default function AdminPage() {
         {tab === 'bengali-review' && <AdminVocabularyReview />}
         {tab === 'gk-content' && <AdminGkContent />}
         {tab === 'books' && <AdminBooks />}
+        {tab === 'math-coverage' && <AdminMathCoverage />}
       </main>
     </div>
   );

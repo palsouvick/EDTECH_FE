@@ -72,6 +72,7 @@ export const BOOK = {
   isRead: L('Read ✓', 'পড়া হয়েছে ✓'),
   sectionPyq: L('Asked in previous papers', 'আগের প্রশ্নপত্রে এসেছে'),
   sources: L('Sources', 'সূত্র'),
+  relatedFacts: L('Related GK facts', 'সম্পর্কিত সাধারণ জ্ঞানের তথ্য'),
   boxes: {
     exam_note: L('Exam note', 'পরীক্ষার কথা'),
     dont_confuse: L("Don't confuse", 'গুলিয়ে ফেলো না'),

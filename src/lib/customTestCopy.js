@@ -91,6 +91,12 @@ export const CT = Object.freeze({
     mistakes: (n) => t(`${n} open mistakes`, `${bnNum(n)}টি ভুল বাকি`),
     limited: (n) => t(`only ${n} questions available`, `মাত্র ${bnNum(n)}টি প্রশ্ন আছে`),
     none_available: t('no questions yet', 'এখনও প্রশ্ন নেই'),
+    tier: (k) => ({
+      foundation: t('weak here: foundation questions first', 'এখানে দুর্বল: আগে ভিত্তির প্রশ্ন'),
+      developing: t('moderate to hard', 'মাঝারি থেকে কঠিন'),
+      strong: t('strong: hard + challenge', 'দক্ষ: কঠিন + চ্যালেঞ্জ'),
+      very_strong: t('very strong: hardest mix', 'খুব দক্ষ: সবচেয়ে কঠিন মিশ্রণ'),
+    })[k] ?? null,
   },
   presetNames: {
     custom: t('Custom test', 'নিজের টেস্ট'),
@@ -101,14 +107,71 @@ export const CT = Object.freeze({
     challenge: t('Challenge test', 'চ্যালেঞ্জ টেস্ট'),
     followup: t('Targeted practice', 'লক্ষ্যভিত্তিক অনুশীলন'),
     smart: t('Smart Quiz', 'Smart Quiz'),
+    adaptive: t('Adaptive practice', 'নিজের স্তরের অনুশীলন'),
     pyq: t('PYQ practice test', 'PYQ অনুশীলন টেস্ট'),
+    hard: t('Hard Quiz', 'কঠিন কুইজ'),
+    speed: t('Speed Challenge', 'স্পিড চ্যালেঞ্জ'),
   },
+  hardPreset: t('🧠 Hard Quiz', '🧠 কঠিন কুইজ'),
+  hardPresetHint: t('Reverse, mixed-concept, trap and challenge questions, at your level in each chapter.', 'উল্টো হিসাব, মিশ্র ধারণা, ফাঁদ ও চ্যালেঞ্জ প্রশ্ন — প্রতিটি অধ্যায়ে তোমার স্তর অনুযায়ী।'),
+  // "Why was this hard?" panel (HardQuizInsights.jsx)
+  hq: {
+    title: t('🧠 Why was this hard?', '🧠 কোথায় কঠিন লাগল?'),
+    speedTitle: t('⚡ Your speed', '⚡ তোমার গতি'),
+    completed: t('Answered', 'উত্তর দিয়েছ'),
+    avgTime: t('Avg time / question', 'প্রতি প্রশ্নে গড় সময়'),
+    skipped: t('Skipped', 'ছেড়ে গেছ'),
+    rushed: t('Rushed mistakes', 'তাড়াহুড়োর ভুল'),
+    speedHint: (s) => t(`Planned ${s}s per question. A rushed mistake is a wrong answer given in under 40% of that time: slow down a little there, the method is probably fine.`, `প্রতি প্রশ্নে পরিকল্পিত ${bnNum(s)} সেকেন্ড। তার ৪০%-এর কম সময়ে দেওয়া ভুল উত্তর = তাড়াহুড়োর ভুল: ওখানে একটু ধীরে চলো, পদ্ধতি সম্ভবত ঠিকই আছে।`),
+    strongIn: t('Strong:', 'দক্ষ:'),
+    weakIn: t('Needs work:', 'আরও অনুশীলন দরকার:'),
+    patternPerformance: t('Performance by question type', 'প্রশ্নের ধরন অনুযায়ী ফল'),
+    skills: {
+      standard: t('Standard', 'সাধারণ'),
+      reverse: t('Reverse problems', 'উল্টো হিসাব'),
+      mixed: t('Multi-step / mixed concept', 'বহু ধাপ / মিশ্র ধারণা'),
+      trap: t('Trap questions', 'ফাঁদের প্রশ্ন'),
+      reasoning: t('Hidden condition / comparison', 'লুকোনো শর্ত / তুলনা'),
+      pyq: t('Actual PYQs', 'আসল আগের প্রশ্ন'),
+      challenge: t('Challenge level', 'চ্যালেঞ্জ স্তর'),
+    },
+    skillHints: {
+      standard: t('one method, exam level', 'একটি পদ্ধতি, পরীক্ষার মান'),
+      reverse: t('final value known, find the original', 'শেষ মান জানা, শুরুর মান বের করো'),
+      mixed: t('two or more concepts or steps', 'দুই বা বেশি ধারণা বা ধাপ'),
+      trap: t('the obvious method gives a wrong option', 'সহজ পথে গেলে ভুল বিকল্পে পৌঁছবে'),
+      reasoning: t('a condition or comparison decides the method', 'শর্ত বা তুলনা পদ্ধতি ঠিক করে'),
+      pyq: t('from real past papers', 'আসল আগের প্রশ্নপত্র থেকে'),
+      challenge: t('the hardest level', 'সবচেয়ে কঠিন স্তর'),
+    },
+    status: { strong: t('Strong', 'দক্ষ'), ok: t('Okay', 'চলনসই'), weak: t('Weak', 'দুর্বল') },
+    nextTitle: t('Your next practice', 'তোমার পরের অনুশীলন'),
+    next: {
+      harder_mix: () => t('Strong result. Next: a harder, mixed-pattern Hard Quiz.', 'দারুণ ফল। এবার: আরও কঠিন, মিশ্র ধাঁচের কঠিন কুইজ।'),
+      new_pattern: () => t('Strong result. Next: a Hard Quiz with patterns you have not mastered yet.', 'দারুণ ফল। এবার: যে ধাঁচগুলো এখনও আয়ত্তে আসেনি, সেগুলো নিয়ে কঠিন কুইজ।'),
+      more_moderate: () => t('Good progress. Next: more moderate questions before the hard ones.', 'ভালো এগোচ্ছ। এবার: কঠিন প্রশ্নের আগে আরও কিছু মাঝারি প্রশ্ন।'),
+      review_concept: (name, pattern) => t(`The same idea went wrong more than once${pattern ? ` (${pattern})` : ''}. Revise ${name}, then do basic questions.`, `একই ধারণায় একাধিকবার ভুল${pattern ? ` (${pattern})` : ''}। ${name} ঝালিয়ে নাও, তারপর সহজ প্রশ্ন করো।`),
+      foundation: (name) => t(`Build the foundation in ${name} first: concept, then basic and easy questions.`, `আগে ${name}-এর ভিত্তি তৈরি করো: ধারণা, তারপর সহজ প্রশ্ন।`),
+    },
+    moderateBtn: t('10 moderate questions', '১০টি মাঝারি প্রশ্ন'),
+  },
+  byLevel: t('🧠 Set by your level in each chapter', '🧠 প্রতিটি অধ্যায়ে তোমার স্তর অনুযায়ী'),
+  allChapters: t('All chapters', 'সব অধ্যায়'),
+  speedPreset: t('⚡ Speed Challenge', '⚡ স্পিড চ্যালেঞ্জ'),
+  speedPresetHint: t('5–20 questions against the clock. See your speed and rushed mistakes.', '৫–২০টি প্রশ্ন, ঘড়ির বিরুদ্ধে। গতি আর তাড়াহুড়োর ভুল দেখো।'),
+  speedCount: t('Speed Challenge: how many questions?', 'স্পিড চ্যালেঞ্জ: কতগুলো প্রশ্ন?'),
+  speedTime: t('Time limit', 'সময়সীমা'),
+  speedNote: t('Timed exam screen, no negative marks.', 'সময় ধরা পরীক্ষার স্ক্রিন, নেগেটিভ মার্কিং নেই।'),
+  hardNote: t('Each chapter is picked at your own level. A chapter you are weak in gets foundation questions first, not a hard set.', 'প্রতিটি অধ্যায় তোমার নিজের স্তরে বাছা হয়। যে অধ্যায়ে দুর্বল, সেখানে আগে ভিত্তির প্রশ্ন আসবে, কঠিন সেট নয়।'),
   subjects: { quant: t('Mathematics', 'গণিত'), english: t('English', 'ইংরেজি'), gs: t('General Knowledge', 'সাধারণ জ্ঞান') },
   errors: {
     NO_WEAK_TOPICS: t('No weak chapters yet. Answer at least 5 questions in a chapter first.', 'এখনও কোনো দুর্বল অধ্যায় নেই। আগে কোনো অধ্যায়ে অন্তত ৫টি প্রশ্নের উত্তর দাও।'),
     NO_MISTAKES: t('No open mistakes in these chapters.', 'এই অধ্যায়গুলোতে কোনো ভুল বাকি নেই।'),
     INSUFFICIENT_QUESTIONS: t('Not enough questions in these chapters yet. Add another chapter.', 'এই অধ্যায়গুলোতে এখনও যথেষ্ট প্রশ্ন নেই। আরেকটা অধ্যায় যোগ করো।'),
     TIME_TOO_SHORT: t('Give at least 10 seconds per question.', 'প্রতি প্রশ্নে অন্তত ১০ সেকেন্ড দাও।'),
+    HARD_QUIZ_SUBJECT: t('The Hard Quiz is for Mathematics.', 'কঠিন কুইজ শুধু গণিতের জন্য।'),
+    SPEED_COUNT: t('A Speed Challenge has 5, 10, 15 or 20 questions.', 'স্পিড চ্যালেঞ্জে ৫, ১০, ১৫ বা ২০টি প্রশ্ন থাকে।'),
+    SPEED_TIME_REQUIRED: t('Choose a time limit for the Speed Challenge.', 'স্পিড চ্যালেঞ্জের সময়সীমা বাছো।'),
     MOCK_CREATE_RATE_LIMITED: t('Too many tests in a short time. Wait a few minutes.', 'অল্প সময়ে অনেক টেস্ট হয়ে গেছে। কয়েক মিনিট অপেক্ষা করো।'),
     generic: t('Could not build the test. Try again.', 'টেস্ট তৈরি করা গেল না। আবার চেষ্টা করো।'),
   },
@@ -131,6 +194,7 @@ export const CT = Object.freeze({
   targetTime: (m) => (m == null ? t('No time limit', 'কোনো সময়সীমা নেই') : t(`Target: ${m} min`, `লক্ষ্য: ${bnNum(m)} মিনিট`)),
   expired: t('This test has expired. Build a new one.', 'এই টেস্টের সময় শেষ। নতুন একটা বানাও।'),
   backToLearn: t('Back to chapters', 'অধ্যায়ে ফিরে যাও'),
+  home: t('Home', 'হোম'),
 
   // Result
   resultTitle: t('🎯 Test result', '🎯 টেস্টের ফল'),
@@ -203,7 +267,8 @@ export function reasonText(code) {
   const [key, arg] = code.split(':');
   const r = CT.reasons[key];
   if (!r) return null;
-  return typeof r === 'function' ? r(Number(arg)) : r;
+  if (typeof r !== 'function') return r;
+  return r(arg !== undefined && arg !== '' && !Number.isNaN(Number(arg)) ? Number(arg) : arg);
 }
 
 /**

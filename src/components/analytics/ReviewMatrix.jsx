@@ -211,7 +211,7 @@ export default function ReviewMatrix({ review, topicNames, defaultView = 'en', f
               aria-checked={view === v.id}
               onClick={() => setView(v.id)}
               lang={v.lang}
-              className={`min-h-9 rounded-full px-3 text-xs font-semibold ${view === v.id ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400'}`}
+              className={`min-h-11 rounded-full px-3 text-xs font-semibold sm:min-h-9 ${view === v.id ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400'}`}
             >
               {typeof v.label === 'string' ? v.label : <Localized value={v.label} />}
             </button>

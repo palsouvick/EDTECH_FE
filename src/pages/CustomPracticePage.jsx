@@ -5,6 +5,7 @@ import { CT, withNames } from '../lib/customTestCopy';
 import { learnPaths } from '../lib/routes';
 import PageShell from '../components/navigation/PageShell';
 import PyqBadge from '../components/practice/PyqBadge';
+import { PracticeTypeChip } from '../components/analysis/AdaptiveParts';
 import LearnThisLink from '../components/review/LearnThisLink';
 import { Localized } from '../components/topic-hub/Localized';
 import CustomTestResult, { reviseLink } from '../components/custom-test/CustomTestResult';
@@ -188,7 +189,7 @@ export default function CustomPracticePage() {
           <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
             <div className="h-full rounded-full bg-indigo-500" style={{ width: `${(Object.keys(feedback).length / questions.length) * 100}%` }} />
           </div>
-          <div className="flex flex-wrap gap-2"><PyqBadge refs={q.pyq} /></div>
+          <div className="flex flex-wrap gap-2"><PracticeTypeChip type={q.practiceType} /><PyqBadge refs={q.pyq} /></div>
           <Localized value={q.stem} markdown as="div" className="text-lg font-medium text-slate-900 dark:text-white" />
           <div role="radiogroup" aria-label={CT.questionOf(i + 1, questions.length).en} className="space-y-2">
             {q.options.map((o, k) => {

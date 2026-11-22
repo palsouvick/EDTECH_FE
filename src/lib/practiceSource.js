@@ -72,6 +72,25 @@ export function createGkFactPracticeSource(code) {
   };
 }
 
+/** A GK confusion drill: questions from facts students mix up, interleaved (a single page). */
+export function createGkDrillPracticeSource(id) {
+  return {
+    async fetchPage({ language }) {
+      const { questions } = await request(`/gk/drills/${id}/questions?language=${language}`);
+      return { questions, nextCursor: null, hasMore: false };
+    },
+    verify(body) {
+      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category: 'WBPSC' } });
+    },
+    setBookmark(questionId, on) {
+      return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });
+    },
+    report(body) {
+      return request('/practice/report-error', { method: 'POST', body });
+    },
+  };
+}
+
 const BOOKMARKS_KEY = 'edtech:fixture-bookmarks';
 const readBookmarks = () => {
   try {

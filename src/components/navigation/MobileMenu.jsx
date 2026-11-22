@@ -57,7 +57,7 @@ export default function MobileMenu({ showLanguage = true }) {
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={say(NAV.openMenu)}
-        className="grid size-10 place-items-center rounded-xl text-slate-700 ring-1 ring-slate-300 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
+        className="grid size-11 place-items-center rounded-xl text-slate-700 ring-1 ring-slate-300 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           <path d="M4 7h16M4 12h16M4 17h16" />
@@ -74,7 +74,7 @@ export default function MobileMenu({ showLanguage = true }) {
               role="dialog"
               aria-modal="true"
               aria-label={say(NAV.menu)}
-              className="fixed inset-x-0 top-0 z-50 max-h-dvh overflow-y-auto rounded-b-2xl bg-white px-4 pb-5 pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-2xl dark:bg-slate-900"
+              className="fixed inset-x-0 top-0 z-50 max-h-dvh overscroll-contain overflow-y-auto rounded-b-2xl bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-2xl dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
                 <Localized value={NAV.menu} as="h2" className="text-base font-bold text-slate-900 dark:text-white" />
@@ -85,13 +85,13 @@ export default function MobileMenu({ showLanguage = true }) {
                     button.current?.focus();
                   }}
                   aria-label={say(NAV.closeMenu)}
-                  className="grid size-10 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="grid size-11 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
                   <XIcon width={20} height={20} aria-hidden="true" />
                 </button>
               </div>
 
-              <nav aria-label="Site" className="mt-3 grid grid-cols-2 gap-2">
+              <nav aria-label="Site" className="mt-3 grid min-w-0 grid-cols-2 gap-2">
                 {navItems.map((i) => (
                   <NavLink
                     key={i.key}
@@ -99,7 +99,7 @@ export default function MobileMenu({ showLanguage = true }) {
                     end={i.end}
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
-                      `flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-indigo-500 ${
+                      `flex min-h-12 min-w-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold focus-visible:outline-2 focus-visible:outline-indigo-500 ${
                         isActive
                           ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
                           : 'bg-slate-50 text-slate-800 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-100 dark:ring-slate-700'

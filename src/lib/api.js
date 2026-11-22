@@ -6,6 +6,9 @@ const BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 const DEV_USER = import.meta.env.DEV ? import.meta.env.VITE_DEV_USER_ID : undefined;
 /** True when requests carry the dev test-student header, so features work without logging in. */
 export const HAS_DEV_USER = Boolean(DEV_USER);
+/** For requests made outside request(): the PDF viewer (pdf.js) and upload progress (XHR). */
+export const API_BASE = BASE;
+export const devAuthHeaders = () => (DEV_USER ? { 'x-user-id': DEV_USER } : {});
 
 export class ApiError extends Error {
   constructor(status, code, message, details) {

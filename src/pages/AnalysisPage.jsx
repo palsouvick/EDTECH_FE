@@ -8,6 +8,8 @@ import { Localized } from '../components/topic-hub/Localized';
 import { useLanguagePreference } from '../hooks/useLanguagePreference';
 import { BandBadge, card, FirstPlanStep, MasteryBars, Meter, WeeklyTrend, WhyList } from '../components/analysis/AnalysisParts';
 import { AN, formatDuration } from '../lib/analysisCopy';
+import { AD } from '../lib/adaptiveCopy';
+import { ContinueStudying, Insights, LevelBadge, NextActions, SkillCounts, SkillMap, StatusBadge, StatusCards, WeekChange } from '../components/analysis/AdaptiveParts';
 import { subjectSlugFromCode } from '../lib/routes';
 import { CardGridSkeleton, LoadError } from './funnel/FunnelLayout';
 
@@ -44,19 +46,21 @@ export default function AnalysisPage() {
     <PageShell className="max-w-6xl pb-16 pt-6 sm:pt-10">
       <header>
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-          <span aria-hidden="true">🧭 </span>
+          <span aria-hidden="true">🧠 </span>
           <Localized value={AN.title} />
         </h1>
-        <Localized value={AN.sub} as="p" className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300" />
+        <Localized value={AD.sub} as="p" className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300" />
       </header>
 
       {state.status === 'loading' && <div className="mt-6"><CardGridSkeleton count={2} height="h-48" /></div>}
       {state.status === 'error' && <div className="mt-6"><LoadError error={state.error} onRetry={() => setAttempt((n) => n + 1)} /></div>}
       {d && (
         <div className="mt-6 space-y-6">
+          {/* Above the fold: target exam, the one best next step, where the student stands, what to do now. */}
           <ExamStrip plan={d.plan} subjects={d.subjects} />
-          <Trends subjects={d.subjects} streakDays={d.streakDays} />
-          <MasterySection subjects={d.subjects} />
+          <ContinueStudying step={d.continue} />
+          <StatusCards subjects={d.subjects} streakDays={d.streakDays} />
+          <NextActions actions={d.nextActions} />
 
           <section aria-labelledby="health">
             <h2 id="health" className="sr-only"><Localized value={AN.health} /></h2>
@@ -64,6 +68,12 @@ export default function AnalysisPage() {
               {d.subjects.map((s) => <SubjectCard key={s.subject} s={s} />)}
             </ul>
           </section>
+
+          <SkillMap subjects={d.subjects} />
+          <Trends subjects={d.subjects} streakDays={d.streakDays} />
+          <WeekChange week={d.weekChange} subjects={d.subjects} />
+          <Insights items={d.insights} />
+          <MasterySection subjects={d.subjects} />
 
           <section aria-labelledby="focus" className={card}>
             <h2 id="focus" className="text-xl font-bold text-slate-900 dark:text-white"><Localized value={AN.currentFocus} /></h2>
@@ -110,7 +120,10 @@ function ExamStrip({ plan, subjects }) {
   return (
     <section aria-labelledby="exam" className={`${card} ring-indigo-200 dark:ring-indigo-500/30`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="exam" className="text-lg font-bold text-slate-900 dark:text-white"><Localized value={AN.examTitle} /></h2>
+        <h2 id="exam" className="text-lg font-bold text-slate-900 dark:text-white">
+          <Localized value={AN.examTitle} />
+          <Link to="/plan" className="ml-3 text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300"><Localized value={AD.planLink} /> →</Link>
+        </h2>
         <p className="text-sm font-semibold text-slate-900 dark:text-white">
           <Localized value={AN.examName} />
           {examDate ? (
@@ -286,6 +299,7 @@ function SubjectCard({ s }) {
           );
         })}
       </div>
+      <SkillCounts map={s.skillMap} />
       {s.month.deltaPts != null && <Localized value={AN.improvement(s.month.deltaPts)} as="p" className={`mt-3 text-sm font-semibold ${s.month.deltaPts >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`} />}
       <Link to={`/analysis/${slug}`} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
         <Localized value={AN.open(AN.subjects[s.subject])} /> →
@@ -324,6 +338,8 @@ function SubjectChapters({ s }) {
               {c.emoji ? <span aria-hidden="true">{c.emoji} </span> : null}<Localized value={c.title} />
             </Link>
             <BandBadge band={c.band} score={c.score} />
+            {c.status && c.started && <StatusBadge status={c.status} />}
+            {c.started && <LevelBadge level={c.level} />}
             <span className="ml-auto tabular-nums text-slate-600 dark:text-slate-300">
               <Localized value={AN.mastery} /> {c.mastery == null ? '—' : `${c.mastery}%`} · <Localized value={AN.accuracy} /> {c.accuracy == null ? '—' : `${c.accuracy}%`}
             </span>

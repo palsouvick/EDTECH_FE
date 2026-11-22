@@ -19,6 +19,7 @@ export const REVIEW = Object.freeze({
   reasonMistake: t('Your mistake', 'তোমার ভুল'),
   reasonBookmark: t('Bookmarked', 'বুকমার্ক করা'),
   reasonBoth: t('Mistake · bookmarked', 'ভুল · বুকমার্ক করা'),
+  askedAnotherWay: t('🔁 Same fact, asked another way', '🔁 একই তথ্য, অন্যভাবে প্রশ্ন'),
   wrongTimes: (n) => t(`Wrong ${n}×`, `${n} বার ভুল`),
   toMaster: (s, n) => t(`${s} of ${n} right to master`, `আয়ত্তের জন্য ${n}টির মধ্যে ${s}টি ঠিক`),
   check: t('Check answer', 'উত্তর মেলাও'),

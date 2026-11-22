@@ -1,0 +1,92 @@
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AppRoutes } from '../App';
+import { AuthProvider } from '../app/AuthContext';
+import { DataSourceProvider } from '../app/DataSourceContext';
+import { createFixtureDataSource } from '../lib/dataSource';
+import { clearResourceCache } from '../hooks/useResource';
+import { languageStore } from '../hooks/useLanguagePreference';
+
+const t = (en, bn) => ({ en, bn });
+const DETECTIVES = {
+  id: 'bengali_characters',
+  title: t('Bengali detectives and characters', 'বাংলা গোয়েন্দা ও চরিত্র'),
+  intro: t('Byomkesh, Feluda, Ghanada: who created whom.', 'ব্যোমকেশ, ফেলুদা, ঘনাদা: কে কার স্রষ্টা।'),
+  questionCount: 6,
+  facts: [{ code: 'GK-WBG-260', title: t('Byomkesh Bakshi: Sharadindu Bandyopadhyay', 'ব্যোমকেশ বক্সী: শরদিন্দু বন্দ্যোপাধ্যায়') }],
+};
+
+function renderAt(path, extra = {}) {
+  const source = {
+    ...createFixtureDataSource({ latencyMs: 0 }),
+    getMe: async () => ({ user: { id: 'u1', name: 'Riya', email: 'riya@example.com' } }),
+    getGkDrills: vi.fn(async () => ({ drills: [DETECTIVES] })),
+    ...extra,
+  };
+  const user = userEvent.setup();
+  render(
+    <DataSourceProvider source={source}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <AppRoutes />
+        </MemoryRouter>
+      </AuthProvider>
+    </DataSourceProvider>,
+  );
+  return { user, source };
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  clearResourceCache();
+  act(() => languageStore.set('en'));
+});
+
+describe('GK confusion drills', () => {
+  it('drill page: title, how wrong options are explained, the topics it draws on', async () => {
+    renderAt('/learn/gk/drill/bengali_characters');
+    expect(await screen.findByRole('heading', { name: /^Bengali detectives and characters/ })).toBeInTheDocument();
+    expect(screen.getByText(/The note under the answer says what that option really is/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Byomkesh Bakshi: Sharadindu/ })).toHaveAttribute('href', '/learn/gk/topic/GK-WBG-260');
+    expect(screen.getByRole('button', { name: /^Start drill/ })).toBeInTheDocument();
+  });
+
+  it('an unknown drill says so', async () => {
+    renderAt('/learn/gk/drill/nope');
+    expect(await screen.findByText('This drill is not available yet.')).toBeInTheDocument();
+  });
+});
+
+describe('revision asks a GK fact another way', () => {
+  it('shows the badge and sends both the queued and the asked question', async () => {
+    const answerReview = vi.fn(async ({ askedQuestionId, selectedOptionId }) => ({
+      questionId: askedQuestionId,
+      selectedOptionId,
+      isCorrect: true,
+      correctOptionId: selectedOptionId,
+      explanation: { items: [t('Byomkesh Bakshi.', 'ব্যোমকেশ বক্সী।')] },
+      shortcut: null,
+      trapForSelected: null,
+      review: { status: 'active', streak: 1, masterAfter: 2, nextDueAt: '2026-11-24T10:00:00Z' },
+    }));
+    const { user } = renderAt('/revise', {
+      getReviewSummary: async () => ({ dueToday: 1, active: 1, mastered: 0, mistakesActive: 1, nextDueAt: null, masterAfter: 2 }),
+      getReviewDue: async () => ({
+        masterAfter: 2,
+        items: [{
+          reason: 'mistake', streak: 0, wrongCount: 1, topicName: t('West Bengal GK', 'পশ্চিমবঙ্গ'),
+          itemQuestionId: 'q_who', askedAnotherWay: true,
+          question: { questionId: 'q_reverse', stem: t('Sharadindu Bandyopadhyay created which detective?', 'শরদিন্দু বন্দ্যোপাধ্যায় কোন গোয়েন্দার স্রষ্টা?'), options: [{ optionId: 'opt_aaaa', text: t('Byomkesh Bakshi', 'ব্যোমকেশ বক্সী') }, { optionId: 'opt_bbbb', text: t('Feluda', 'ফেলুদা') }] },
+        }],
+      }),
+      answerReview,
+    });
+    expect(await screen.findByText('Sharadindu Bandyopadhyay created which detective?')).toBeInTheDocument();
+    expect(screen.getByText('🔁 Same fact, asked another way')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /Byomkesh Bakshi/ }));
+    await user.click(screen.getByRole('button', { name: /^Check answer/ }));
+    expect(answerReview).toHaveBeenCalledWith(expect.objectContaining({ questionId: 'q_who', askedQuestionId: 'q_reverse', selectedOptionId: 'opt_aaaa' }));
+  });
+});

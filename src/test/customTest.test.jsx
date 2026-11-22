@@ -198,6 +198,10 @@ describe('custom test result', () => {
     expect(screen.getByText('🔴 Weak topic')).toBeInTheDocument();
     expect(screen.getByText(/Move on to Ratio & Proportion/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /10 basic questions/ })).toHaveAttribute('href', '/learn/math/profit-loss/quiz/beginner');
+    // A way back at the top, without scrolling to the bottom buttons.
+    const top = screen.getByRole('navigation', { name: 'Result navigation' });
+    expect(within(top).getByRole('link', { name: /Back to chapters/ })).toHaveAttribute('href', '/learn/math');
+    expect(within(top).getByRole('link', { name: /Home/ })).toHaveAttribute('href', '/');
 
     // Only wrong/skipped by default: question 4 with why, shortcut, trap and a Revise link.
     const q4 = screen.getByText('Question 4').closest('li');

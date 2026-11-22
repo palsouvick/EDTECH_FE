@@ -2,6 +2,16 @@
 const t = (en, bn) => ({ en, bn });
 const bnDigits = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
+export const DRILL = Object.freeze({
+  title: t("Don't mix them up: confusion drills", 'গুলিয়ে ফেলো না: বিভ্রান্তি ড্রিল'),
+  sub: t('Short quizzes made only of things people confuse: P or K, Feluda or Byomkesh, pen name or real name. Each fact is asked both ways.', 'শুধু যেগুলো সহজে গুলিয়ে যায় সেগুলো দিয়ে ছোট কুইজ: P না K, ফেলুদা না ব্যোমকেশ, ছদ্মনাম না আসল নাম। প্রতিটি তথ্য দুই দিক থেকে জিজ্ঞাসা করা হয়।'),
+  start: t('Start drill', 'ড্রিল শুরু করো'),
+  back: t('All GK', 'সব সাধারণ জ্ঞান'),
+  topics: t('Revise these topics', 'এই বিষয়গুলো রিভাইস করো'),
+  notFound: t('This drill is not available yet.', 'এই ড্রিলটি এখনও পাওয়া যাচ্ছে না।'),
+  tip: t('Picked a wrong option? The note under the answer says what that option really is. Missed facts come back in Revision, asked another way.', 'ভুল বিকল্প বেছেছ? উত্তরের নিচের নোটে সেই বিকল্পটি আসলে কী তা লেখা থাকবে। ভুল হওয়া তথ্য রিভিশনে আবার আসবে, অন্যভাবে প্রশ্ন করে।'),
+});
+
 export const PACK = Object.freeze({
   openTopic: t('Open the complete topic', 'পুরো বিষয়টি খোলো'),
   alsoLearn: t('You should also learn', 'এগুলিও জেনে রাখো'),

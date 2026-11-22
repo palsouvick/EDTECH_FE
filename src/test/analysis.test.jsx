@@ -232,6 +232,69 @@ describe('learning analysis pages', () => {
     expect(rows[1]).toHaveTextContent('Average');
   });
 
+  it('adaptive overview: continue studying, what to do now with per-chapter levels, skill map, week change and insights', async () => {
+    const base = await makeSource().getLearningOverview();
+    const lv = (current, next, action = 'hold', extra = {}) => ({ current, next, action, thin: false, nearest: null, concept: null, ...extra });
+    const map = {
+      counts: { strong: 1, developing: 0, weak: 1, insufficient: 0 },
+      notStarted: 2,
+      groups: {
+        strong: [{ topic: 'average', title: t('Average', 'গড়'), mastery: 88, answers: 30, level: lv('hard', 'challenge', 'up') }],
+        developing: [],
+        weak: [{ topic: 'percentage', title: t('Percentage', 'শতকরা'), mastery: 32, answers: 35, level: lv('moderate', 'basic', 'reset') }],
+        insufficient: [],
+      },
+    };
+    const data = {
+      ...base,
+      subjects: base.subjects.map((s) => ({ ...s, skillMap: s.subject === 'quant' ? map : { counts: { strong: 0, developing: 0, weak: 0, insufficient: 0 }, notStarted: 5, groups: { strong: [], developing: [], weak: [], insufficient: [] } } })),
+      nextActions: [
+        { subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), mastery: 32, status: 'weak', priority: 'MUST', kind: 'review_concept', level: lv('moderate', 'basic', 'review_concept', { concept: { key: 'successive', name: t('Successive change', 'ক্রমিক পরিবর্তন'), wrong: 3 } }) },
+        { subject: 'quant', topic: 'average', title: t('Average', 'গড়'), mastery: 88, status: 'strong', priority: 'IMPORTANT', kind: 'challenge', level: lv('hard', 'challenge', 'up') },
+      ],
+      continue: { kind: 'practice', subject: 'quant', topic: 'percentage', title: t('Percentage', 'শতকরা'), practice: 'basic', level: 'basic' },
+      insights: [{ kind: 'progress', subject: 'quant', topic: 'average', title: t('Average', 'গড়'), from: 62, to: 81 }],
+      weekChange: { answers: 47, improved: 2, wrongDelta: -6, revisionDue: 3, bySubject: { quant: { accuracyDelta: 8 }, english: { accuracyDelta: -4 } } },
+    };
+    const source = makeSource({ getLearningOverview: vi.fn(() => Promise.resolve(data)), createCustomTest: vi.fn(() => Promise.resolve({ sessionId: 'c'.repeat(24), custom: { mode: 'practice', preset: 'adaptive' } })) });
+    const { user: u } = { user: userEvent.setup() };
+    renderAt('/analysis', source);
+
+    const now = await screen.findByRole('region', { name: /What should I do now?/ });
+    const items = within(now).getAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('Percentage');
+    expect(items[0]).toHaveTextContent('Needs practice');
+    expect(items[0]).toHaveTextContent('Must know for your exam');
+    expect(items[0]).toHaveTextContent('You have made 3 mistakes in Successive change. Review this concept before harder questions.');
+    expect(within(items[0]).getByRole('link', { name: /Review concept/ })).toHaveAttribute('href', '/learn/math/percentage');
+    expect(items[1]).toHaveTextContent('Practise 5 Exam Challenge questions');
+
+    const cont = screen.getByRole('region', { name: /Continue studying/ });
+    expect(cont).toHaveTextContent('Percentage: Basic practice');
+    expect(within(cont).getByRole('button', { name: /▶ Continue studying/ })).toBeInTheDocument();
+
+    const skill = screen.getByRole('region', { name: /My Skill Map/ });
+    expect(skill).toHaveTextContent('Strong');
+    const avgRow = within(skill).getByText('Average').closest('li');
+    expect(avgRow).toHaveTextContent('88%');
+    expect(avgRow).toHaveTextContent(/Next.*Exam Challenge/);
+    const pctRow = within(skill).getByText('Percentage').closest('li');
+    expect(pctRow).toHaveTextContent('32%');
+    expect(pctRow).toHaveTextContent(/Next.*Basic/);
+    expect(skill).toHaveTextContent('2 chapters not started');
+    expect(screen.getByText(/Strong 1 · Developing 0 · Needs practice 1/)).toBeInTheDocument();
+
+    const week = screen.getByRole('region', { name: /What changed in the last 7 days?/ });
+    expect(week).toHaveTextContent('↑ Mathematics accuracy +8%');
+    expect(week).toHaveTextContent('↓ English accuracy -4%');
+    expect(week).toHaveTextContent('🔥 2 chapters improved');
+    expect(week).toHaveTextContent('✓ 6 fewer wrong answers than last week');
+    expect(screen.getByText('Your Average accuracy rose from 62% to 81%.')).toBeInTheDocument();
+    // Start practice: an adaptive session for that chapter (it opens the practice page).
+    await u.click(within(items[1]).getByRole('button', { name: /Start practice/ }));
+    await waitFor(() => expect(source.createCustomTest).toHaveBeenCalledWith({ subject: 'quant', preset: 'adaptive', topics: ['average'], questionCount: 5, mode: 'practice', language: 'en' }));
+  });
+
   it('overview without an exam date: the strip says so and links to the plan', async () => {
     const noDate = {
       subjects: [
@@ -261,6 +324,14 @@ describe('learning analysis pages', () => {
     expect(screen.queryByRole('link', { name: /Open mistakes/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Skipped, not yet solved/ })).not.toBeInTheDocument();
     expect(screen.getAllByText('Open mistakes')).toHaveLength(2);
+  });
+
+  it('study now is a priority list: it says so and opens the full chapter list', async () => {
+    const user = userEvent.setup();
+    renderAt('/analysis/math', makeSource());
+    expect(await screen.findByText(/Your top 1 priorities out of 2 chapters/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /See all 2 chapters/ }));
+    expect(screen.getByRole('tab', { name: /Chapters/ })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('subject page: what to study now, why, the plan, and the next Smart Quiz', async () => {

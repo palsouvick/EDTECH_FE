@@ -425,17 +425,17 @@ export default function BookChapterPage() {
 
           <DepthSwitch depth={depth} hasDeep={chapter.sections.some((s) => s.deep)} onDepth={(d) => recordReading({ chapter: chapter.code, depth: d })} />
 
-          <nav aria-label={BOOK.sectionsNav.en} className="sticky top-0 z-10 -mx-4 overflow-x-auto bg-slate-50/95 px-4 py-2 backdrop-blur dark:bg-slate-950/95">
+          <nav aria-label={BOOK.sectionsNav.en} className="sticky top-[calc(4.25rem+env(safe-area-inset-top))] z-10 -mx-4 overflow-x-auto bg-slate-50/95 px-4 py-2 backdrop-blur dark:bg-slate-950/95">
             <ol className="flex gap-2">
               {chapter.sections.map((s, i) => (
                 <li key={s.id} className="shrink-0">
-                  <a href={`#${sectionAnchor(s.id)}`} onClick={(e) => { e.preventDefault(); onRevise(s.id); }} className={`inline-flex min-h-10 items-center rounded-lg px-3 text-sm ring-1 ${read.has(s.id) ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/30' : 'bg-white text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700'}`} lang="bn">
+                  <a href={`#${sectionAnchor(s.id)}`} onClick={(e) => { e.preventDefault(); onRevise(s.id); }} className={`inline-flex min-h-11 items-center rounded-lg px-3 text-sm ring-1 ${read.has(s.id) ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/30' : 'bg-white text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700'}`} lang="bn">
                     {bnNum(i + 1)}. {s.heading}
                   </a>
                 </li>
               ))}
               <li className="shrink-0">
-                <a href="#practice" onClick={(e) => { e.preventDefault(); document.getElementById('practice')?.scrollIntoView?.({ behavior: 'smooth' }); }} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white">
+                <a href="#practice" onClick={(e) => { e.preventDefault(); document.getElementById('practice')?.scrollIntoView?.({ behavior: 'smooth' }); }} className="inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white">
                   <Localized value={BOOK.practiceTitle} />
                 </a>
               </li>
@@ -609,10 +609,18 @@ export default function BookChapterPage() {
 
           <PracticePanel bookCode={bookCode} chapter={chapter} preview={preview} entry={entry} onResult={recordResult} onRevise={onRevise} />
 
+          {/* Related GK facts: published ones only, shown by title (the API leaves drafts out). */}
           {chapter.relatedFacts.length > 0 && (
-            <p className="flex flex-wrap gap-2 text-sm">
-              {chapter.relatedFacts.map((c) => <Link key={c} to={gkTopicPath(c)} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-50 px-3 font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300">📚 {c}</Link>)}
-            </p>
+            <section aria-labelledby="related-facts">
+              <h2 id="related-facts" className="text-base font-bold text-slate-900 dark:text-white"><Localized value={BOOK.relatedFacts} /></h2>
+              <p className="mt-2 flex flex-wrap gap-2 text-sm">
+                {chapter.relatedFacts.map((f) => (
+                  <Link key={f.code ?? f} to={gkTopicPath(f.code ?? f)} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-50 px-3 font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300">
+                    📚 {f.title ? <Localized value={f.title} className="ml-1" /> : f}
+                  </Link>
+                ))}
+              </p>
+            </section>
           )}
 
           <Block title={BOOK.sources}>

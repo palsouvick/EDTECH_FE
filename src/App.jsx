@@ -26,6 +26,8 @@ import AdminLogin from './pages/AdminLogin';
 import BookmarksPage from './pages/BookmarksPage';
 import RevisePage from './pages/RevisePage';
 import RevisionPage from './pages/RevisionPage';
+import MyCoursePage from './pages/MyCoursePage';
+import CourseReaderPage from './pages/CourseReaderPage';
 import MistakesPage from './pages/MistakesPage';
 import MasteryPage from './pages/MasteryPage';
 import AnalysisPage from './pages/AnalysisPage';
@@ -42,6 +44,7 @@ import DiagnosticPage from './pages/DiagnosticPage';
 import IdoDashboardPage from './pages/IdoDashboardPage';
 import IdoPlanPage from './pages/IdoPlanPage';
 import GkTopicPage from './pages/learn/GkTopicPage';
+import GkDrillPage from './pages/learn/GkDrillPage';
 import BookHomePage from './pages/learn/BookHomePage';
 import BookChapterPage from './pages/learn/BookChapterPage';
 import CookieConsent from './components/auth/CookieConsent';
@@ -87,6 +90,7 @@ export function AppRoutes() {
       <Route path="/learn/gk" element={<GkDashboardPage />} />
       <Route path="/learn/gk/revision" element={<GkRevisionPage />} />
       <Route path="/learn/gk/topic/:code" element={<GkTopicPage />} />
+      <Route path="/learn/gk/drill/:id" element={<GkDrillPage />} />
       <Route path="/learn/gk/:chapter/book" element={<BookHomePage />} />
       <Route path="/learn/gk/:chapter/book/:code" element={<BookChapterPage />} />
       <Route path="/learn/gk/:chapter" element={<GkChapterPage />} />
@@ -118,6 +122,8 @@ export function AppRoutes() {
       <Route path="/me" element={<PerformancePage />} />
       {/* F13: /revision is the ONE revision page; the bookmark list moved under it. */}
       <Route path="/revision" element={<RevisionPage />} />
+      <Route path="/my-course" element={<MyCoursePage />} />
+      <Route path="/my-course/:id" element={<CourseReaderPage />} />
       <Route path="/revision/bookmarks" element={<BookmarksPage />} />
       <Route path="/revise" element={<RevisePage />} />
       <Route path="/mistakes" element={<MistakesPage />} />

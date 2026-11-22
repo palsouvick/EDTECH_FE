@@ -12,6 +12,7 @@ import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { SubjectTabs } from './SubjectPage';
 import { BookEntryCard } from './BookHomePage';
 import CustomTestLauncher from '../../components/custom-test/CustomTestLauncher';
+import GkDrills from '../../components/gk/GkDrills';
 import PriorityBadge, { PriorityLegend } from '../../components/priority/PriorityBadge';
 import StageChip from '../../components/mastery/StageChip';
 
@@ -175,6 +176,7 @@ export default function GkDashboardPage() {
         <SubjectTabs subject="gs" />
       </div>
       <CustomTestLauncher subject="gs" className="mt-6" />
+      <GkDrills className="mt-8" />
       <BookEntryCard card="indian_history" onlyIfStarted className="mt-6 block max-w-4xl" />
       <PriorityLegend className="mt-4 max-w-4xl" />
 

@@ -7,6 +7,7 @@ import { AUTH } from '../../lib/i18n';
 import { TARGET_EXAM } from '../../lib/targetExamCopy';
 import { NAV } from '../../lib/homeCopy';
 import { Localized } from '../topic-hub/Localized';
+import { COURSE } from '../../lib/course';
 
 /** "/login?next=/exams/ssc" for the page the student is on now. */
 export function loginPath(location, mode = 'login') {
@@ -57,7 +58,7 @@ function AccountControl({ auth, className = '' }) {
       <span className={`inline-flex shrink-0 items-center gap-1.5 ${className}`}>
         <Link
           to={loginPath(location)}
-          className="inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-indigo-300 dark:ring-indigo-800 dark:hover:bg-indigo-950"
+          className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-indigo-500 dark:text-indigo-300 dark:ring-indigo-800 dark:hover:bg-indigo-950 sm:min-h-9"
         >
           <Localized value={AUTH.login} />
         </Link>
@@ -71,7 +72,7 @@ function AccountControl({ auth, className = '' }) {
     );
   }
 
-  const item = 'block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800';
+  const item = 'block min-h-11 w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800';
   return (
     <div ref={rootRef} className={`relative shrink-0 ${className}`}>
       <button
@@ -81,7 +82,7 @@ function AccountControl({ auth, className = '' }) {
         aria-controls={menuId}
         aria-label={`${AUTH.account.en}: ${user.name}`}
         onClick={() => setOpen((o) => !o)}
-        className="grid size-9 place-items-center rounded-full bg-indigo-600 text-sm font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+        className="grid size-11 place-items-center rounded-full bg-indigo-600 text-sm font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:size-9"
       >
         {initials(user.name)}
       </button>
@@ -105,6 +106,10 @@ function AccountControl({ auth, className = '' }) {
           <Link role="menuitem" to="/mastery" className={item} onClick={() => setOpen(false)}>
             <span aria-hidden="true">🗺️ </span>
             <Localized value={MASTERY.title} />
+          </Link>
+          <Link role="menuitem" to="/my-course" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">📚 </span>
+            <Localized value={COURSE.title} />
           </Link>
           {/* Revision is a top-level tab (Phase 12): not repeated here. */}
           <button

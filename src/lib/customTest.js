@@ -5,6 +5,9 @@
 
 export const COUNT_CHOICES = Object.freeze([10, 20, 30, 40, 50]);
 export const TIME_CHOICES = Object.freeze([10, 15, 20, 30, 45, 60]);
+/** Speed Challenge (same counts as the server, hardQuiz.logic SPEED_COUNTS) and its time choices in minutes. */
+export const SPEED_COUNTS = Object.freeze([5, 10, 15, 20]);
+export const SPEED_TIMES = Object.freeze([3, 5, 8, 10, 15, 20, 30]);
 export const DIFFICULTY_ORDER = Object.freeze(['easy', 'moderate', 'hard', 'exam', 'mixed']);
 export const MIN_Q = 5;
 export const MAX_Q = 100;

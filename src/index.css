@@ -62,12 +62,33 @@ html.lang-switching body {
   body {
     @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200;
   }
+  #root {
+    min-width: 0;
+  }
+  @media (max-width: 639px) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
+  }
 }
 
 @layer components {
   /* Compact Markdown typography for concept notes. */
+  .md-body {
+    min-width: 0;
+  }
   .md-body > * + * {
     margin-top: 0.6em;
+  }
+  .md-body p,
+  .md-body li,
+  .md-body blockquote,
+  .md-body h1,
+  .md-body h2,
+  .md-body h3 {
+    overflow-wrap: anywhere;
   }
   .md-body strong {
     @apply font-semibold text-slate-900 dark:text-white;
@@ -83,10 +104,12 @@ html.lang-switching body {
   }
   /* Tables (remark-gfm): bordered, zebra rows, header tint; the wrapper scrolls on narrow screens. */
   .md-body .md-table {
-    @apply overflow-x-auto rounded-xl ring-1 ring-slate-200 dark:ring-slate-700;
+    @apply max-w-full min-w-0 overflow-x-auto rounded-xl ring-1 ring-slate-200 dark:ring-slate-700;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
   .md-body table {
-    @apply w-full border-collapse text-left text-[0.95em];
+    @apply w-full min-w-full border-collapse text-left text-[0.95em];
   }
   .md-body thead th {
     @apply bg-indigo-50 font-bold text-indigo-950 dark:bg-indigo-500/15 dark:text-indigo-100;
@@ -111,8 +134,10 @@ html.lang-switching body {
   /* Long display formulas scroll inside their card, never the page. */
   .md-body .katex-display,
   .formula-display {
+    max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    overscroll-behavior-x: contain;
     padding: 0.25rem 0;
   }
   .katex {

@@ -8,6 +8,7 @@ import PageShell from '../navigation/PageShell';
 import { Localized } from '../topic-hub/Localized';
 import { LoadError } from '../../pages/funnel/FunnelLayout';
 import CustomTestDialog from './CustomTestDialog';
+import HardQuizInsights from './HardQuizInsights';
 import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 import { useStartCustomTest } from './useStartCustomTest';
 import PyqBadge from '../practice/PyqBadge';
@@ -145,6 +146,11 @@ export default function CustomTestResult({ sessionId }) {
 
   return (
     <PageShell className="max-w-4xl space-y-5 pb-16 pt-6 sm:pt-8">
+      {/* A way out without scrolling past every panel to the buttons at the bottom. */}
+      <nav aria-label="Result navigation" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold">
+        <Link to={learnPaths.subject(subject)} className="inline-flex min-h-10 items-center text-indigo-700 hover:underline dark:text-indigo-300">← <Localized value={CT.backToLearn} className="ml-1" /></Link>
+        <Link to="/" className="inline-flex min-h-10 items-center text-slate-600 hover:underline dark:text-slate-300">🏠 <Localized value={CT.home} className="ml-1" /></Link>
+      </nav>
       <section className={`${card} bg-gradient-to-br from-indigo-600 to-violet-600 text-white ring-0`}>
         <Localized value={CT.resultTitle} as="h1" className="text-2xl font-extrabold sm:text-3xl" />
         <p className="mt-1 text-sm text-indigo-100">
@@ -209,6 +215,8 @@ export default function CustomTestResult({ sessionId }) {
           ))}
         </div>
       </section>
+
+      <HardQuizInsights r={r} subject={subject} busy={busy} onRun={run} reviseLink={reviseLink} />
 
       {r.concepts.length > 0 && (
         <section className={card}>

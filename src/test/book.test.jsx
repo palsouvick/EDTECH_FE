@@ -27,7 +27,7 @@ const book = {
 };
 const chapter = {
   book: 'history', code: 'HIS-02', number: 2, part: 'ancient', title: 'হরপ্পা সভ্যতা', subtitle: 'প্রথম নগর', draft: false, weight: true, bengal: false,
-  subtopics: ['ivc'], relatedFacts: ['GK-HIS-104'], prerequisites: [{ code: 'HIS-01', number: 1, title: 'প্রাগৈতিহাসিক ভারত', available: false }], readingMinutes: { quick: 5, standard: 30, deep: 45 },
+  subtopics: ['ivc'], relatedFacts: [{ code: 'GK-HIS-104', title: { en: 'Indus Valley sites', bn: 'সিন্ধু সভ্যতার কেন্দ্র' } }], prerequisites: [{ code: 'HIS-01', number: 1, title: 'প্রাগৈতিহাসিক ভারত', available: false }], readingMinutes: { quick: 5, standard: 30, deep: 45 },
   overview: { intro: 'এই অধ্যায়ের পরিচিতি।', you_will_learn: ['এক', 'দুই', 'তিন'] },
   sections: sections.map((s, i) => ({ ...s, quick: `সংক্ষেপ ${i}`, standard: `পূর্ণ ব্যাখ্যা ${i}`, deep: i === 0 ? 'গভীর আলোচনা ০' : null, boxes: i === 1 ? [{ kind: 'exam_note', title: 'বৃহত্তম', body: 'রাখিগড়ি বনাম মহেঞ্জোদারো' }] : [], sources: ['s1'], pyq: i === 0 ? [{ exam: 'WBCS', years: [2022] }] : [], questionCount: 1 })),
   events: [{ title: 'খনন', when: '১৯২১', what: 'হরপ্পায় খনন', why_it_matters: 'সভ্যতা চেনা গেল', section: 'discovery' }],
@@ -116,6 +116,8 @@ describe('book pages', () => {
   it('chapter: depths switch the text, sections can be marked read, and progress shows Continue reading', async () => {
     const { user } = renderAt('/learn/gk/indian-history/book/HIS-02');
     expect(await screen.findByRole('heading', { level: 1, name: 'হরপ্পা সভ্যতা' })).toBeInTheDocument();
+    // Related GK facts link by title, not by code.
+    expect(screen.getByRole('link', { name: /Indus Valley sites|সিন্ধু সভ্যতার কেন্দ্র/ })).toHaveAttribute('href', '/learn/gk/topic/GK-HIS-104');
     expect(screen.getByText('পূর্ণ ব্যাখ্যা 0')).toBeInTheDocument();
     expect(screen.getByText(/অধ্যায় ১: প্রাগৈতিহাসিক ভারত/)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /প্রাগৈতিহাসিক ভারত/ })).toBeNull();

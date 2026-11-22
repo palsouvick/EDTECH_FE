@@ -19,7 +19,7 @@ export default function SiteHeader({ sticky = true, showLanguage = true }) {
       data-sticky-top={sticky || undefined}
       className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b border-slate-200/80 bg-white/85 pt-[env(safe-area-inset-top)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/85`}
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+      <div className="mx-auto flex min-w-0 max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 sm:px-4">
         <Link to="/" className="flex shrink-0 items-center gap-2 font-bold text-slate-900 dark:text-white">
           <span className="grid size-8 place-items-center rounded-lg bg-indigo-600 text-white">
             <SigmaIcon width={18} height={18} />
