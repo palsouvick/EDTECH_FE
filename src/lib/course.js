@@ -73,6 +73,13 @@ export const COURSE = Object.freeze({
     ready: t('Ready', 'তৈরি'),
     failed: t('Could not read this file', 'ফাইলটি পড়া যায়নি'),
   },
+  failReason: {
+    password: t('This PDF is password-protected. Remove the password, delete this copy and add it again.', 'এই PDF-এ পাসওয়ার্ড দেওয়া আছে। পাসওয়ার্ড সরিয়ে, এই কপিটি মুছে আবার যোগ করো।'),
+    damaged: t('This PDF looks damaged. Try downloading it again, then add the new copy.', 'PDF-টি নষ্ট মনে হচ্ছে। আবার ডাউনলোড করে নতুন কপিটি যোগ করো।'),
+    server: t('Something went wrong on our side. Try again; your file is still saved.', 'আমাদের দিকে একটা সমস্যা হয়েছে। আবার চেষ্টা করো; তোমার ফাইল সেভ করা আছে।'),
+  },
+  retry: t('Try again', 'আবার চেষ্টা করো'),
+  retrying: t('Starting…', 'শুরু হচ্ছে…'),
   kind: {
     text: t('Text PDF', 'টেক্সট PDF'),
     scanned: t('Scanned: read with OCR', 'স্ক্যান করা: OCR দিয়ে পড়া'),

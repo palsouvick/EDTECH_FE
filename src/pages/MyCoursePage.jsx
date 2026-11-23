@@ -25,7 +25,36 @@ function StatusLine({ f }) {
   return <Localized value={COURSE.status[f.status]} as="p" className={`mt-2 text-sm font-semibold ${tone}`} />;
 }
 
-function FileCard({ f }) {
+/** A failed file: why, in the student's language, and a retry (pointless for a locked PDF). */
+function FailedNote({ f, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const reason = COURSE.failReason[f.failReason] ? f.failReason : 'server';
+  async function retry() {
+    setBusy(true);
+    setErr('');
+    try {
+      await courseApi.reprocess(f.id);
+      await onChanged();
+    } catch (e) {
+      setErr(e.message);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-1">
+      <Localized value={COURSE.failReason[reason]} as="p" className="text-xs text-rose-700 dark:text-rose-300" />
+      {reason !== 'password' && (
+        <button type="button" disabled={busy} onClick={retry} className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-rose-600 px-3 text-xs font-bold text-white hover:bg-rose-500 disabled:opacity-60">
+          ↻ <Localized value={busy ? COURSE.retrying : COURSE.retry} className="ml-1" />
+        </button>
+      )}
+      {err && <p role="alert" className="mt-1 text-xs text-rose-700 dark:text-rose-300">{err}</p>}
+    </div>
+  );
+}
+
+function FileCard({ f, onChanged }) {
   return (
     <li className={card}>
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -47,7 +76,7 @@ function FileCard({ f }) {
       </div>
       <StatusLine f={f} />
       {f.status === 'ready' && f.sections?.some(needsCheck) && <Localized value={COURSE.checkTitle(f.sections.filter(needsCheck).length)} as="p" className="mt-1 text-xs font-semibold text-amber-700 dark:text-amber-300" />}
-      {f.status === 'failed' && f.error && <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">{f.error}</p>}
+      {f.status === 'failed' && <FailedNote f={f} onChanged={onChanged} />}
       {f.sections?.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-2">
           {f.sections.map((s) => (
@@ -194,7 +223,7 @@ export default function MyCoursePage() {
       {files?.some((f) => f.status === 'ready') && <AllMarks />}
       {files === null && !error && <p aria-busy="true" className="h-32 animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800" />}
       {files?.length === 0 && <Localized value={COURSE.empty} as="p" className={`${card} text-slate-600 dark:text-slate-300`} />}
-      {files?.length > 0 && <ul className="space-y-3">{files.map((f) => <FileCard key={f.id} f={f} />)}</ul>}
+      {files?.length > 0 && <ul className="space-y-3">{files.map((f) => <FileCard key={f.id} f={f} onChanged={load} />)}</ul>}
     </PageShell>
   );
 }
