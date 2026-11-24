@@ -79,9 +79,12 @@ async function send(path, { method, body, signal, headers }) {
   return json.data;
 }
 
-/** Unwraps the backend envelope: { success, data } | { success: false, error }. */
-export async function request(path, { method = 'GET', body, signal, headers } = {}) {
-  const retries = method === 'GET' ? RETRY_DELAYS_MS.length : 0;
+/**
+ * Unwraps the backend envelope: { success, data } | { success: false, error }.
+ * `retry: true` lets a write that is safe to repeat (checking an answer) ride out a restart too.
+ */
+export async function request(path, { method = 'GET', body, signal, headers, retry = method === 'GET' } = {}) {
+  const retries = retry ? RETRY_DELAYS_MS.length : 0;
   for (let attempt = 0; ; attempt += 1) {
     try {
       return await send(path, { method, body, signal, headers });

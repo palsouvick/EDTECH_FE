@@ -111,6 +111,7 @@ export const CT = Object.freeze({
     pyq: t('PYQ practice test', 'PYQ অনুশীলন টেস্ট'),
     hard: t('Hard Quiz', 'কঠিন কুইজ'),
     speed: t('Speed Challenge', 'স্পিড চ্যালেঞ্জ'),
+    stuck: t('Practice My Weakness', 'দুর্বলতার অনুশীলন'),
   },
   hardPreset: t('🧠 Hard Quiz', '🧠 কঠিন কুইজ'),
   hardPresetHint: t('Reverse, mixed-concept, trap and challenge questions, at your level in each chapter.', 'উল্টো হিসাব, মিশ্র ধারণা, ফাঁদ ও চ্যালেঞ্জ প্রশ্ন — প্রতিটি অধ্যায়ে তোমার স্তর অনুযায়ী।'),

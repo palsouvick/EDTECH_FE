@@ -54,6 +54,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getReviewDue()                                 -> { items } today's revision queue (no answers)
  *   answerReview({ questionId, selectedOptionId }) -> verify payload + { review: { status, streak, nextDueAt } }
  *   getMistakes({ status, subject?, topic?, offset }) -> mistake notebook page
+ *   getStuckProblems()                            -> Math "I'm Stuck": My Stuck Problems (signed-in)
+ *   getStuckSummary()                             -> the home card: top gap, most stuck chapters, next action
  *   getInsights()                                  -> { mastery, counts, weakPatterns, badges, streak }
  *   getLeaderboard() / setLeaderboardOptIn(optIn)  -> weekly opt-in leaderboard
  *   getChallenge()                                 -> today's daily challenge { day, questions, done }
@@ -72,6 +74,8 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getImportantDays()                            -> { months: [{ month, rows, sources }], similarNames, confusedPairs }
  *   listVocabularyWords(filters)                  -> { words, total, offset, limit }
  *   createVocabularyPracticeSession({ mode })     -> { sessionToken, questions }
+ *   createVocabularyReviewQuiz(type, count)       -> spaced revision as MCQs (Bengali meaning / synonym / antonym);
+ *                                                    answer with answerVocabularyPractice (result has `review`)
  *   getBook(book) / getBookChapter(book, code) / getBookProgress(book) / saveBookReading / saveBookResult
  *   bookPracticeSource(book, code, { mode, sections, preview, onChecked }) -> study books (lib/bookSource.js)
  */
@@ -155,7 +159,7 @@ export function createHttpDataSource() {
     getPerformance: () => request(`/me/performance?tz=${-new Date().getTimezoneOffset()}`),
     listBookmarks: ({ subject, topic, offset = 0 } = {}) =>
       request(`/practice/bookmarks?${new URLSearchParams({ offset: String(offset), ...(subject && { subject }), ...(topic && { topic }) })}`),
-    verifyAnswer: (body) => request('/practice/verify-answer', { method: 'POST', body }),
+    verifyAnswer: (body) => request('/practice/verify-answer', { method: 'POST', retry: true, body }),
     setBookmark: (questionId, on) => request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' }),
     // tz = minutes east of UTC, so "today" follows the student's clock.
     getReviewSummary: () => request(`/review/summary?tz=${-new Date().getTimezoneOffset()}`),
@@ -169,6 +173,8 @@ export function createHttpDataSource() {
     setLeaderboardOptIn: (optIn) => request('/me/leaderboard', { method: 'PUT', body: { optIn } }),
     getChallenge: () => request(`/challenge/today?tz=${-new Date().getTimezoneOffset()}`),
     submitChallenge: ({ answers }) => request('/challenge/today', { method: 'POST', body: { tz: -new Date().getTimezoneOffset(), answers } }),
+    getStuckProblems: () => request('/me/stuck'),
+    getStuckSummary: () => request('/me/stuck/summary'),
     getMistakes: ({ status = 'active', subject, topic, offset = 0 } = {}) =>
       request(`/review/mistakes?${new URLSearchParams({ status, offset: String(offset), ...(subject && { subject }), ...(topic && { topic }) })}`),
     listLearnSubjects: () => request('/learn/subjects'),
@@ -210,6 +216,7 @@ export function createHttpDataSource() {
     getVocabularyReview: (type = 'due') => request(`/vocabulary/progress/review?${new URLSearchParams({ type })}`),
     answerVocabularyReview: (body) => request('/vocabulary/progress/review', { method: 'POST', body }),
     createVocabularyPracticeSession: (body) => request('/vocabulary/practice/sessions', { method: 'POST', body }),
+    createVocabularyReviewQuiz: (type = 'due', count = 10) => request('/vocabulary/progress/review/quiz', { method: 'POST', body: { type, count } }),
     answerVocabularyPractice: (token, body) => request(`/vocabulary/practice/sessions/${token}/answers`, { method: 'POST', body }),
   };
 }
@@ -443,6 +450,23 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     }
   };
   const writeVocabularyProgress = (value) => localStorage.setItem('edtech:vocabulary-progress', JSON.stringify(value));
+  // Offline spaced revision: right = longer interval, wrong = back tomorrow (as the server does).
+  const applyVocabularyReview = (wordId, known) => {
+    const progress = readVocabularyProgress();
+    const current = progress[wordId] || {};
+    const intervalDays = known ? ((current.reviewStreak || 0) > 0 ? 3 : 1) : 1;
+    const next = {
+      ...current,
+      reviewStreak: known ? (current.reviewStreak || 0) + 1 : 0,
+      missCount: (current.missCount || 0) + (known ? 0 : 1),
+      difficult: known ? current.difficult : true,
+      nextReviewAt: new Date(Date.now() + intervalDays * 86_400_000).toISOString(),
+    };
+    progress[wordId] = next;
+    writeVocabularyProgress(progress);
+    return { known, intervalDays, nextReviewAt: next.nextReviewAt };
+  };
+  const vocabularyReviewTokens = new Set();
   const withVocabularyProgress = (entry) => ({
     ...entry,
     progress: readVocabularyProgress()[entry.id] || null,
@@ -565,6 +589,9 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     getRevisionHub: () => wait({ dueToday: { total: 0, questions: 0, gkFacts: 0, vocabulary: 0, nextDueAt: null }, mistakes: { open: 0, repeating: 0, mastered: 0, bySubject: [] }, bookmarked: { questions: 0, gkFacts: 0, words: 0 }, weakTopics: [], pyq: { inQueue: 0, dueToday: 0 }, vocabulary: null, queue: null, gk: null }),
     answerReview: learnOffline,
     getMistakes: () => wait({ counts: { active: 0, mastered: 0 }, total: 0, hasMore: false, groups: [], items: [] }),
+    // Offline: stuck marks are only kept by the server, so My Stuck Problems starts empty.
+    getStuckProblems: () => wait({ total: 0, events: 0, solvedAfterStuck: 0, wrongAfterStuck: 0, leftAfterStuck: 0, reasons: {}, chapters: [], gaps: [], improvement: [], next: null, quizzes: [], items: [], hasMore: false }),
+    getStuckSummary: () => wait({ total: 0, topGap: null, mostStuck: [], improvement: [], next: null }),
     getInsights: () => wait({ mastery: [], counts: {}, weakPatterns: [], badges: [], allBadges: 9, streak: { days: 0, freezes: 0, protectedDays: [], freezeEvery: 7 } }),
     getLeaderboard: () => wait({ optedIn: false, top: [], me: null, participants: 0 }),
     setLeaderboardOptIn: (optIn) => wait({ optedIn: optIn, top: [], me: null, participants: 0 }),
@@ -733,19 +760,37 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
       return wait({ words });
     },
     answerVocabularyReview: ({ wordId, known }) => {
+      const r = applyVocabularyReview(wordId, known);
+      return wait({ ...r, word: withVocabularyProgress(vocabularyFixture.find((word) => word.id === wordId)) });
+    },
+    createVocabularyReviewQuiz: (type = 'due', count = 10) => {
       const progress = readVocabularyProgress();
-      const current = progress[wordId] || {};
-      const intervalDays = known ? ((current.reviewStreak || 0) > 0 ? 3 : 1) : 1;
-      const next = {
-        ...current,
-        reviewStreak: known ? (current.reviewStreak || 0) + 1 : 0,
-        missCount: (current.missCount || 0) + (known ? 0 : 1),
-        difficult: known ? current.difficult : true,
-        nextReviewAt: new Date(Date.now() + intervalDays * 86_400_000).toISOString(),
-      };
-      progress[wordId] = next;
-      writeVocabularyProgress(progress);
-      return wait({ known, intervalDays, nextReviewAt: next.nextReviewAt, word: withVocabularyProgress(vocabularyFixture.find((word) => word.id === wordId)) });
+      const due = vocabularyFixture
+        .map((word, index) => ({ word, index }))
+        .filter(({ word }) => (type === 'due'
+          ? progress[word.id]?.learned && progress[word.id]?.nextReviewAt && new Date(progress[word.id].nextReviewAt) <= new Date()
+          : progress[word.id]?.missCount > 0))
+        .slice(0, count);
+      const order = ['meaning', 'synonym', 'antonym'];
+      const questions = due.map(({ word, index }, k) => {
+        const mode = order[k % 3];
+        const answer = mode === 'synonym' ? word.synonyms[0] : mode === 'antonym' ? word.antonyms[0] : word.meaningBn;
+        const values = vocabularyFixture.map((entry) => (mode === 'synonym' ? entry.synonyms[0] : mode === 'antonym' ? entry.antonyms[0] : entry.meaningBn));
+        const options = [...new Set([answer, ...values.filter((value) => value && value !== answer)])].slice(0, 4)
+          .map((text, optionIndex) => ({ optionId: `vopt_${optionIndex}_${String(index).padStart(6, '0')}`, text }));
+        return {
+          questionId: `question_${String(index).padStart(12, '0')}`,
+          index: k,
+          mode,
+          prompt: mode === 'meaning' ? `Choose the correct Bengali meaning of “${word.word}”.` : `Choose a ${mode} of “${word.word}”.`,
+          options,
+        };
+      }).filter((question) => question.options.length === 4);
+      if (!questions.length) return wait({ sessionToken: null, type, questions: [] });
+      const sessionToken = `fixture_${Math.random().toString(36).slice(2).padEnd(40, '0')}`;
+      vocabularySessions.set(sessionToken, questions);
+      vocabularyReviewTokens.add(sessionToken);
+      return wait({ sessionToken, type, questions });
     },
     createVocabularyPracticeSession: ({ mode, count = 10 }) => {
       const questions = vocabularyFixture.slice(0, count).map((word, index) => {
@@ -787,11 +832,13 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
           : ['fill_blank', 'identify'].includes(question.mode) ? word.word
             : question.mode === 'context' ? word.exampleEn : word.meaningBn;
       const correctOptionId = question.options.find((entry) => entry.text === answer)?.optionId;
+      const isCorrect = selectedOptionId === correctOptionId;
       return wait({
         questionId,
         selectedOptionId,
-        isCorrect: selectedOptionId === correctOptionId,
+        isCorrect,
         correctOptionId,
+        review: vocabularyReviewTokens.has(token) ? applyVocabularyReview(word.id, isCorrect) : null,
         explanation: {
           definitionEn: word.definitionEn,
           meaningBn: word.meaningBn,
@@ -800,6 +847,20 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
           exampleBn: word.exampleBn,
           synonyms: word.synonyms,
           antonyms: word.antonyms,
+          related: (() => {
+            const find = (term) => vocabularyFixture.find((entry) => entry.word.toLowerCase() === String(term).toLowerCase());
+            const entry = (term) => ({ word: term, meaningBn: find(term)?.meaningBn ?? null, definitionEn: find(term)?.definitionEn ?? null });
+            const bengali = ['meaning', 'match'].includes(question.mode);
+            return {
+              synonyms: word.synonyms.map(entry),
+              antonyms: word.antonyms.map(entry),
+              options: question.mode === 'context' ? [] : question.options.map((o) => {
+                if (!bengali) return { optionId: o.optionId, text: o.text, ...entry(o.text) };
+                const w = vocabularyFixture.find((x) => x.meaningBn === o.text);
+                return { optionId: o.optionId, text: o.text, word: w?.word ?? null, meaningBn: o.text, definitionEn: w?.definitionEn ?? null };
+              }),
+            };
+          })(),
         },
       });
     },

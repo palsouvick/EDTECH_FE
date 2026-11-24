@@ -262,5 +262,60 @@ describe('practice runner', () => {
     const body = source.submitMock.mock.calls[0][0];
     expect(body.sessionId).toBe(id);
     expect(body.responses.map((r) => r.selectedOptionId)).toEqual(['opt_aaaa2', null]);
+    expect(body.responses.every((r) => !('stuck' in r))).toBe(true);
+  });
+
+  const practiceSession = (id, subject) => ({
+    sessionId: id,
+    status: 'ACTIVE',
+    config: { subject, timeLimitMinutes: 3, questionCount: 2 },
+    custom: { mode: 'practice', checked: {} },
+    questions: [
+      { questionId: 'q1', topic: 'mensuration', pyq: [], stem: t('Surface area of a cylinder?', 'x'), options: [opt('opt_aaaa1', '3333'), opt('opt_aaaa2', '2640')] },
+      { questionId: 'q2', topic: 'mensuration', pyq: [], stem: t('Volume of a cone?', 'y'), options: [opt('opt_cccc1', '10'), opt('opt_cccc2', '20')] },
+    ],
+  });
+  const practiceSource = (session) => ({
+    getMockSession: vi.fn(async () => session),
+    checkCustomAnswer: vi.fn(async (_s, { questionId, selectedOptionId }) => ({
+      questionId, selectedOptionId, correctOptionId: 'opt_aaaa1', isCorrect: selectedOptionId === 'opt_aaaa1', locked: false,
+      explanation: { steps: [], shortcut: null, traps: [] },
+      concept: { subject: 'quant', topic: 'mensuration', name: t('Mensuration', 'পরিমিতি'), pattern: t('Cylinder', 'চোঙ') },
+    })),
+    submitMock: vi.fn(async () => ({})),
+    getCustomTestReport: vi.fn(() => new Promise(() => {})),
+    getMockAnalytics: vi.fn(() => new Promise(() => {})),
+  });
+
+  it("Math practice: I'm Stuck with a reason is sent next to the answer and kept on reload", async () => {
+    const user = userEvent.setup();
+    const id = 'd'.repeat(24);
+    const source = practiceSource(practiceSession(id, 'quant'));
+    renderWith(<CustomPracticePage />, source, { path: '/practice/custom/:sessionId', route: `/practice/custom/${id}` });
+    await screen.findByText('Surface area of a cylinder?');
+    await user.click(screen.getByRole('button', { name: /I'm Stuck/ }));
+    expect(screen.getByText(/doesn't affect your score/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /I don't know which formula\/method to use/ }));
+    expect(screen.getByRole('button', { name: /Marked as stuck/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(JSON.parse(localStorage.getItem(`edtech:practice-stuck:${id}`)).q1.reason).toBe('method');
+
+    // Still answerable after getting stuck.
+    await user.click(screen.getByRole('radio', { name: /3333/ }));
+    await user.click(screen.getByRole('button', { name: /Check answer/ }));
+    await screen.findByRole('button', { name: /Next question/ });
+    await user.click(screen.getByRole('button', { name: /Finish and see result/ }));
+    await waitFor(() => expect(source.submitMock).toHaveBeenCalled());
+    const [first, second] = source.submitMock.mock.calls[0][0].responses;
+    expect(first.selectedOptionId).toBe('opt_aaaa1');
+    expect(first.stuck).toMatchObject({ reason: 'method' });
+    expect(second).not.toHaveProperty('stuck');
+    expect(localStorage.getItem(`edtech:practice-stuck:${id}`)).toBeNull();
+  });
+
+  it("I'm Stuck is not shown outside Math", async () => {
+    const id = 'e'.repeat(24);
+    renderWith(<CustomPracticePage />, practiceSource(practiceSession(id, 'english')), { path: '/practice/custom/:sessionId', route: `/practice/custom/${id}` });
+    await screen.findByText('Surface area of a cylinder?');
+    expect(screen.queryByRole('button', { name: /I'm Stuck/ })).toBeNull();
   });
 });

@@ -155,6 +155,47 @@ describe('mock test (CBT) flow', () => {
     submitMock.mockRestore();
   }, 10_000);
 
+  it("Math: I'm Stuck marks the question, takes an optional reason, and is sent next to the answer", async () => {
+    const user = userEvent.setup();
+    const submitMock = vi.spyOn(source, 'submitMock');
+    await startEngine({ create: {} });
+    await user.click(screen.getByRole('button', { name: /I'm Stuck/ }));
+    const panel = screen.getByTestId('stuck-panel');
+    expect(within(panel).getByText(/doesn't affect your score/)).toBeInTheDocument();
+    await user.click(within(panel).getByRole('button', { name: /Calculation problem/ }));
+    expect(screen.getByRole('button', { name: /Marked as stuck/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(screen.getByTestId('stuck-panel')).getByText('Calculation problem')).toBeInTheDocument();
+    expect(palette().getByRole('button', { name: /^1: .*\(stuck\)/ }).dataset.stuck).toBe('true');
+    expect(paletteStatus(1)).toBe('NOT_ANSWERED'); // stuck is not a status
+
+    // Still answerable after getting stuck.
+    await user.click(within(document.querySelector('[role="radiogroup"][aria-labelledby="mock-stem"]')).getAllByRole('radio')[0]);
+    await user.click(screen.getByRole('button', { name: /Save & Next/ }));
+    expect(paletteStatus(1)).toBe('ANSWERED');
+
+    await user.click(screen.getAllByRole('button', { name: /^Submit/ })[0]);
+    const confirm = await screen.findByRole('dialog', { name: /Submit the test/ });
+    expect(within(confirm).getByText(/1 marked stuck/)).toBeInTheDocument();
+    await user.click(within(confirm).getByRole('button', { name: /^Submit/ }));
+    await waitFor(() => expect(submitMock).toHaveBeenCalled());
+    const [first, second] = submitMock.mock.calls[0][0].responses;
+    expect(first.stuck).toMatchObject({ reason: 'calculation' });
+    expect(first.selectedOptionId).toBeTruthy(); // the answer is sent as usual
+    expect(second).not.toHaveProperty('stuck');
+    submitMock.mockRestore();
+  }, 10_000);
+
+  it("I'm Stuck is not offered outside Math", async () => {
+    const session = await source.createMock({ category: 'SSC', subject: 'quant', topicIds: ['profit_loss'], questionCount: 10, language: 'en', timeLimitMinutes: 10 });
+    const exam = createExamState({ ...session, config: { ...session.config, subject: 'english' } }, { examName: { en: 'Test' } });
+    render(
+      <MemoryRouter>
+        <MockTestEngine initialState={exam} source={source} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('button', { name: /I'm Stuck/ })).toBeNull();
+  });
+
   it('pause keeps the question visible and stops the clock', async () => {
     const user = userEvent.setup();
     await startEngine({ create: { allowPause: true } });

@@ -6,12 +6,15 @@ import { OUTCOME } from './charts';
 import { OPTION_LETTERS } from '../practice/OptionButton';
 import PyqBadge from '../practice/PyqBadge';
 import LearnThisLink from '../review/LearnThisLink';
+import { SP } from '../../lib/stuckCopy';
 
 const FILTERS = [
   { id: 'all', label: ANALYTICS.filterAll, test: () => true },
   { id: 'incorrect', label: ANALYTICS.filterIncorrect, test: (r) => r.outcome === 'INCORRECT' },
   { id: 'unattempted', label: ANALYTICS.filterUnattempted, test: (r) => r.outcome === 'UNATTEMPTED' || r.outcome === 'TIMED_OUT' },
   { id: 'marked', label: ANALYTICS.filterMarked, test: (r) => r.markedForReview },
+  // Math "I'm Stuck" (shown only when the test has any): a learning signal, not an outcome.
+  { id: 'stuck', label: SP.filterStuck, test: (r) => Boolean(r.stuck), optional: true },
 ];
 
 const VIEWS = [
@@ -62,6 +65,11 @@ const QuestionReviewCard = memo(function QuestionReviewCard({ r, view, topicName
           <span aria-hidden="true">{o.icon}</span>
           <Localized value={o.label} />
         </span>
+        {r.stuck && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+            <Localized value={SP.stuckChip} />
+          </span>
+        )}
         {r.markedForReview && (
           <span className="rounded-full bg-violet-100 px-2 py-0.5 font-semibold text-violet-800 dark:bg-violet-500/15 dark:text-violet-300">
             <Localized value={ANALYTICS.marked} />
@@ -220,7 +228,7 @@ export default function ReviewMatrix({ review, topicNames, defaultView = 'en', f
       </div>
 
       <div role="tablist" aria-label="Filter questions" className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        {FILTERS.map((f) => (
+        {FILTERS.filter((f) => !f.optional || counts[f.id] > 0).map((f) => (
           <button
             key={f.id}
             type="button"

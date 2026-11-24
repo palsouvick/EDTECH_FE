@@ -25,6 +25,8 @@ import { Localized } from '../topic-hub/Localized';
 import { ArrowRightIcon, TrophyIcon } from '../topic-hub/icons';
 import { AnswerBar, RingGauge, TimeChart, TopicAccuracyBars } from './charts';
 import ReviewMatrix from './ReviewMatrix';
+import { SP } from '../../lib/stuckCopy';
+import { STUCK_PATH } from '../stuck/StuckParts';
 import LossReasons from './LossReasons';
 import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 
@@ -160,6 +162,7 @@ export default function TestAnalyticsDashboard({ sessionId, source, meta, backTo
   }
 
   const { counts, avgTime, avgTarget, slow, pct, retry } = derived;
+  const stuckN = d.review.filter((q) => q.stuck).length;
   const r = d.result;
   const weak = d.weakestTopic;
   const weakName = weak ? d.topicNames?.[weak.topic] ?? { en: weak.topic.replace(/_/g, ' ') } : null;
@@ -300,6 +303,16 @@ export default function TestAnalyticsDashboard({ sessionId, source, meta, backTo
         {slow > 0 && <Localized value={overTarget(slow)} as="p" className="-mt-1 mb-2 text-xs font-medium text-amber-700 dark:text-amber-300" />}
         <TimeChart review={d.review} onSelect={(q) => setFocusSeq(q.seq)} />
       </Card>
+
+      {/* Mock score and learning difficulty map are kept apart: stuck marks never change the score. */}
+      {stuckN > 0 && (
+        <div data-testid="stuck-banner" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
+          <Localized value={SP.mockBanner(stuckN)} as="p" className="text-sm font-medium text-amber-900 dark:text-amber-100" />
+          <Link to={STUCK_PATH} className="inline-flex min-h-10 items-center rounded-xl bg-amber-600 px-4 text-sm font-bold text-white hover:bg-amber-500">
+            🧠 <Localized value={SP.menu} className="ml-1" />
+          </Link>
+        </div>
+      )}
 
       <ReviewMatrix review={d.review} topicNames={d.topicNames} defaultView={ui === 'bn' ? 'bn' : 'en'} focusSeq={focusSeq} />
     </div>

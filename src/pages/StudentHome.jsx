@@ -9,6 +9,7 @@ import { taskTitle } from '../components/plan/PlanParts';
 import { TARGET_EXAM, TODAY } from '../lib/targetExamCopy';
 import PageShell from '../components/navigation/PageShell';
 import StageChip from '../components/mastery/StageChip';
+import { StuckSummaryCard } from '../components/stuck/StuckParts';
 import { Localized } from '../components/topic-hub/Localized';
 import { ArrowRightIcon } from '../components/topic-hub/icons';
 import { lastVisitedStore } from '../lib/lastVisited';
@@ -265,6 +266,9 @@ export default function StudentHome({ user }) {
       )}
 
       {/* F7: Find My Starting Level, offered once for the target exam. */}
+      {/* Math "I'm Stuck": top weakness, most stuck chapters, improvement, next action (hidden without stuck data). */}
+      <StuckSummaryCard />
+
       {showDiagOffer && (
         <section className="mt-5 rounded-3xl bg-violet-50 p-5 shadow-sm ring-1 ring-violet-200 sm:p-6 dark:bg-violet-500/10 dark:ring-violet-500/30" aria-labelledby="diag-offer-title">
           <h2 id="diag-offer-title" className={h2}>

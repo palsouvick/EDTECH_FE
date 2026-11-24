@@ -29,6 +29,7 @@ import RevisionPage from './pages/RevisionPage';
 import MyCoursePage from './pages/MyCoursePage';
 import CourseReaderPage from './pages/CourseReaderPage';
 import MistakesPage from './pages/MistakesPage';
+import StuckProblemsPage from './pages/StuckProblemsPage';
 import MasteryPage from './pages/MasteryPage';
 import AnalysisPage from './pages/AnalysisPage';
 import SubjectAnalysisPage from './pages/SubjectAnalysisPage';
@@ -127,6 +128,7 @@ export function AppRoutes() {
       <Route path="/revision/bookmarks" element={<BookmarksPage />} />
       <Route path="/revise" element={<RevisePage />} />
       <Route path="/mistakes" element={<MistakesPage />} />
+      <Route path="/math/stuck" element={<StuckProblemsPage />} />
       <Route path="/mastery" element={<MasteryPage />} />
       <Route path="/analysis" element={<AnalysisPage />} />
       <Route path="/analysis/:subject" element={<SubjectAnalysisPage />} />

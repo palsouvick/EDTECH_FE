@@ -320,6 +320,43 @@ export const MOCK = Object.freeze({
   },
 });
 
+/** "I'm Stuck" in Math mocks: a learning signal, never a penalty. */
+export const STUCK = Object.freeze({
+  button: { en: "I'm Stuck", bn: 'আটকে গেছি', hi: 'मैं अटक गया' },
+  buttonHint: {
+    en: "Mark that you don't know how to solve this. It never changes your score.",
+    bn: 'জানাও যে এটা কীভাবে করতে হয় জানো না। এতে তোমার স্কোর কখনও বদলাবে না।',
+    hi: 'बताएँ कि इसे हल करना नहीं आता। इससे आपका स्कोर कभी नहीं बदलता।',
+  },
+  marked: { en: 'Marked as stuck', bn: 'আটকে যাওয়া হিসেবে চিহ্নিত', hi: 'अटका हुआ चिह्नित' },
+  safe: {
+    en: "Noted for your learning — it doesn't affect your score. You can still answer.",
+    bn: 'শেখার জন্য নোট করা হল — স্কোরে কোনো প্রভাব নেই। তুমি এখনও উত্তর দিতে পারো।',
+    hi: 'सीखने के लिए नोट किया — स्कोर पर कोई असर नहीं। आप अब भी उत्तर दे सकते हैं।',
+  },
+  askReason: { en: 'What is the problem? (optional)', bn: 'সমস্যাটা কী? (ইচ্ছামতো)', hi: 'क्या समस्या है? (वैकल्पिक)' },
+  continue: { en: 'Continue', bn: 'চালিয়ে যাও', hi: 'जारी रखें' },
+  changeReason: { en: 'Change reason', bn: 'কারণ বদলাও', hi: 'कारण बदलें' },
+  undo: { en: 'Not stuck after all', bn: 'আসলে আটকাইনি', hi: 'असल में नहीं अटका' },
+  legend: { en: 'Stuck (learning note)', bn: 'আটকে গেছি (শেখার নোট)', hi: 'अटका (सीखने का नोट)' },
+  confirmLine: (n) => ({
+    en: `${n} marked stuck — saved for your learning, score unchanged`,
+    bn: `${n}টি প্রশ্নে আটকে গেছ — শেখার জন্য রাখা হল, স্কোর একই থাকবে`,
+    hi: `${n} प्रश्नों पर अटके — सीखने के लिए सहेजा, स्कोर वही रहेगा`,
+  }),
+  reasons: {
+    concept: { en: "I don't understand the concept", bn: 'ধারণাটা বুঝি না', hi: 'अवधारणा समझ नहीं आई' },
+    method: { en: "I don't know which formula/method to use", bn: 'কোন সূত্র/পদ্ধতি লাগবে জানি না', hi: 'कौन-सा सूत्र/तरीका लगे, पता नहीं' },
+    calculation: { en: 'Calculation problem', bn: 'হিসেবে সমস্যা', hi: 'गणना में समस्या' },
+    start: { en: "I don't know how to start", bn: 'কীভাবে শুরু করব জানি না', hi: 'शुरू कैसे करूँ, पता नहीं' },
+    forgot_rule: { en: 'I forgot the basic rule', bn: 'মূল নিয়মটা ভুলে গেছি', hi: 'मूल नियम भूल गया' },
+    too_slow: { en: 'I understand it but it takes too much time', bn: 'বুঝি, কিন্তু অনেক সময় লাগে', hi: 'समझ आता है पर बहुत समय लगता है' },
+    question_unclear: { en: "I don't understand the question", bn: 'প্রশ্নটাই বুঝিনি', hi: 'प्रश्न समझ नहीं आया' },
+    other: { en: 'Other', bn: 'অন্য কিছু', hi: 'अन्य' },
+  },
+  reasonIcons: { concept: '🧠', method: '📐', calculation: '🔢', start: '🧩', forgot_rule: '📖', too_slow: '⏱️', question_unclear: '❓', other: '💬' },
+});
+
 export const minutesLabel = (n) => ({ en: `${n} min`, bn: `${n} মিনিট`, hi: `${n} मिनट` });
 export const perQuestionLabel = (n) => ({ en: `${n} s per question`, bn: `প্রতি প্রশ্নে ${n} সেকেন্ড`, hi: `प्रति प्रश्न ${n} सेकंड` });
 export const questionOfLabel = (i, n) => ({ en: `Question ${i} of ${n}`, bn: `প্রশ্ন ${i} / ${n}`, hi: `प्रश्न ${i} / ${n}` });

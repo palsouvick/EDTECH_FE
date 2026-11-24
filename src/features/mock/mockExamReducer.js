@@ -10,6 +10,10 @@
  *    saved, it locks, and the next unlocked question opens. When none are
  *    left, the test submits.
  *
+ *  - Math only: "I'm Stuck" (STUCK / STUCK_REASON / UNSTUCK) is a learning signal kept
+ *    next to the answer, never instead of it. It does not change the question's
+ *    status, its answer or the score.
+ *
  * Pure: unit-tested in src/test/mockExamReducer.test.js.
  */
 
@@ -33,7 +37,29 @@ export function statusCounts(entries) {
   return counts;
 }
 
-const blankEntry = () => ({ visited: false, draft: null, answer: null, marked: false, locked: false, timeMs: 0 });
+/**
+ * Why a student pressed "I'm Stuck" (optional). Order is the order the chips are shown.
+ * concept: don't understand the concept · method: don't know which formula/method ·
+ * calculation: calculation trouble · start: don't know how to start · forgot_rule: forgot
+ * the basic rule · too_slow: understand it but it takes too long · question_unclear: don't
+ * understand the question · other.
+ */
+export const STUCK_REASONS = Object.freeze(['concept', 'method', 'calculation', 'start', 'forgot_rule', 'too_slow', 'question_unclear', 'other']);
+
+/** Subjects whose mocks offer "I'm Stuck". Math only for now. */
+const STUCK_SUBJECTS = new Set(['quant']);
+
+/** True when this exam offers "I'm Stuck" (a Math mock). Older saved exams fall back to meta.subject. */
+export function offersStuck(s) {
+  return STUCK_SUBJECTS.has(s.config?.subject ?? s.meta?.subject);
+}
+
+/** Number of questions marked stuck. */
+export const stuckCount = (entries) => entries.reduce((n, e) => n + (e.stuck ? 1 : 0), 0);
+
+// stuck: null, or { reason, timeMs, markedAt }: timeMs is the time spent on the question
+// before pressing "I'm Stuck"; markedAt is when (ISO).
+const blankEntry = () => ({ visited: false, draft: null, answer: null, marked: false, locked: false, timeMs: 0, stuck: null });
 
 /**
  * Build the initial exam state from a created (or fetched) server session.
@@ -48,6 +74,7 @@ export function createExamState(session, meta) {
     sessionId: session.sessionId,
     meta,
     config: {
+      subject: c.subject ?? meta?.subject ?? null,
       questionCount: c.questionCount,
       timerMode: c.perQuestionTimer ? 'perQuestion' : 'overall',
       durationSec: c.timeLimitMinutes ? c.timeLimitMinutes * 60 : null,
@@ -147,6 +174,28 @@ export function mockExamReducer(s, action) {
       return { ...moved, current: next };
     }
 
+    case 'STUCK': {
+      // The current question only, while it can still be worked on. Pressing it again keeps
+      // the first record (the time before the student first got stuck is what matters).
+      if (!editable(s) || !offersStuck(s)) return s;
+      const e = s.entries[s.current];
+      if (e.stuck) return s;
+      const reason = STUCK_REASONS.includes(action.reason) ? action.reason : null;
+      return withEntry(s, s.current, { stuck: { reason, timeMs: e.timeMs, markedAt: action.at ?? null } });
+    }
+
+    case 'STUCK_REASON': {
+      const e = s.entries[s.current];
+      if (s.phase !== 'active' || !e.stuck) return s;
+      const reason = STUCK_REASONS.includes(action.reason) ? action.reason : null;
+      return withEntry(s, s.current, { stuck: { ...e.stuck, reason } });
+    }
+
+    case 'UNSTUCK':
+      // Undo for a mis-tap.
+      if (!editable(s) || !s.entries[s.current].stuck) return s;
+      return withEntry(s, s.current, { stuck: null });
+
     case 'PAUSE':
       return s.phase === 'active' && s.config.allowPause ? { ...s, phase: 'paused' } : s;
     case 'RESUME':
@@ -169,16 +218,26 @@ export function mockExamReducer(s, action) {
   }
 }
 
-/** Responses payload for POST /mock/submit-session. Marked-only questions have no answer. */
+const toSec = (ms) => Math.round(ms / 100) / 10;
+
+/**
+ * Responses payload for POST /mock/submit-session. Marked-only questions have no answer.
+ * A question marked "I'm Stuck" also carries `stuck` (reason, time before pressing it, when);
+ * the server stores it next to the scored answer and never lets it change the score.
+ */
 export function toSubmission(s) {
   return {
     sessionId: s.sessionId,
-    responses: s.questions.map((q, i) => ({
-      questionId: q.questionId,
-      selectedOptionId: s.entries[i].answer,
-      timeSpentSec: Math.round(s.entries[i].timeMs / 100) / 10,
-      // For the review matrix filter only; marks never change the score.
-      markedForReview: s.entries[i].marked,
-    })),
+    responses: s.questions.map((q, i) => {
+      const e = s.entries[i];
+      return {
+        questionId: q.questionId,
+        selectedOptionId: e.answer,
+        timeSpentSec: toSec(e.timeMs),
+        // For the review matrix filter only; marks never change the score.
+        markedForReview: e.marked,
+        ...(e.stuck && { stuck: { reason: e.stuck.reason ?? null, timeBeforeSec: toSec(e.stuck.timeMs ?? 0), markedAt: e.stuck.markedAt ?? null } }),
+      };
+    }),
   };
 }

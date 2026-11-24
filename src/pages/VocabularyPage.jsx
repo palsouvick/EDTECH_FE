@@ -4,6 +4,7 @@ import { useOptionalAuth } from '../app/AuthContext';
 import { useDataSource } from '../app/DataSourceContext';
 import PageShell from '../components/navigation/PageShell';
 import BengaliReviewNote, { CMU_CREDIT } from '../components/vocabulary/BengaliReviewNote';
+import ReviewQuiz, { WordExplanation } from '../components/vocabulary/ReviewQuiz';
 import Pronunciation from '../components/vocabulary/Pronunciation';
 
 const MODES = [
@@ -126,16 +127,12 @@ export default function VocabularyPage() {
   const [answer, setAnswer] = useState(null);
   const [practiceBusy, setPracticeBusy] = useState(false);
   const [reviewType, setReviewType] = useState('due');
-  const [reviewWords, setReviewWords] = useState([]);
-  const [reviewIndex, setReviewIndex] = useState(0);
-  const [reviewResult, setReviewResult] = useState(null);
 
   const categories = useMemo(
     () => availableCategories.length ? availableCategories : [...new Set(words.flatMap((word) => word.categories))].sort(),
     [availableCategories, words],
   );
   const currentQuestion = practice?.questions?.[practiceIndex];
-  const reviewWord = reviewWords[reviewIndex];
   const signedIn = Boolean(user);
   const loginHref = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
 
@@ -188,16 +185,6 @@ export default function VocabularyPage() {
     source.getVocabularyProgressSummary().then((result) => live && setSummary(result)).catch((loadError) => live && setError(messageOf(loadError)));
     return () => { live = false; };
   }, [source, signedIn]);
-
-  useEffect(() => {
-    let live = true;
-    if (tab !== 'review' || !signedIn) return () => { live = false; };
-    setReviewWords([]);
-    setReviewIndex(0);
-    setReviewResult(null);
-    source.getVocabularyReview(reviewType).then((result) => live && setReviewWords(result.words)).catch((loadError) => live && setError(messageOf(loadError)));
-    return () => { live = false; };
-  }, [source, tab, reviewType, signedIn]);
 
   async function refreshProgress() {
     if (!signedIn) return;
@@ -292,26 +279,6 @@ export default function VocabularyPage() {
     } finally {
       setPracticeBusy(false);
     }
-  }
-
-  async function submitReview(known) {
-    if (!reviewWord) return;
-    setPracticeBusy(true);
-    setError('');
-    try {
-      const result = await source.answerVocabularyReview({ wordId: reviewWord.id, known });
-      setReviewResult(result);
-      await refreshProgress();
-    } catch (actionError) {
-      setError(messageOf(actionError));
-    } finally {
-      setPracticeBusy(false);
-    }
-  }
-
-  async function loadMoreReview() {
-    setReviewIndex((index) => index + 1);
-    setReviewResult(null);
   }
 
   const answered = practice?.questions?.filter((question) => question.index < practiceIndex).length || 0;
@@ -424,8 +391,7 @@ export default function VocabularyPage() {
             })}</div>
             {answer && <div role="status" className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-slate-800 dark:bg-emerald-950/40 dark:text-slate-100">
               <p className="font-bold">{answer.isCorrect ? 'Correct!' : 'Review this word'}</p>
-              <p className="mt-1">{answer.explanation.definitionEn}</p><p className="mt-1">{answer.explanation.meaningBn}</p><BengaliReviewNote review={answer.explanation.bengaliReview} /><p className="mt-2 italic">{answer.explanation.exampleEn}</p><p className="mt-1">{answer.explanation.exampleBn}</p>
-              <p className="mt-2"><strong>Synonyms:</strong> {answer.explanation.synonyms.join(', ')} · <strong>Antonyms:</strong> {answer.explanation.antonyms.join(', ')}</p>
+              <WordExplanation e={answer.explanation} correctOptionId={answer.correctOptionId} selectedOptionId={answer.selectedOptionId} />
             </div>}
             <div className="mt-5 flex justify-end">{answer
               ? <button type="button" className={primary} onClick={() => { setPracticeIndex((i) => i + 1); setSelected(''); setAnswer(null); }}>Next question</button>
@@ -436,15 +402,11 @@ export default function VocabularyPage() {
 
       {tab === 'review' && (
         <section className={`${panel} mx-auto max-w-3xl`}>
-          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-extrabold">Spaced revision</h2><p className="text-sm text-slate-500">Correct reviews extend the interval; missed words return tomorrow.</p></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-extrabold">Spaced revision</h2><p className="text-sm text-slate-500">Pick the right Bengali meaning, synonym or antonym. Right answers push the next review further out; missed words come back tomorrow.</p></div>
             <select className={`${field} w-auto`} aria-label="Review queue" value={reviewType} onChange={(event) => setReviewType(event.target.value)}><option value="due">Due for review</option><option value="missed">Previously missed</option></select>
           </div>
           {!signedIn ? <p className="mt-4 text-sm">Sign in to save and review words. <Link className="font-bold text-indigo-700 underline dark:text-indigo-300" to={loginHref}>Sign in</Link></p>
-            : reviewWord ? <div className="mt-5 rounded-2xl bg-slate-50 p-5 dark:bg-slate-800">
-              <p className="text-2xl font-extrabold">{reviewWord.word}</p><p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{reviewWord.definitionEn}</p>
-              {reviewResult ? <div role="status" className="mt-4"><p>{reviewResult.known ? 'Good recall!' : `Keep revising · next review in ${reviewResult.intervalDays} day`}</p><button type="button" className={`${primary} mt-3`} onClick={loadMoreReview}>Next word</button></div>
-                : <div className="mt-4 flex flex-wrap gap-2"><button type="button" className={primary} disabled={practiceBusy} onClick={() => submitReview(true)}>I remembered</button><button type="button" className={secondary} disabled={practiceBusy} onClick={() => submitReview(false)}>I missed it</button></div>}
-            </div> : <p className="mt-5 rounded-2xl bg-emerald-50 p-5 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">{reviewType === 'due' ? 'No words are due right now.' : 'No missed words to revise.'}</p>}
+            : <ReviewQuiz source={source} type={reviewType} onAnswered={() => refreshProgress().catch(() => {})} onSwitchToMissed={() => setReviewType('missed')} />}
         </section>
       )}
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useOptionalAuth } from '../../app/AuthContext';
 import { useOptionalDataSource } from '../../app/DataSourceContext';
 import { Link } from 'react-router-dom';
@@ -151,7 +151,7 @@ export function FirstPlanStep({ subject, topic, plan }) {
 }
 
 /** Starts a Smart Quiz (custom-test preset "smart") and opens it. */
-export function SmartQuizButton({ subject, topics = [], count = 15, mode = 'practice', variant = 'primary', label = AN.start }) {
+export function SmartQuizButton({ subject, topics = [], count = 15, mode = 'practice', variant = 'primary', label = AN.start, disabled = false }) {
   const start = useStartCustomTest();
   const { lang } = useLanguagePreference();
   const [state, setState] = useState('idle');
@@ -169,7 +169,7 @@ export function SmartQuizButton({ subject, topics = [], count = 15, mode = 'prac
       : 'min-h-11 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-60';
   return (
     <span className="inline-flex flex-col">
-      <button type="button" onClick={go} disabled={state === 'busy'} aria-busy={state === 'busy'} className={cls}>
+      <button type="button" onClick={go} disabled={state === 'busy' || disabled} aria-busy={state === 'busy'} className={cls}>
         <Localized value={state === 'busy' ? AN.starting : label} />
       </button>
       {state === 'error' && <Localized value={AN.failed} as="span" role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400" />}
@@ -177,12 +177,65 @@ export function SmartQuizButton({ subject, topics = [], count = 15, mode = 'prac
   );
 }
 
-/** "Your next Smart Quiz": what the latest test showed, the plan per chapter, and a start button. */
+const COUNTS = [10, 15, 20, 25, 30, 40];
+/** Smallest question count that gives every chapter at least one question (15 at least, 40 at most). */
+const countFor = (chapters) => COUNTS.find((n) => n >= Math.max(15, chapters)) ?? COUNTS[COUNTS.length - 1];
+
+/**
+ * "Your next Smart Quiz": what the latest test showed, the chapters it covers (every chapter of the
+ * subject, all ticked by default; the student unticks what they do not want), the plan per chapter
+ * (previewed live for the ticked chapters), and a start button.
+ */
 export function NextSmartQuizCard({ subject, quiz, compact = false }) {
-  const [count, setCount] = useState(15);
+  const source = useOptionalDataSource();
+  const { lang } = useLanguagePreference();
+  const chapters = useMemo(() => quiz?.chapters ?? [], [quiz]);
+  const chapterKey = chapters.map((c) => c.topic).join(',');
+  const chooser = !compact && chapters.length > 1;
+  const [selected, setSelected] = useState(() => new Set(chapters.map((c) => c.topic)));
+  const [count, setCount] = useState(() => (chooser ? countFor(chapters.length) : 15));
   const [mode, setMode] = useState('practice');
+  const [preview, setPreview] = useState(null);
+  useEffect(() => {
+    setSelected(new Set(chapters.map((c) => c.topic)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterKey]);
+  const topics = chapters.filter((c) => selected.has(c.topic)).map((c) => c.topic);
+  const topicKey = topics.join(',');
+  // Live plan for the ticked chapters (the server's Smart Quiz preview).
+  useEffect(() => {
+    if (!chooser || !topics.length || typeof source?.previewCustomTest !== 'function') {
+      setPreview(null);
+      return undefined;
+    }
+    let alive = true;
+    const t = setTimeout(() => {
+      source.previewCustomTest({ subject, preset: 'smart', topics, questionCount: count, language: lang }).then(
+        (p) => alive && setPreview(p),
+        () => alive && setPreview(null),
+      );
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chooser, topicKey, count, subject, lang, source]);
   if (!quiz) return null;
   const b = quiz.basedOn;
+  const titleOf = new Map(chapters.map((c) => [c.topic, c.title]));
+  const plan = chooser
+    ? preview
+      ? preview.plan.map((p) => ({ ...p, title: titleOf.get(p.topic) ?? { en: p.topic }, role: p.reasons?.includes('retention') ? 'retention' : 'focus' }))
+      : quiz.plan.filter((p) => selected.has(p.topic))
+    : quiz.plan;
+  const planCount = plan.reduce((a, p) => a + p.count, 0);
+  const toggle = (topic) => setSelected((s) => {
+    const next = new Set(s);
+    if (next.has(topic)) next.delete(topic);
+    else next.add(topic);
+    return next;
+  });
   return (
     <section aria-labelledby={`smart-${subject}`} className={`${card} ring-indigo-200 dark:ring-indigo-500/30`}>
       <h2 id={`smart-${subject}`} className="text-lg font-bold text-slate-900 dark:text-white">
@@ -199,11 +252,39 @@ export function NextSmartQuizCard({ subject, quiz, compact = false }) {
           </ul>
         </div>
       )}
-      {quiz.plan.length > 0 && (
+      {chooser && (
+        <fieldset className="mt-4" data-testid="smart-chapters">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <legend className="text-sm font-bold text-slate-900 dark:text-white">
+              <Localized value={AN.chooseChapters} /> · <Localized value={AN.chaptersPicked(topics.length, chapters.length)} className="font-semibold text-indigo-700 dark:text-indigo-300" />
+            </legend>
+            <span className="flex gap-2 text-xs font-semibold">
+              <button type="button" onClick={() => setSelected(new Set(chapters.map((c) => c.topic)))} className="min-h-9 rounded-lg px-2.5 text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-500/40">
+                <Localized value={AN.selectAll} />
+              </button>
+              <button type="button" onClick={() => setSelected(new Set())} className="min-h-9 rounded-lg px-2.5 text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-600">
+                <Localized value={AN.clearAll} />
+              </button>
+            </span>
+          </div>
+          <Localized value={AN.chooseChaptersHint} as="p" className="mt-0.5 text-xs text-slate-500 dark:text-slate-400" />
+          <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+            {chapters.map((c) => (
+              <label key={c.topic} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-sm ring-1 ${selected.has(c.topic) ? 'bg-indigo-50 ring-indigo-200 dark:bg-indigo-500/10 dark:ring-indigo-500/30' : 'ring-slate-200 dark:ring-slate-700'}`}>
+                <input type="checkbox" checked={selected.has(c.topic)} onChange={() => toggle(c.topic)} className="size-4 accent-indigo-600" />
+                <Localized value={c.title} className="font-medium text-slate-800 dark:text-slate-100" />
+              </label>
+            ))}
+          </div>
+          {topics.length === 0 && <Localized value={AN.pickOne} as="p" className="mt-2 text-sm font-medium text-rose-700 dark:text-rose-300" />}
+          {topics.length > count && <Localized value={AN.fewerQuestions(count, topics.length)} as="p" className="mt-2 text-sm font-medium text-amber-800 dark:text-amber-300" />}
+        </fieldset>
+      )}
+      {plan.length > 0 && (
         <>
-          <Localized value={AN.therefore(quiz.count)} as="p" className="mt-3 font-bold text-slate-900 dark:text-white" />
-          <ul className="mt-1 space-y-0.5 text-sm text-slate-700 dark:text-slate-200">
-            {quiz.plan.map((p) => (
+          <Localized value={AN.therefore(planCount)} as="p" className="mt-3 font-bold text-slate-900 dark:text-white" />
+          <ul className="mt-1 space-y-0.5 text-sm text-slate-700 dark:text-slate-200" data-testid="smart-plan">
+            {plan.map((p) => (
               <li key={p.topic} className="flex flex-wrap gap-x-1.5">
                 <span className="w-6 text-right font-bold tabular-nums">{p.count}</span>
                 <Localized value={p.title} className="font-medium" />
@@ -218,7 +299,7 @@ export function NextSmartQuizCard({ subject, quiz, compact = false }) {
         <label className="text-sm">
           <Localized value={AN.size} className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300" />
           <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="min-h-11 rounded-lg bg-white px-2 ring-1 ring-slate-300 dark:bg-slate-900 dark:ring-slate-700">
-            {[10, 15, 20, 30].map((n) => <option key={n} value={n}>{n}</option>)}
+            {COUNTS.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </label>
         <fieldset className="text-sm">
@@ -230,7 +311,7 @@ export function NextSmartQuizCard({ subject, quiz, compact = false }) {
             </label>
           ))}
         </fieldset>
-        <SmartQuizButton subject={subject} count={count} mode={mode} />
+        <SmartQuizButton subject={subject} topics={chooser ? topics : []} count={count} mode={mode} disabled={chooser && topics.length === 0} />
       </div>
     </section>
   );

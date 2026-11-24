@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { MOCK, markingLabel, questionOfLabel } from '../../lib/i18n';
+import { MOCK, STUCK, markingLabel, questionOfLabel } from '../../lib/i18n';
 import { examStore } from '../../lib/examStore';
 import CustomTestResult from '../custom-test/CustomTestResult';
 import { clearExamTimers, formatClock, useExamTimer } from '../../hooks/useExamTimer';
 import { languageStore } from '../../hooks/useLanguagePreference';
-import { STATUS, mockExamReducer, statusCounts, toSubmission } from '../../features/mock/mockExamReducer';
+import { STATUS, mockExamReducer, offersStuck, statusCounts, stuckCount, toSubmission } from '../../features/mock/mockExamReducer';
+import { StuckButton, StuckPanel } from './StuckControls';
 import LanguageSwitcher from '../topic-hub/LanguageSwitcher';
 import { Localized } from '../topic-hub/Localized';
 import { TimerIcon } from '../topic-hub/icons';
@@ -63,6 +64,10 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   const live = phase === 'active' || phase === 'paused' || phase === 'confirming';
 
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const stuckOn = offersStuck(state);
+  // The quick "what is the problem?" chips, open right after pressing I'm Stuck; closed on any move.
+  const [askingStuck, setAskingStuck] = useState(false);
+  useEffect(() => setAskingStuck(false), [current]);
   const [announcement, setAnnouncement] = useState(restored ? say(MOCK.restored) : '');
   const [showRestored, setShowRestored] = useState(restored);
   useEffect(() => {
@@ -199,6 +204,19 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   );
   const select = useCallback((optionId) => dispatch({ type: 'SELECT', optionId }), []);
   const goTo = useCallback((index) => act({ type: 'GOTO', index }), [act]);
+  const markStuck = () => {
+    // act() flushes buffered time first, so the record keeps the time spent before getting stuck.
+    act({ type: 'STUCK', at: new Date().toISOString() });
+    setAskingStuck(true);
+  };
+  const stuckReason = (reason) => {
+    dispatch({ type: 'STUCK_REASON', reason });
+    setAskingStuck(false);
+  };
+  const unstuck = () => {
+    dispatch({ type: 'UNSTUCK' });
+    setAskingStuck(false);
+  };
 
   const pause = () => {
     flushTime();
@@ -339,7 +357,25 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
                 <PracticeTypeChip type={q.practiceType} />
                 <PyqBadge refs={q.pyq} />
                 <SourceCheckBadge check={q.sourceCheck} />
+                {stuckOn && (
+                  <StuckButton
+                    stuck={entry.stuck}
+                    disabled={phase !== 'active' || entry.locked}
+                    onClick={entry.stuck ? () => setAskingStuck((v) => !v) : markStuck}
+                  />
+                )}
               </div>
+              {stuckOn && (
+                <StuckPanel
+                  stuck={entry.stuck}
+                  asking={askingStuck}
+                  disabled={phase !== 'active' || entry.locked}
+                  onReason={stuckReason}
+                  onContinue={() => setAskingStuck(false)}
+                  onAsk={() => setAskingStuck(true)}
+                  onUndo={unstuck}
+                />
+              )}
               <div id="mock-stem" className="text-lg font-medium leading-relaxed text-slate-900 sm:text-xl dark:text-white">
                 <Localized value={q.stem} as="div" markdown />
               </div>
@@ -410,6 +446,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
           current={current}
           onSelect={goTo}
           linear={perQuestion}
+          showStuck={stuckOn}
           open={paletteOpen}
           onClose={() => setPaletteOpen(false)}
           footer={
@@ -451,6 +488,12 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
             </li>
           ))}
         </ul>
+        {stuckOn && stuckCount(entries) > 0 && (
+          <p className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+            <span aria-hidden="true">🆘</span>
+            <Localized value={STUCK.confirmLine(stuckCount(entries))} />
+          </p>
+        )}
         <div className="mt-6 grid grid-cols-2 gap-2">
           <button type="button" onClick={() => dispatch({ type: 'CANCEL_SUBMIT' })} autoFocus className="min-h-12 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
             <Localized value={MOCK.backToTest} />

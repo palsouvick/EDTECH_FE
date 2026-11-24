@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STATUS, createExamState, mockExamReducer as r, statusCounts, statusOf, toSubmission } from '../features/mock/mockExamReducer';
+import { STATUS, createExamState, mockExamReducer as r, offersStuck, statusCounts, statusOf, stuckCount, toSubmission } from '../features/mock/mockExamReducer';
 
 const session = (n, { perQuestion = false, allowPause = true, timeLimitMinutes = 10 } = {}) => ({
   sessionId: 'a'.repeat(24),
@@ -129,5 +129,87 @@ describe('mockExamReducer (CBT rules)', () => {
     s = r(s, { type: 'TIME_SPENT', index: 0, ms: 12_340 });
     expect(toSubmission(s).responses[0].timeSpentSec).toBe(12.3);
     expect(statusCounts(s.entries)).toMatchObject({ NOT_ANSWERED: 1, NOT_VISITED: 2 });
+  });
+});
+
+describe("mockExamReducer: I'm Stuck (Math only)", () => {
+  const math = (n = 3, opts) => {
+    const sess = session(n, opts);
+    sess.config.subject = 'quant';
+    return createExamState(sess, {});
+  };
+  const AT = '2026-11-24T10:00:00.000Z';
+
+  it('is offered for Math (quant) only; older saved exams fall back to meta.subject', () => {
+    expect(offersStuck(math())).toBe(true);
+    const english = session(2);
+    english.config.subject = 'english';
+    expect(offersStuck(createExamState(english, {}))).toBe(false);
+    expect(offersStuck({ config: {}, meta: { subject: 'quant' } })).toBe(true);
+    let s = createExamState(english, {});
+    s = r(s, { type: 'STUCK', at: AT });
+    expect(s.entries[0].stuck).toBeNull();
+  });
+
+  it('records the time spent before getting stuck and when; keeps the first record', () => {
+    let s = math();
+    s = r(s, { type: 'TIME_SPENT', index: 0, ms: 42_000 });
+    s = r(s, { type: 'STUCK', at: AT });
+    expect(s.entries[0].stuck).toEqual({ reason: null, timeMs: 42_000, markedAt: AT });
+    s = r(s, { type: 'TIME_SPENT', index: 0, ms: 10_000 });
+    s = r(s, { type: 'STUCK', at: '2026-11-24T10:05:00.000Z' });
+    expect(s.entries[0].stuck).toEqual({ reason: null, timeMs: 42_000, markedAt: AT });
+  });
+
+  it('is separate from the answer: status, answer and submission are unchanged, and answering is still allowed', () => {
+    let s = math();
+    s = r(s, { type: 'STUCK', at: AT });
+    expect(statusOf(s.entries[0])).toBe(STATUS.NOT_ANSWERED);
+    s = r(s, { type: 'SELECT', optionId: opt(s, 0, 'c') });
+    s = r(s, { type: 'SAVE_NEXT' });
+    expect(s.entries[0]).toMatchObject({ answer: opt(s, 0, 'c'), stuck: { markedAt: AT } });
+    expect(statusOf(s.entries[0])).toBe(STATUS.ANSWERED);
+    expect(stuckCount(s.entries)).toBe(1);
+    expect(toSubmission(s).responses[0]).toEqual({
+      questionId: s.questions[0].questionId,
+      selectedOptionId: opt(s, 0, 'c'),
+      timeSpentSec: 0,
+      markedForReview: false,
+      stuck: { reason: null, timeBeforeSec: 0, markedAt: AT },
+    });
+    expect(toSubmission(s).responses[1]).not.toHaveProperty('stuck'); // unchanged payload when not stuck
+  });
+
+  it('an optional reason can be set, changed or cleared; unknown reasons are ignored', () => {
+    let s = math();
+    s = r(s, { type: 'STUCK_REASON', reason: 'calculation' }); // not stuck yet: no-op
+    expect(s.entries[0].stuck).toBeNull();
+    s = r(s, { type: 'STUCK', at: AT, reason: 'method' });
+    expect(s.entries[0].stuck.reason).toBe('method');
+    s = r(s, { type: 'STUCK_REASON', reason: 'calculation' });
+    expect(s.entries[0].stuck.reason).toBe('calculation');
+    s = r(s, { type: 'STUCK_REASON', reason: 'hacking' });
+    expect(s.entries[0].stuck.reason).toBeNull();
+  });
+
+  it('can be undone, follows the question it was set on, and is blocked while paused or locked', () => {
+    let s = math();
+    s = r(s, { type: 'STUCK', at: AT });
+    s = r(s, { type: 'GOTO', index: 2 });
+    expect(s.entries.map((e) => Boolean(e.stuck))).toEqual([true, false, false]);
+    s = r(s, { type: 'GOTO', index: 0 });
+    s = r(s, { type: 'UNSTUCK' });
+    expect(s.entries[0].stuck).toBeNull();
+
+    s = r(s, { type: 'PAUSE' });
+    s = r(s, { type: 'STUCK', at: AT });
+    expect(s.entries[0].stuck).toBeNull();
+
+    let p = math(2, { perQuestion: true });
+    p = r(p, { type: 'QUESTION_TIME_UP' }); // Q1 locks, Q2 opens
+    p = r(p, { type: 'GOTO', index: 0 });
+    p = r(p, { type: 'STUCK', at: AT });
+    expect(p.entries[0].stuck).toBeNull();
+    expect(p.entries[1].stuck).toEqual({ reason: null, timeMs: 0, markedAt: AT });
   });
 });

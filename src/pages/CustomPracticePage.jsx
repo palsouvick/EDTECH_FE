@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { StuckButton, StuckPanel } from '../components/mock/StuckControls';
+import { STUCK } from '../lib/i18n';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useDataSource } from '../app/DataSourceContext';
 import { CT, withNames } from '../lib/customTestCopy';
@@ -62,6 +64,19 @@ function Feedback({ fb, q, subject }) {
  * first answer checked is final (the server keeps it). Finish submits and shows the result.
  * Reloading resumes: answers already checked come back from the server.
  */
+// Math "I'm Stuck" in practice-mode tests (Smart Quiz, adaptive, chapter practice...), as on the
+// mock screen: a learning signal sent next to the answer, never part of the score.
+const STUCK_SUBJECTS = new Set(['quant']);
+const STUCK_REASONS = new Set(Object.keys(STUCK.reasons));
+const stuckKey = (id) => `edtech:practice-stuck:${id}`;
+function readStuck(id) {
+  try {
+    return JSON.parse(localStorage.getItem(stuckKey(id)) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+
 export default function CustomPracticePage() {
   const { sessionId } = useParams();
   const source = useDataSource();
@@ -76,6 +91,17 @@ export default function CustomPracticePage() {
   const shownAt = useRef(Date.now());
   const spent = useRef({});
   const valid = /^[a-f\d]{24}$/i.test(sessionId);
+  // qid -> { reason, timeMs, markedAt }; kept on this device so a reload does not lose it.
+  const [stuck, setStuck] = useState(() => (valid ? readStuck(sessionId) : {}));
+  const [askingStuck, setAskingStuck] = useState(false);
+  useEffect(() => {
+    if (!valid) return;
+    try {
+      localStorage.setItem(stuckKey(sessionId), JSON.stringify(stuck));
+    } catch {
+      /* private mode: kept in memory only */
+    }
+  }, [stuck, sessionId, valid]);
 
   useEffect(() => {
     if (!valid) return undefined;
@@ -107,6 +133,28 @@ export default function CustomPracticePage() {
   const questions = view.session?.questions ?? [];
   const q = questions[i];
   const subject = view.session?.config.subject;
+  const stuckOn = STUCK_SUBJECTS.has(subject);
+  useEffect(() => setAskingStuck(false), [i]);
+  const markStuck = () => {
+    if (!q || stuck[q.questionId]) return;
+    const timeMs = Math.round(((spent.current[q.questionId] || 0) + (Date.now() - shownAt.current) / 1000) * 1000);
+    setStuck((s) => ({ ...s, [q.questionId]: { reason: null, timeMs, markedAt: new Date().toISOString() } }));
+    setAskingStuck(true);
+  };
+  const stuckReason = (reason) => {
+    if (!q) return;
+    setStuck((s) => (s[q.questionId] ? { ...s, [q.questionId]: { ...s[q.questionId], reason: STUCK_REASONS.has(reason) ? reason : null } } : s));
+    setAskingStuck(false);
+  };
+  const unstuck = () => {
+    if (!q) return;
+    setStuck((s) => {
+      const next = { ...s };
+      delete next[q.questionId];
+      return next;
+    });
+    setAskingStuck(false);
+  };
 
   // Reopening a question already checked (after a reload) fetches its stored feedback again.
   useEffect(() => {
@@ -154,15 +202,23 @@ export default function CustomPracticePage() {
           // Only checked answers count in practice mode; the server keeps them in any case.
           selectedOptionId: feedback[x.questionId]?.selectedOptionId ?? view.session?.custom?.checked?.[x.questionId] ?? null,
           timeSpentSec: Math.min(3 * 3600, Math.round(spent.current[x.questionId] || 0)),
+          ...(stuckOn && stuck[x.questionId] && {
+            stuck: { reason: stuck[x.questionId].reason ?? null, timeBeforeSec: Math.round((stuck[x.questionId].timeMs || 0) / 100) / 10, markedAt: stuck[x.questionId].markedAt ?? null },
+          }),
         })),
       });
+      try {
+        localStorage.removeItem(stuckKey(sessionId));
+      } catch {
+        /* ignore */
+      }
       setView({ status: 'result' });
     } catch (e) {
       setError(e);
       setView((v) => ({ ...v, submitting: false }));
     }
     // note() only touches refs.
-  }, [source, sessionId, questions, feedback, view.session]);
+  }, [source, sessionId, questions, feedback, view.session, stuck, stuckOn]);
 
   if (!valid) return <Navigate to="/learn" replace />;
   if (view.status === 'result') return <CustomTestResult sessionId={sessionId} />;
@@ -189,7 +245,29 @@ export default function CustomPracticePage() {
           <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden="true">
             <div className="h-full rounded-full bg-indigo-500" style={{ width: `${(Object.keys(feedback).length / questions.length) * 100}%` }} />
           </div>
-          <div className="flex flex-wrap gap-2"><PracticeTypeChip type={q.practiceType} /><PyqBadge refs={q.pyq} /></div>
+          <div className="flex flex-wrap items-center gap-2">
+            <PracticeTypeChip type={q.practiceType} />
+            <PyqBadge refs={q.pyq} />
+            {stuckOn && (
+              <StuckButton
+                stuck={stuck[q.questionId]}
+                // Before the answer is checked; once checked, a stuck mark can still be opened or undone.
+                disabled={Boolean(feedback[q.questionId]) && !stuck[q.questionId]}
+                onClick={stuck[q.questionId] ? () => setAskingStuck((v) => !v) : markStuck}
+              />
+            )}
+          </div>
+          {stuckOn && (
+            <StuckPanel
+              stuck={stuck[q.questionId]}
+              asking={askingStuck}
+              disabled={false}
+              onReason={stuckReason}
+              onContinue={() => setAskingStuck(false)}
+              onAsk={() => setAskingStuck(true)}
+              onUndo={unstuck}
+            />
+          )}
           <Localized value={q.stem} markdown as="div" className="text-lg font-medium text-slate-900 dark:text-white" />
           <div role="radiogroup" aria-label={CT.questionOf(i + 1, questions.length).en} className="space-y-2">
             {q.options.map((o, k) => {

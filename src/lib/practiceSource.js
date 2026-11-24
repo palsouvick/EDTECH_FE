@@ -17,7 +17,7 @@ export function createHttpPracticeSource({ category, subject, topic, pattern, su
       return request(`/practice/questions?${qs}`);
     },
     verify(body) {
-      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category } });
+      return request('/practice/verify-answer', { method: 'POST', retry: true, body: { ...body, category } });
     },
     setBookmark(questionId, on) {
       return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });
@@ -42,7 +42,7 @@ export function createPyqPracticeSource({ exam, year, shift, subject, topic, pac
       return { questions, nextCursor: hasMore ? String(page + 1) : null, hasMore };
     },
     verify(body) {
-      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category: 'WBPSC' } });
+      return request('/practice/verify-answer', { method: 'POST', retry: true, body: { ...body, category: 'WBPSC' } });
     },
     setBookmark(questionId, on) {
       return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });
@@ -61,7 +61,7 @@ export function createGkFactPracticeSource(code) {
       return { questions, nextCursor: null, hasMore: false };
     },
     verify(body) {
-      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category: 'WBPSC' } });
+      return request('/practice/verify-answer', { method: 'POST', retry: true, body: { ...body, category: 'WBPSC' } });
     },
     setBookmark(questionId, on) {
       return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });
@@ -80,7 +80,7 @@ export function createGkDrillPracticeSource(id) {
       return { questions, nextCursor: null, hasMore: false };
     },
     verify(body) {
-      return request('/practice/verify-answer', { method: 'POST', body: { ...body, category: 'WBPSC' } });
+      return request('/practice/verify-answer', { method: 'POST', retry: true, body: { ...body, category: 'WBPSC' } });
     },
     setBookmark(questionId, on) {
       return request(`/practice/bookmarks/${questionId}`, { method: on ? 'PUT' : 'DELETE' });

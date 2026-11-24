@@ -11,6 +11,7 @@ import CustomTestDialog from './CustomTestDialog';
 import HardQuizInsights from './HardQuizInsights';
 import { NextSmartQuizAfterTest } from '../analysis/AnalysisParts';
 import { useStartCustomTest } from './useStartCustomTest';
+import { StuckPracticeResult } from '../stuck/StuckParts';
 import PyqBadge from '../practice/PyqBadge';
 import LearnThisLink from '../review/LearnThisLink';
 
@@ -183,6 +184,9 @@ export default function CustomTestResult({ sessionId }) {
         {r.masteryPct != null && r.chapters[0] && <Localized value={withNames((n) => CT.mastery(n, r.masteryPct), r.chapters[0].name)} as="p" className="mt-3 text-lg font-extrabold" />}
         {r.previous && <Localized value={CT.previous(r.previous.accuracy, r.accuracy)} as="p" className="mt-2 text-sm font-semibold" />}
       </section>
+
+      {/* Practice My Weakness: previous → now, weakest / strongest pattern, adaptive next level. */}
+      {r.stuckPractice && <StuckPracticeResult data={r.stuckPractice} />}
 
       <section className={card}>
         <Localized value={CT.chapterPerformance} as="h2" className="text-base font-extrabold text-slate-900 dark:text-white" />

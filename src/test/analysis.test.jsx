@@ -365,6 +365,40 @@ describe('learning analysis pages', () => {
     expect(await screen.findByTestId('where')).toHaveTextContent(`/practice/custom/${'c'.repeat(24)}`);
   });
 
+  it('Smart Quiz lists every chapter ticked by default; unticked chapters are left out of the quiz', async () => {
+    const source = makeSource();
+    const all = [
+      { topic: 'percentage', title: t('Percentage', 'শতকরা'), available: 40, band: 'high' },
+      { topic: 'time_work', title: t('Time & Work', 'সময় ও কাজ'), available: 30, band: 'medium' },
+      { topic: 'average', title: t('Average', 'গড়'), available: 20, band: 'strong' },
+      { topic: 'mensuration', title: t('Mensuration', 'পরিমিতি'), available: 25, band: 'not_started' },
+    ];
+    const base = await source.getLearningAnalysis('quant', 'en');
+    source.getLearningAnalysis = vi.fn(() => Promise.resolve({ ...base, nextSmartQuiz: { ...base.nextSmartQuiz, chapters: all } }));
+    source.previewCustomTest = vi.fn((body) => Promise.resolve({ plan: body.topics.map((topic) => ({ topic, count: 2, reasons: topic === 'average' ? ['retention'] : ['focus:50'] })), questionCount: body.topics.length * 2 }));
+    renderAt('/analysis/math', source);
+    const box = await screen.findByTestId('smart-chapters');
+    const boxes = within(box).getAllByRole('checkbox');
+    expect(boxes).toHaveLength(4);
+    expect(boxes.every((b) => b.checked)).toBe(true);
+    expect(within(box).getByText('4 of 4 chapters')).toBeInTheDocument();
+    await waitFor(() => expect(within(screen.getByTestId('smart-plan')).getByText('Mensuration')).toBeInTheDocument());
+
+    await userEvent.click(within(box).getByRole('checkbox', { name: /Average/ }));
+    expect(within(box).getByText('3 of 4 chapters')).toBeInTheDocument();
+    await waitFor(() => expect(source.previewCustomTest).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'smart', topics: ['percentage', 'time_work', 'mensuration'] })));
+    await waitFor(() => expect(within(screen.getByTestId('smart-plan')).queryByText('Average')).toBeNull());
+
+    await userEvent.click(within(box).getByRole('button', { name: /^Clear/ }));
+    expect(screen.getByText('Tick at least one chapter.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Start Smart Quiz/ })).toBeDisabled();
+    await userEvent.click(within(box).getByRole('button', { name: /^Select all/ }));
+    await userEvent.click(within(box).getByRole('checkbox', { name: /Average/ }));
+
+    await userEvent.click(screen.getByRole('button', { name: /^Start Smart Quiz/ }));
+    await waitFor(() => expect(source.createCustomTest).toHaveBeenCalledWith(expect.objectContaining({ preset: 'smart', topics: ['percentage', 'time_work', 'mensuration'], questionCount: 15 })));
+  });
+
   it('chapters keep reading and mastery apart, and show the hidden weak skill', async () => {
     renderAt('/analysis/math', makeSource());
     await userEvent.click(await screen.findByRole('tab', { name: /Chapters/ }));

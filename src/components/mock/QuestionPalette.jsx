@@ -1,5 +1,5 @@
 import { memo, useSyncExternalStore } from 'react';
-import { MOCK } from '../../lib/i18n';
+import { MOCK, STUCK } from '../../lib/i18n';
 import { STATUS, statusCounts, statusOf } from '../../features/mock/mockExamReducer';
 import { Localized } from '../topic-hub/Localized';
 import { XIcon } from '../topic-hub/icons';
@@ -31,6 +31,15 @@ function StatusChip({ status, children, className = '' }) {
   );
 }
 
+/** Amber corner tag on a question marked "I'm Stuck" (Math). Status shape/colour is unchanged. */
+function StuckDot() {
+  return (
+    <span aria-hidden="true" className="absolute -left-1 -top-1 grid size-4 place-items-center rounded-full bg-amber-400 text-[9px] font-bold text-amber-950 ring-2 ring-white dark:ring-slate-900">
+      ?
+    </span>
+  );
+}
+
 const LEGEND = [STATUS.ANSWERED, STATUS.NOT_ANSWERED, STATUS.NOT_VISITED, STATUS.MARKED, STATUS.ANSWERED_MARKED];
 
 const DESKTOP = '(min-width: 1024px)';
@@ -41,8 +50,9 @@ const subscribeDesktop = (cb) => {
 };
 const isDesktop = () => window.matchMedia?.(DESKTOP).matches ?? true;
 
-function PaletteBody({ entries, current, onSelect, linear }) {
+function PaletteBody({ entries, current, onSelect, linear, showStuck }) {
   const counts = statusCounts(entries);
+  const stuck = showStuck ? entries.filter((e) => e.stuck).length : 0;
   return (
     <>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-slate-600 dark:text-slate-300" aria-label="Legend">
@@ -54,6 +64,15 @@ function PaletteBody({ entries, current, onSelect, linear }) {
             <Localized value={MOCK[s]} />
           </li>
         ))}
+        {stuck > 0 && (
+          <li className="col-span-2 flex items-center gap-2">
+            <span className="relative grid size-7 place-items-center rounded-md bg-slate-100 text-[11px] font-semibold ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-600">
+              {stuck}
+              <StuckDot />
+            </span>
+            <Localized value={STUCK.legend} />
+          </li>
+        )}
       </ul>
 
       <div role="list" aria-label="Questions" className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-6 lg:grid-cols-5">
@@ -69,7 +88,8 @@ function PaletteBody({ entries, current, onSelect, linear }) {
                 onClick={() => onSelect(i)}
                 disabled={disabled}
                 aria-current={isCurrent ? 'step' : undefined}
-                aria-label={`${i + 1}: ${MOCK[status].en}${e.locked ? ' (locked)' : ''}`}
+                aria-label={`${i + 1}: ${MOCK[status].en}${showStuck && e.stuck ? ' (stuck)' : ''}${e.locked ? ' (locked)' : ''}`}
+                data-stuck={showStuck && e.stuck ? 'true' : undefined}
                 data-status={status}
                 className={`block w-full rounded-lg p-0.5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-indigo-500 disabled:cursor-not-allowed ${
                   isCurrent ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''
@@ -77,6 +97,7 @@ function PaletteBody({ entries, current, onSelect, linear }) {
               >
                 <StatusChip status={status} className={`h-11 w-full text-sm lg:h-10 ${e.locked ? 'opacity-50' : ''}`}>
                   {i + 1}
+                  {showStuck && e.stuck && <StuckDot />}
                 </StatusChip>
               </button>
             </div>
@@ -96,11 +117,12 @@ function PaletteBody({ entries, current, onSelect, linear }) {
  * @param {number} props.current
  * @param {(index: number) => void} props.onSelect
  * @param {boolean} [props.linear]  per-question timer mode: no jumping
+ * @param {boolean} [props.showStuck]  Math mocks: tag questions marked "I'm Stuck"
  * @param {boolean} props.open      drawer state (ignored on large screens)
  * @param {() => void} props.onClose
  * @param {React.ReactNode} [props.footer]  e.g. the Submit button
  */
-const QuestionPalette = memo(function QuestionPalette({ entries, current, onSelect, linear = false, open, onClose, footer }) {
+const QuestionPalette = memo(function QuestionPalette({ entries, current, onSelect, linear = false, showStuck = false, open, onClose, footer }) {
   const desktop = useSyncExternalStore(subscribeDesktop, isDesktop, () => true);
   const select = (i) => {
     onSelect(i);
@@ -134,7 +156,7 @@ const QuestionPalette = memo(function QuestionPalette({ entries, current, onSele
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <PaletteBody entries={entries} current={current} onSelect={select} linear={linear} />
+          <PaletteBody entries={entries} current={current} onSelect={select} linear={linear} showStuck={showStuck} />
         </div>
         {footer && <div className="border-t border-slate-100 p-4 dark:border-slate-800">{footer}</div>}
       </aside>
