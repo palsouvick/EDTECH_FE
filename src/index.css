@@ -90,8 +90,28 @@ html.lang-switching body {
   .md-body h3 {
     overflow-wrap: anywhere;
   }
-  .md-body strong {
-    @apply font-semibold text-slate-900 dark:text-white;
+  /* Bold = a key point. Drawn as a highlighter stroke so it stands out on white cards and on
+   * the tinted callouts alike, in every subject (content marks key facts with **bold**). */
+  .md-body strong,
+  .md-inline strong,
+  .key-mark {
+    @apply rounded-sm font-bold text-slate-950 dark:text-white;
+    background-image: linear-gradient(transparent 52%, var(--color-amber-200) 52%);
+    padding: 0 0.12em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  @media (prefers-color-scheme: dark) {
+    .md-body strong,
+    .md-inline strong,
+    .key-mark {
+      background-image: linear-gradient(transparent 52%, color-mix(in oklab, var(--color-amber-400) 40%, transparent) 52%);
+    }
+  }
+  .md-body th strong,
+  .study-table th strong {
+    background-image: none;
+    padding: 0;
   }
   .md-body ul {
     @apply list-disc pl-5;
@@ -102,32 +122,60 @@ html.lang-switching body {
   .md-body code {
     @apply rounded bg-slate-100 px-1 py-0.5 text-[0.9em] dark:bg-slate-800;
   }
-  /* Tables (remark-gfm): bordered, zebra rows, header tint; the wrapper scrolls on narrow screens. */
-  .md-body .md-table {
-    @apply max-w-full min-w-0 overflow-x-auto rounded-xl ring-1 ring-slate-200 dark:ring-slate-700;
+  /* Study tables (book Markdown tables and GK topic tables): every column has its own colour,
+   * header and text alike, so a student reads a row as name → value → value at a glance.
+   * The wrapper scrolls on narrow screens. */
+  .md-body .md-table,
+  .study-table-wrap {
+    @apply max-w-full min-w-0 overflow-x-auto rounded-xl ring-1 ring-indigo-200 dark:ring-slate-700;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
-  .md-body table {
+  .md-body table,
+  table.study-table {
     @apply w-full min-w-full border-collapse text-left text-[0.95em];
   }
-  .md-body thead th {
-    @apply bg-indigo-50 font-bold text-indigo-950 dark:bg-indigo-500/15 dark:text-indigo-100;
+  .md-body thead th,
+  .study-table thead th {
+    @apply border-b-2 font-bold;
   }
   .md-body th,
-  .md-body td {
+  .md-body td,
+  .study-table th,
+  .study-table td {
     @apply border-b border-slate-200 px-3 py-2 align-top dark:border-slate-700;
   }
   .md-body th + th,
-  .md-body td + td {
+  .md-body td + td,
+  .study-table th + th,
+  .study-table td + td {
     @apply border-l;
   }
-  .md-body tbody tr:nth-child(even) {
-    @apply bg-slate-50 dark:bg-slate-800/50;
+  .md-body tbody tr:nth-child(even),
+  .study-table tbody tr:nth-child(even) {
+    @apply bg-slate-50/80 dark:bg-slate-800/40;
   }
-  .md-body tbody tr:last-child td {
+  .md-body tbody tr:hover,
+  .study-table tbody tr:hover {
+    @apply bg-amber-50 dark:bg-amber-500/10;
+  }
+  .md-body tbody tr:last-child td,
+  .study-table tbody tr:last-child td {
     @apply border-b-0;
   }
+  /* Column colours: 1 indigo (the item), 2 emerald, 3 sky, 4 amber, 5 rose, 6+ violet. */
+  :is(.md-body, .study-table) th:nth-child(1) { @apply border-b-indigo-300 bg-indigo-100 text-indigo-950 dark:border-b-indigo-500/50 dark:bg-indigo-500/20 dark:text-indigo-100; }
+  :is(.md-body, .study-table) th:nth-child(2) { @apply border-b-emerald-300 bg-emerald-100 text-emerald-950 dark:border-b-emerald-500/50 dark:bg-emerald-500/20 dark:text-emerald-100; }
+  :is(.md-body, .study-table) th:nth-child(3) { @apply border-b-sky-300 bg-sky-100 text-sky-950 dark:border-b-sky-500/50 dark:bg-sky-500/20 dark:text-sky-100; }
+  :is(.md-body, .study-table) th:nth-child(4) { @apply border-b-amber-300 bg-amber-100 text-amber-950 dark:border-b-amber-500/50 dark:bg-amber-500/20 dark:text-amber-100; }
+  :is(.md-body, .study-table) th:nth-child(5) { @apply border-b-rose-300 bg-rose-100 text-rose-950 dark:border-b-rose-500/50 dark:bg-rose-500/20 dark:text-rose-100; }
+  :is(.md-body, .study-table) th:nth-child(n + 6) { @apply border-b-violet-300 bg-violet-100 text-violet-950 dark:border-b-violet-500/50 dark:bg-violet-500/20 dark:text-violet-100; }
+  :is(.md-body, .study-table) td:nth-child(1) { @apply font-bold text-indigo-800 dark:text-indigo-300; }
+  :is(.md-body, .study-table) td:nth-child(2) { @apply text-emerald-800 dark:text-emerald-300; }
+  :is(.md-body, .study-table) td:nth-child(3) { @apply text-sky-800 dark:text-sky-300; }
+  :is(.md-body, .study-table) td:nth-child(4) { @apply text-amber-900 dark:text-amber-200; }
+  :is(.md-body, .study-table) td:nth-child(5) { @apply text-rose-800 dark:text-rose-300; }
+  :is(.md-body, .study-table) td:nth-child(n + 6) { @apply text-violet-800 dark:text-violet-300; }
   .md-inline > p {
     display: inline;
   }

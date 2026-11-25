@@ -11,6 +11,27 @@ import { gkCardPath } from './GkDashboardPage';
 import { FactActions, gkTopicPath } from './GkChapterPage';
 
 const box = 'rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-800';
+/** Each must-remember point gets its own colour so points are easy to tell apart and recall. */
+const POINT_TONES = [
+  { border: 'border-indigo-500', badge: 'bg-indigo-500' },
+  { border: 'border-emerald-500', badge: 'bg-emerald-600' },
+  { border: 'border-sky-500', badge: 'bg-sky-600' },
+  { border: 'border-amber-500', badge: 'bg-amber-600' },
+  { border: 'border-rose-500', badge: 'bg-rose-500' },
+  { border: 'border-violet-500', badge: 'bg-violet-500' },
+];
+
+/** "Chemical names: A retinol; …" → "**Chemical names:** A retinol; …" so the lead label is highlighted. */
+function markLeadLabel(value) {
+  if (!value) return value;
+  const out = {};
+  for (const [lang, text] of Object.entries(value)) {
+    const m = typeof text === 'string' && !text.startsWith('**') && text.match(/^([^:*\n]{2,40}):\s+([\s\S]+)$/);
+    out[lang] = m ? `**${m[1].trim()}:** ${m[2]}` : text;
+  }
+  return out;
+}
+
 const bnDigits = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
 /** "-261" → "c. 261 BCE"; "1526" → "1526"; full dates shown as given. Bengali: খ্রিস্টপূর্ব. */
@@ -168,7 +189,17 @@ export default function GkTopicPage() {
 
           {p?.mustRemember.length > 0 && (
             <Section title={PACK.mustRemember} tone="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 sm:p-5 dark:bg-amber-500/10 dark:ring-amber-500/30">
-              <ul className="list-disc space-y-1 pl-5 text-amber-950 dark:text-amber-100">{p.mustRemember.map((x, i) => <li key={i}><Localized value={x} markdown /></li>)}</ul>
+              <ol className="space-y-2">
+                {p.mustRemember.map((x, i) => {
+                  const tone = POINT_TONES[i % POINT_TONES.length];
+                  return (
+                    <li key={i} className={`flex gap-3 rounded-xl border-l-4 bg-white/80 p-3 text-slate-800 shadow-sm dark:bg-slate-900/60 dark:text-slate-100 ${tone.border}`}>
+                      <span aria-hidden="true" className={`grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${tone.badge}`}>{i + 1}</span>
+                      <Localized value={markLeadLabel(x)} markdown as="div" className="min-w-0 flex-1" />
+                    </li>
+                  );
+                })}
+              </ol>
             </Section>
           )}
 
@@ -187,14 +218,14 @@ export default function GkTopicPage() {
 
           {p?.table && (
             <Section title={p.table.caption ?? PACK.timeline}>
-              <div className="overflow-x-auto rounded-xl ring-1 ring-slate-200 dark:ring-slate-800">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-                    <tr>{p.table.columns.map((c, i) => <th key={i} scope="col" className="px-3 py-2"><Localized value={c} /></th>)}</tr>
+              <div className="study-table-wrap">
+                <table className="study-table text-sm">
+                  <thead className="text-xs">
+                    <tr>{p.table.columns.map((c, i) => <th key={i} scope="col"><Localized value={c} /></th>)}</tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody>
                     {p.table.rows.map((row, i) => (
-                      <tr key={i}>{row.map((cell, j) => <td key={j} className={`px-3 py-2 align-top ${j === 0 ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}><Localized value={cell} markdown inline /></td>)}</tr>
+                      <tr key={i}>{row.map((cell, j) => <td key={j}><Localized value={cell} markdown inline /></td>)}</tr>
                     ))}
                   </tbody>
                 </table>
