@@ -20,7 +20,7 @@ export function useStartStuckPractice() {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const run = useCallback(
-    async (key, { mode = 'pattern', level = null, count = 10, topics = [] } = {}) => {
+    async (key, { mode = 'pattern', level = null, count = 10, topics = [], focusQuestionId = null } = {}) => {
       setBusy(key);
       setError(null);
       try {
@@ -31,6 +31,9 @@ export function useStartStuckPractice() {
           ...(level && { stuckLevel: level }),
           questionCount: count,
           topics,
+          // One stuck question's "Practise similar questions": practise that question's
+          // pattern only. Chapter-level practice (GapCard, launcher, next set) sends none.
+          ...(focusQuestionId && { focusQuestionId }),
           language: languageStore.get(),
         });
       } catch (e) {

@@ -179,13 +179,14 @@ describe('My Stuck Problems page', () => {
     expect(source.createCustomTest).toHaveBeenLastCalledWith(
       expect.objectContaining({ subject: 'quant', preset: 'stuck', stuckMode: 'calculation', stuckLevel: 'moderate', questionCount: 10, topics: ['percentage'] }),
     );
+    expect(source.createCustomTest.mock.calls.at(-1)[0]).not.toHaveProperty('focusQuestionId'); // chapter-level practice has no focus
   });
 
   it('practise similar asks for 5 same-pattern questions in that chapter', async () => {
     const { user, source } = renderAt('/math/stuck');
     const card = await screen.findByTestId('stuck-problem');
     await user.click(within(card).getByRole('button', { name: /Practise similar questions \(12 available\)/ }));
-    expect(source.createCustomTest).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'stuck', stuckMode: 'pattern', questionCount: 5, topics: ['percentage'] }));
+    expect(source.createCustomTest).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'stuck', stuckMode: 'pattern', questionCount: 5, topics: ['percentage'], focusQuestionId: 'a'.repeat(24) }));
     expect(source.createCustomTest.mock.calls.at(-1)[0]).not.toHaveProperty('stuckLevel'); // adaptive level
   });
 

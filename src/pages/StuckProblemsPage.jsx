@@ -139,7 +139,7 @@ function ProblemCard({ item, practice }) {
         <button
           type="button"
           disabled={Boolean(practice.busy)}
-          onClick={() => practice.run(`similar:${item.questionId}`, { mode: 'pattern', count: 5, topics: [item.topic] })}
+          onClick={() => practice.run(`similar:${item.questionId}`, { mode: 'pattern', count: 5, topics: [item.topic], focusQuestionId: item.questionId })}
           className={`${btn} text-indigo-700 ring-1 ring-indigo-300 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-500/40`}
         >
           <Localized value={practice.busy === `similar:${item.questionId}` ? SP.starting : SP.practiseSimilar(item.similarCount)} />
