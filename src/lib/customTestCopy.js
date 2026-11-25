@@ -181,6 +181,11 @@ export const CT = Object.freeze({
   questionOf: (i, n) => t(`Question ${i} of ${n}`, `প্রশ্ন ${bnNum(i)} / ${bnNum(n)}`),
   check: t('Check answer', 'উত্তর দেখো'),
   checking: t('Checking…', 'দেখা হচ্ছে…'),
+  // Exam screen: "Check answer" for one question during the test
+  checkHint: t('Checking shows the answer and explanation now; your choice then becomes final.', 'যাচাই করলে এখনই উত্তর ও ব্যাখ্যা দেখা যাবে; তারপর তোমার বাছাই আর বদলানো যাবে না।'),
+  checkedLocked: t('Answer checked: it is final.', 'উত্তর যাচাই করা হয়েছে: আর বদলানো যাবে না।'),
+  checkFailed: t('Could not check the answer. Try again.', 'উত্তর যাচাই করা গেল না। আবার চেষ্টা করো।'),
+  pickFirst: t('Choose an option first.', 'আগে একটি উত্তর বাছো।'),
   correct: t('✅ Correct!', '✅ ঠিক!'),
   wrong: t('❌ Not quite', '❌ হয়নি'),
   correctIs: t('Correct answer', 'সঠিক উত্তর'),

@@ -213,3 +213,37 @@ describe("mockExamReducer: I'm Stuck (Math only)", () => {
     expect(p.entries[1].stuck).toEqual({ reason: null, timeMs: 0, markedAt: AT });
   });
 });
+
+describe('mockExamReducer: Check answer (custom tests)', () => {
+  const verdict = (s, i, c, right) => ({ questionId: s.questions[i].questionId, selectedOptionId: opt(s, i, c), correctOptionId: opt(s, i, right), isCorrect: c === right, explanation: { steps: [], traps: [] } });
+
+  it('a checked option becomes the final answer; it cannot be changed or cleared', () => {
+    let s = createExamState(session(3), { custom: true });
+    s = r(s, { type: 'SELECT', optionId: opt(s, 0, 'b') });
+    s = r(s, { type: 'CHECKED', index: 0, result: verdict(s, 0, 'b', 'c') });
+    expect(s.entries[0]).toMatchObject({ answer: opt(s, 0, 'b'), draft: opt(s, 0, 'b') });
+    expect(s.entries[0].checked.isCorrect).toBe(false);
+    expect(statusOf(s.entries[0])).toBe(STATUS.ANSWERED);
+    expect(r(s, { type: 'SELECT', optionId: opt(s, 0, 'c') }).entries[0].draft).toBe(opt(s, 0, 'b'));
+    expect(r(s, { type: 'CLEAR_RESPONSE' }).entries[0].answer).toBe(opt(s, 0, 'b'));
+  });
+
+  it('the student can still move on and come back to a checked question', () => {
+    let s = createExamState(session(3), { custom: true });
+    s = r(s, { type: 'SELECT', optionId: opt(s, 0, 'a') });
+    s = r(s, { type: 'CHECKED', index: 0, result: verdict(s, 0, 'a', 'a') });
+    s = r(s, { type: 'SAVE_NEXT' });
+    expect(s.current).toBe(1);
+    s = r(s, { type: 'GOTO', index: 0 });
+    expect(s.current).toBe(0);
+    expect(s.entries[0].answer).toBe(opt(s, 0, 'a'));
+    expect(toSubmission(s).responses[0].selectedOptionId).toBe(opt(s, 0, 'a'));
+  });
+
+  it('answers checked on the server are restored, locked, waiting for their verdict', () => {
+    const base = session(3);
+    const s = createExamState({ ...base, custom: { checked: { [base.questions[2].questionId]: 'opt_2d00' } } }, { custom: true });
+    expect(s.entries[2]).toMatchObject({ visited: true, answer: 'opt_2d00', checked: { selectedOptionId: 'opt_2d00', pending: true } });
+    expect(s.entries[0].checked).toBeNull();
+  });
+});

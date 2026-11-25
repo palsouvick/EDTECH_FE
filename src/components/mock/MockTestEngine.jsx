@@ -2,6 +2,8 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { MOCK, STUCK, markingLabel, questionOfLabel } from '../../lib/i18n';
 import { examStore } from '../../lib/examStore';
 import CustomTestResult from '../custom-test/CustomTestResult';
+import AnswerFeedback from '../custom-test/AnswerFeedback';
+import { CT } from '../../lib/customTestCopy';
 import { clearExamTimers, formatClock, useExamTimer } from '../../hooks/useExamTimer';
 import { languageStore } from '../../hooks/useLanguagePreference';
 import { STATUS, mockExamReducer, offersStuck, statusCounts, stuckCount, toSubmission } from '../../features/mock/mockExamReducer';
@@ -231,6 +233,49 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   const q = questions[current];
   const entry = entries[current];
 
+  // ---- Check answer (custom tests only) ----------------------------------------
+  // The server reveals the key for one question and keeps the checked option as final.
+  const canCheck = Boolean(state.meta?.custom) && typeof source.checkCustomAnswer === 'function';
+  const [checkBusy, setCheckBusy] = useState(false);
+  const [checkError, setCheckError] = useState(false);
+  useEffect(() => setCheckError(false), [current]);
+  const checkNow = async () => {
+    const opt = entry.draft ?? entry.answer;
+    if (!canCheck || !opt || checkBusy) return;
+    const index = current;
+    setCheckBusy(true);
+    setCheckError(false);
+    flushTime();
+    try {
+      const result = await source.checkCustomAnswer(sessionId, { questionId: q.questionId, selectedOptionId: opt });
+      dispatch({ type: 'CHECKED', index, result });
+    } catch {
+      setCheckError(true);
+    } finally {
+      setCheckBusy(false);
+    }
+  };
+  // Restored from the server (another device): fetch the verdict again; the server returns the locked one.
+  const pendingOpt = entry.checked?.pending ? entry.checked.selectedOptionId : null;
+  useEffect(() => {
+    if (!canCheck || !pendingOpt) return undefined;
+    let alive = true;
+    const index = current;
+    source.checkCustomAnswer(sessionId, { questionId: questions[index].questionId, selectedOptionId: pendingOpt }).then(
+      (result) => alive && dispatch({ type: 'CHECKED', index, result }),
+      () => alive && setCheckError(true),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [canCheck, pendingOpt, current, sessionId, source, questions]);
+  const verdict = entry.checked && !entry.checked.pending ? entry.checked : null;
+  const optionStatus = (o) => {
+    if (!verdict) return o.optionId === entry.draft ? 'selected' : 'idle';
+    if (o.optionId === verdict.correctOptionId) return o.optionId === verdict.selectedOptionId ? 'correct' : 'answer';
+    return o.optionId === verdict.selectedOptionId ? 'wrong' : 'dimmed';
+  };
+
   // Keyboard: A–D / 1–4 choose, Enter = Save & Next, M = Mark for Review & Next.
   useEffect(() => {
     if (phase !== 'active') return undefined;
@@ -390,14 +435,41 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
                     key={o.optionId}
                     option={o}
                     index={i}
-                    status={o.optionId === entry.draft ? 'selected' : 'idle'}
+                    status={optionStatus(o)}
                     checked={o.optionId === entry.draft}
                     focusable={entry.draft ? o.optionId === entry.draft : i === 0}
-                    disabled={phase !== 'active' || entry.locked}
+                    disabled={phase !== 'active' || entry.locked || Boolean(entry.checked)}
                     onSelect={select}
                   />
                 ))}
               </div>
+              {canCheck && !entry.checked && (
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={checkNow}
+                    disabled={phase !== 'active' || entry.locked || checkBusy || !(entry.draft ?? entry.answer)}
+                    className="min-h-11 rounded-xl px-4 text-sm font-semibold text-amber-800 ring-1 ring-amber-300 hover:bg-amber-50 disabled:opacity-40 dark:text-amber-200 dark:ring-amber-500/50 dark:hover:bg-amber-500/10"
+                  >
+                    <Localized value={checkBusy ? CT.checking : CT.check} />
+                  </button>
+                  <Localized value={entry.draft ?? entry.answer ? CT.checkHint : CT.pickFirst} as="p" className="min-w-0 flex-1 text-xs text-slate-500 dark:text-slate-400" />
+                </div>
+              )}
+              {checkError && (
+                <p role="alert" className="mt-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+                  <Localized value={CT.checkFailed} />
+                </p>
+              )}
+              {entry.checked && (
+                <div className="mt-4">
+                  {verdict ? (
+                    <AnswerFeedback fb={verdict} q={q} subject={config.subject ?? state.meta?.subject} />
+                  ) : (
+                    <Localized value={CT.checking} as="p" className="text-sm text-slate-500 dark:text-slate-400" />
+                  )}
+                </div>
+              )}
             </article>
 
           {/* CBT actions: sticky to the bottom on phones */}
@@ -406,7 +478,7 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
               <button
                 type="button"
                 onClick={() => act({ type: 'CLEAR_RESPONSE' })}
-                disabled={phase !== 'active' || entry.locked || (!entry.draft && !entry.answer)}
+                disabled={phase !== 'active' || entry.locked || Boolean(entry.checked) || (!entry.draft && !entry.answer)}
                 className="min-h-12 flex-1 rounded-xl px-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-40 sm:flex-none dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-800"
               >
                 <Localized value={MOCK.clearResponse} />

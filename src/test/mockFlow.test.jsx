@@ -142,6 +142,40 @@ describe('mock test (CBT) flow', () => {
     await screen.findByText('Performance analysis', {}, { timeout: 6000 });
   }, 10_000);
 
+  it('Check answer: only on a custom test; shows the verdict and locks the options', async () => {
+    const user = userEvent.setup();
+    const session = await source.createMock({
+      category: 'SSC', subject: 'quant', topicIds: ['profit_loss'], questionCount: 10, language: 'en', timeLimitMinutes: 10, allowPause: true,
+    });
+    const q = session.questions[0];
+    const [picked, right] = [q.options[0].optionId, q.options[1].optionId];
+    const checkCustomAnswer = vi.fn(async () => ({
+      questionId: q.questionId, selectedOptionId: picked, correctOptionId: right, isCorrect: false, locked: false,
+      explanation: { steps: [{ en: 'Because of the rule.', bn: 'নিয়মের জন্য।' }], shortcut: null, traps: [] },
+      learn: null, concept: { subject: 'quant', topic: 'profit_loss', name: { en: 'Profit & Loss' }, pattern: null },
+    }));
+
+    // A standard mock never offers it.
+    const plain = render(<MemoryRouter><MockTestEngine initialState={createExamState(session, { examName: { en: 'Test' } })} source={{ ...source, checkCustomAnswer }} /></MemoryRouter>);
+    expect(screen.queryByRole('button', { name: /^Check answer/ })).toBeNull();
+    plain.unmount();
+
+    render(<MemoryRouter><MockTestEngine initialState={createExamState(session, { examName: { en: 'Test' }, custom: true, subject: 'quant' })} source={{ ...source, checkCustomAnswer }} /></MemoryRouter>);
+    const check = screen.getByRole('button', { name: /^Check answer/ });
+    expect(check).toBeDisabled(); // nothing chosen yet
+    const options = within(document.querySelector('[role="radiogroup"][aria-labelledby="mock-stem"]'));
+    await user.click(options.getAllByRole('radio')[0]);
+    await user.click(check);
+    expect(checkCustomAnswer).toHaveBeenCalledWith(session.sessionId, { questionId: q.questionId, selectedOptionId: picked });
+    expect(await screen.findByText('❌ Not quite')).toBeInTheDocument();
+    expect(screen.getByText('Because of the rule.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Check answer/ })).toBeNull();
+    const radios = options.getAllByRole('radio');
+    expect(radios.every((b) => b.getAttribute('aria-disabled') === 'true')).toBe(true);
+    expect(radios.map((b) => b.dataset.status).slice(0, 2)).toEqual(['wrong', 'answer']);
+    expect(screen.getByRole('button', { name: /^Clear Response/ })).toBeDisabled();
+  }, 15_000);
+
   it('time spent on a question is not lost when submitting right away', async () => {
     // Regression: buffered time (flushed every 5 s) used to be dropped on submit.
     const user = userEvent.setup();

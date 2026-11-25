@@ -10,6 +10,10 @@
  *    saved, it locks, and the next unlocked question opens. When none are
  *    left, the test submits.
  *
+ *  - Custom tests only: "Check answer" (CHECKED) saves the chosen option as the answer and
+ *    shows the server's verdict. A checked answer can no longer be changed or cleared (the
+ *    server scores the checked option anyway), but the question can still be revisited.
+ *
  *  - Math only: "I'm Stuck" (STUCK / STUCK_REASON / UNSTUCK) is a learning signal kept
  *    next to the answer, never instead of it. It does not change the question's
  *    status, its answer or the score.
@@ -59,7 +63,9 @@ export const stuckCount = (entries) => entries.reduce((n, e) => n + (e.stuck ? 1
 
 // stuck: null, or { reason, timeMs, markedAt }: timeMs is the time spent on the question
 // before pressing "I'm Stuck"; markedAt is when (ISO).
-const blankEntry = () => ({ visited: false, draft: null, answer: null, marked: false, locked: false, timeMs: 0, stuck: null });
+// checked: null, or the check response ({ selectedOptionId, isCorrect, correctOptionId, explanation, ... });
+// { selectedOptionId, pending: true } when restored from the server before the verdict is fetched again.
+const blankEntry = () => ({ visited: false, draft: null, answer: null, marked: false, locked: false, timeMs: 0, stuck: null, checked: null });
 
 /**
  * Build the initial exam state from a created (or fetched) server session.
@@ -69,6 +75,12 @@ const blankEntry = () => ({ visited: false, draft: null, answer: null, marked: f
 export function createExamState(session, meta) {
   const entries = session.questions.map(blankEntry);
   entries[0].visited = true;
+  // Answers already checked on the server (resumed on another device): restore them, locked.
+  const checked = session.custom?.checked || {};
+  session.questions.forEach((q, i) => {
+    const opt = checked[q.questionId];
+    if (opt) Object.assign(entries[i], { visited: true, draft: opt, answer: opt, checked: { selectedOptionId: opt, pending: true } });
+  });
   const c = session.config;
   return {
     sessionId: session.sessionId,
@@ -116,7 +128,10 @@ export function nextOpenIndex(entries, from) {
   return -1;
 }
 
-const editable = (s) => s.phase === 'active' && !s.entries[s.current].locked;
+/** The answer of the current question can still change. */
+const editable = (s) => s.phase === 'active' && !s.entries[s.current].locked && !s.entries[s.current].checked;
+/** The student can leave the current question with Save & Next / Mark & Next. */
+const advanceable = (s) => s.phase === 'active' && !s.entries[s.current].locked;
 
 export function mockExamReducer(s, action) {
   switch (action.type) {
@@ -133,7 +148,7 @@ export function mockExamReducer(s, action) {
 
     case 'SAVE_NEXT':
     case 'MARK_NEXT': {
-      if (!editable(s)) return s;
+      if (!advanceable(s)) return s;
       const e = s.entries[s.current];
       if (s.config.timerMode === 'perQuestion') {
         // Linear test: a saved question is final (its clock stops), go to the next open one.
@@ -157,6 +172,15 @@ export function mockExamReducer(s, action) {
       // Per-question mode is linear: a student cannot hop around while the clock is per item.
       if (s.config.timerMode === 'perQuestion' && action.index !== s.current) return s;
       return goTo(s, action.index);
+
+    case 'CHECKED': {
+      // The server's verdict for question `index`; its option becomes the (final) answer.
+      const i = action.index ?? s.current;
+      const e = s.entries[i];
+      if (!e || s.phase === 'submitting' || s.phase === 'submitted') return s;
+      const opt = action.result.selectedOptionId;
+      return withEntry(s, i, { visited: true, answer: opt, draft: opt, checked: action.result });
+    }
 
     case 'TIME_SPENT':
       return withEntry(s, action.index ?? s.current, {
