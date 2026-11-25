@@ -12,8 +12,29 @@ const UI_LANGS = ['en', 'bn'];
 // GFM for tables (study books use them for lists of facts). singleTilde off: content writes "~২,৫০০ কিমি"
 // for "about", and two such "~" on one line must not turn into strikethrough.
 const REMARK_PLUGINS = [[remarkGfm, { singleTilde: false }], remarkMath];
+// ✗ / ✓ in content (wrong vs right examples) become red / green badges so students see them at once.
+const MARK_RE = /([✗✘✓✔])/;
+const MARK_CLASS = { '✗': 'mark-wrong', '✘': 'mark-wrong', '✓': 'mark-right', '✔': 'mark-right' };
+function rehypeRightWrongMarks() {
+  const walk = (node) => {
+    if (!node.children || (node.type === 'element' && (node.tagName === 'code' || node.tagName === 'pre'))) return;
+    node.children = node.children.flatMap((child) => {
+      if (child.type !== 'text' || !MARK_RE.test(child.value)) {
+        walk(child);
+        return [child];
+      }
+      return child.value.split(MARK_RE).filter(Boolean).map((part) =>
+        MARK_CLASS[part]
+          ? { type: 'element', tagName: 'span', properties: { className: [MARK_CLASS[part]] }, children: [{ type: 'text', value: part }] }
+          : { type: 'text', value: part },
+      );
+    });
+  };
+  return walk;
+}
+
 // strict:'ignore' so editor typos degrade to red source text instead of breaking the page.
-const REHYPE_PLUGINS = [[rehypeKatex, { throwOnError: false, strict: 'ignore' }]];
+const REHYPE_PLUGINS = [rehypeRightWrongMarks, [rehypeKatex, { throwOnError: false, strict: 'ignore' }]];
 // Links in content are sources (e.g. a current-affairs question's PIB release):
 // open them in a new tab so the student keeps their place in practice.
 const Anchor = ({ href, children }) => (

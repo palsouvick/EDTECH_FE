@@ -9,6 +9,15 @@ export const DRILL = Object.freeze({
   back: t('All GK', 'সব সাধারণ জ্ঞান'),
   topics: t('Revise these topics', 'এই বিষয়গুলো রিভাইস করো'),
   notFound: t('This drill is not available yet.', 'এই ড্রিলটি এখনও পাওয়া যাচ্ছে না।'),
+  badge: t('Confusion drill', 'বিভ্রান্তি ড্রিল'),
+  topicCount: (n) => t(`${n} topics`, `${bnDigits(n)}টি বিষয়`),
+  bothWays: t('Asked both ways', 'দুই দিক থেকে প্রশ্ন'),
+  how: t('How it works', 'কীভাবে কাজ করে'),
+  steps: [
+    t('Similar facts are asked side by side, mixed up.', 'একই রকম দেখতে তথ্যগুলো পাশাপাশি, মিশিয়ে জিজ্ঞাসা করা হয়।'),
+    t('Each fact is asked from both sides, so you know it either way round.', 'প্রতিটি তথ্য দুই দিক থেকে জিজ্ঞাসা করা হয়, তাই যেকোনো দিক থেকে মনে থাকে।'),
+    t('Every wrong option is explained, and missed facts return in Revision.', 'প্রতিটি ভুল বিকল্পের ব্যাখ্যা থাকে, আর ভুল হওয়া তথ্য রিভিশনে ফিরে আসে।'),
+  ],
   tip: t('Picked a wrong option? The note under the answer says what that option really is. Missed facts come back in Revision, asked another way.', 'ভুল বিকল্প বেছেছ? উত্তরের নিচের নোটে সেই বিকল্পটি আসলে কী তা লেখা থাকবে। ভুল হওয়া তথ্য রিভিশনে আবার আসবে, অন্যভাবে প্রশ্ন করে।'),
 });
 

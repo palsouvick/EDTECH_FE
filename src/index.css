@@ -108,6 +108,17 @@ html.lang-switching body {
       background-image: linear-gradient(transparent 52%, color-mix(in oklab, var(--color-amber-400) 40%, transparent) 52%);
     }
   }
+  /* ✗ wrong / ✓ right examples (rehypeRightWrongMarks in Localized.jsx). */
+  .mark-wrong,
+  .mark-right {
+    @apply mx-0.5 inline-grid size-[1.35em] place-items-center rounded-full align-[-0.2em] text-[0.8em] font-black not-italic text-white shadow-sm;
+  }
+  .mark-wrong {
+    @apply bg-rose-600 dark:bg-rose-500;
+  }
+  .mark-right {
+    @apply bg-emerald-600 dark:bg-emerald-500;
+  }
   .md-body th strong,
   .study-table th strong {
     background-image: none;
