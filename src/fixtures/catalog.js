@@ -464,6 +464,16 @@ export const catalogFixture = [
         },
         "topics": [
           {
+            "code": "sentence_basics",
+            "name": {
+              "en": "Sentence Basics",
+              "bn": "বাক্যের গঠন (Sentence Basics)",
+              "hi": "वाक्य की बनावट (Sentence Basics)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "parts_of_speech",
             "name": {
               "en": "Parts of Speech",
@@ -489,66 +499,6 @@ export const catalogFixture = [
               "en": "Tenses",
               "bn": "কাল (Tenses)",
               "hi": "काल (Tenses)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "voice",
-            "name": {
-              "en": "Active & Passive Voice",
-              "bn": "বাচ্য (Active & Passive Voice)",
-              "hi": "वाच्य (Active & Passive Voice)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "narration",
-            "name": {
-              "en": "Direct & Indirect Speech",
-              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
-              "hi": "कथन (Direct & Indirect Speech)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "modals_conditionals",
-            "name": {
-              "en": "Modals & Conditionals",
-              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
-              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "reading_comprehension",
-            "name": {
-              "en": "Reading Comprehension",
-              "bn": "পাঠ বোধগম্যতা",
-              "hi": "पठन बोध"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "error_spotting",
-            "name": {
-              "en": "Error Spotting",
-              "bn": "ভুল শনাক্তকরণ",
-              "hi": "त्रुटि पहचान"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "sentence_improvement",
-            "name": {
-              "en": "Sentence Improvement",
-              "bn": "বাক্য সংশোধন",
-              "hi": "वाक्य सुधार"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -717,11 +667,101 @@ export const catalogFixture = [
             ]
           },
           {
+            "code": "prepositions",
+            "name": {
+              "en": "Prepositions",
+              "bn": "প্রিপোজিশন (Prepositions)",
+              "hi": "पूर्वसर्ग (Prepositions)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "voice",
+            "name": {
+              "en": "Active & Passive Voice",
+              "bn": "বাচ্য (Active & Passive Voice)",
+              "hi": "वाच्य (Active & Passive Voice)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "narration",
+            "name": {
+              "en": "Direct & Indirect Speech",
+              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
+              "hi": "कथन (Direct & Indirect Speech)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "modals_conditionals",
+            "name": {
+              "en": "Modals & Conditionals",
+              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
+              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "question_tags",
+            "name": {
+              "en": "Question Tags",
+              "bn": "কোয়েশ্চেন ট্যাগ (Question Tags)",
+              "hi": "क्वेश्चन टैग (Question Tags)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "reading_comprehension",
+            "name": {
+              "en": "Reading Comprehension",
+              "bn": "পাঠ বোধগম্যতা",
+              "hi": "पठन बोध"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "error_spotting",
+            "name": {
+              "en": "Error Spotting",
+              "bn": "ভুল শনাক্তকরণ",
+              "hi": "त्रुटि पहचान"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "sentence_improvement",
+            "name": {
+              "en": "Sentence Improvement",
+              "bn": "বাক্য সংশোধন",
+              "hi": "वाक्य सुधार"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "fill_blanks",
             "name": {
               "en": "Fill in the Blanks",
               "bn": "শূন্যস্থান পূরণ",
               "hi": "रिक्त स्थान भरें"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "spelling",
+            "name": {
+              "en": "Spelling",
+              "bn": "বানান (Spelling)",
+              "hi": "वर्तनी (Spelling)"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -841,6 +881,15 @@ export const catalogFixture = [
             "syllabusStatus": "UNVERIFIED",
             "subtopics": [
               {
+                "code": "prehistoric",
+                "name": {
+                  "en": "Prehistoric India",
+                  "bn": "প্রাগৈতিহাসিক ভারত",
+                  "hi": "Prehistoric India"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "ivc",
                 "name": {
                   "en": "Indus Valley Civilisation",
@@ -886,6 +935,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "post_maurya_sangam",
+                "name": {
+                  "en": "Post-Mauryan India and the Sangam Age",
+                  "bn": "মৌর্য-পরবর্তী ভারত ও সঙ্গম যুগ",
+                  "hi": "Post-Mauryan India and the Sangam Age"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "early_medieval",
                 "name": {
                   "en": "Early Medieval Kingdoms",
@@ -900,6 +958,15 @@ export const catalogFixture = [
                   "en": "Marathas",
                   "bn": "মারাঠা",
                   "hi": "Marathas"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "regional_18c",
+                "name": {
+                  "en": "18th-century Regional Powers",
+                  "bn": "অষ্টাদশ শতকের আঞ্চলিক শক্তি",
+                  "hi": "18th-century Regional Powers"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -949,6 +1016,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "peasant_tribal",
+                "name": {
+                  "en": "Peasant and Tribal Movements",
+                  "bn": "কৃষক ও উপজাতি বিদ্রোহ",
+                  "hi": "Peasant and Tribal Movements"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "revolt_1857",
                 "name": {
                   "en": "Revolt of 1857",
@@ -972,6 +1048,15 @@ export const catalogFixture = [
                   "en": "Indian National Congress",
                   "bn": "ভারতীয় জাতীয় কংগ্রেস",
                   "hi": "Indian National Congress"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "revolutionaries",
+                "name": {
+                  "en": "Revolutionary Movements",
+                  "bn": "বিপ্লবী আন্দোলন",
+                  "hi": "Revolutionary Movements"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -1109,6 +1194,24 @@ export const catalogFixture = [
                   "en": "Straits, Canals, Lakes and Peaks",
                   "bn": "প্রণালী, খাল, হ্রদ ও শৃঙ্গ",
                   "hi": "Straits, Canals, Lakes and Peaks"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "west_bengal_geography",
+                "name": {
+                  "en": "Geography of West Bengal",
+                  "bn": "পশ্চিমবঙ্গের ভূগোল",
+                  "hi": "Geography of West Bengal"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "transport_population",
+                "name": {
+                  "en": "Transport and Population",
+                  "bn": "পরিবহণ ও জনসংখ্যা",
+                  "hi": "Transport and Population"
                 },
                 "syllabusStatus": "UNVERIFIED"
               }
@@ -2099,6 +2202,16 @@ export const catalogFixture = [
         },
         "topics": [
           {
+            "code": "sentence_basics",
+            "name": {
+              "en": "Sentence Basics",
+              "bn": "বাক্যের গঠন (Sentence Basics)",
+              "hi": "वाक्य की बनावट (Sentence Basics)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "parts_of_speech",
             "name": {
               "en": "Parts of Speech",
@@ -2124,66 +2237,6 @@ export const catalogFixture = [
               "en": "Tenses",
               "bn": "কাল (Tenses)",
               "hi": "काल (Tenses)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "voice",
-            "name": {
-              "en": "Active & Passive Voice",
-              "bn": "বাচ্য (Active & Passive Voice)",
-              "hi": "वाच्य (Active & Passive Voice)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "narration",
-            "name": {
-              "en": "Direct & Indirect Speech",
-              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
-              "hi": "कथन (Direct & Indirect Speech)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "modals_conditionals",
-            "name": {
-              "en": "Modals & Conditionals",
-              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
-              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "reading_comprehension",
-            "name": {
-              "en": "Reading Comprehension",
-              "bn": "পাঠ বোধগম্যতা",
-              "hi": "पठन बोध"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "error_spotting",
-            "name": {
-              "en": "Error Spotting",
-              "bn": "ভুল শনাক্তকরণ",
-              "hi": "त्रुटि पहचान"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "sentence_improvement",
-            "name": {
-              "en": "Sentence Improvement",
-              "bn": "বাক্য সংশোধন",
-              "hi": "वाक्य सुधार"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -2352,11 +2405,101 @@ export const catalogFixture = [
             ]
           },
           {
+            "code": "prepositions",
+            "name": {
+              "en": "Prepositions",
+              "bn": "প্রিপোজিশন (Prepositions)",
+              "hi": "पूर्वसर्ग (Prepositions)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "voice",
+            "name": {
+              "en": "Active & Passive Voice",
+              "bn": "বাচ্য (Active & Passive Voice)",
+              "hi": "वाच्य (Active & Passive Voice)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "narration",
+            "name": {
+              "en": "Direct & Indirect Speech",
+              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
+              "hi": "कथन (Direct & Indirect Speech)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "modals_conditionals",
+            "name": {
+              "en": "Modals & Conditionals",
+              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
+              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "question_tags",
+            "name": {
+              "en": "Question Tags",
+              "bn": "কোয়েশ্চেন ট্যাগ (Question Tags)",
+              "hi": "क्वेश्चन टैग (Question Tags)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "reading_comprehension",
+            "name": {
+              "en": "Reading Comprehension",
+              "bn": "পাঠ বোধগম্যতা",
+              "hi": "पठन बोध"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "error_spotting",
+            "name": {
+              "en": "Error Spotting",
+              "bn": "ভুল শনাক্তকরণ",
+              "hi": "त्रुटि पहचान"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "sentence_improvement",
+            "name": {
+              "en": "Sentence Improvement",
+              "bn": "বাক্য সংশোধন",
+              "hi": "वाक्य सुधार"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "fill_blanks",
             "name": {
               "en": "Fill in the Blanks",
               "bn": "শূন্যস্থান পূরণ",
               "hi": "रिक्त स्थान भरें"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "spelling",
+            "name": {
+              "en": "Spelling",
+              "bn": "বানান (Spelling)",
+              "hi": "वर्तनी (Spelling)"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -2476,6 +2619,15 @@ export const catalogFixture = [
             "syllabusStatus": "UNVERIFIED",
             "subtopics": [
               {
+                "code": "prehistoric",
+                "name": {
+                  "en": "Prehistoric India",
+                  "bn": "প্রাগৈতিহাসিক ভারত",
+                  "hi": "Prehistoric India"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "ivc",
                 "name": {
                   "en": "Indus Valley Civilisation",
@@ -2521,6 +2673,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "post_maurya_sangam",
+                "name": {
+                  "en": "Post-Mauryan India and the Sangam Age",
+                  "bn": "মৌর্য-পরবর্তী ভারত ও সঙ্গম যুগ",
+                  "hi": "Post-Mauryan India and the Sangam Age"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "early_medieval",
                 "name": {
                   "en": "Early Medieval Kingdoms",
@@ -2535,6 +2696,15 @@ export const catalogFixture = [
                   "en": "Marathas",
                   "bn": "মারাঠা",
                   "hi": "Marathas"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "regional_18c",
+                "name": {
+                  "en": "18th-century Regional Powers",
+                  "bn": "অষ্টাদশ শতকের আঞ্চলিক শক্তি",
+                  "hi": "18th-century Regional Powers"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -2584,6 +2754,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "peasant_tribal",
+                "name": {
+                  "en": "Peasant and Tribal Movements",
+                  "bn": "কৃষক ও উপজাতি বিদ্রোহ",
+                  "hi": "Peasant and Tribal Movements"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "revolt_1857",
                 "name": {
                   "en": "Revolt of 1857",
@@ -2607,6 +2786,15 @@ export const catalogFixture = [
                   "en": "Indian National Congress",
                   "bn": "ভারতীয় জাতীয় কংগ্রেস",
                   "hi": "Indian National Congress"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "revolutionaries",
+                "name": {
+                  "en": "Revolutionary Movements",
+                  "bn": "বিপ্লবী আন্দোলন",
+                  "hi": "Revolutionary Movements"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -2744,6 +2932,24 @@ export const catalogFixture = [
                   "en": "Straits, Canals, Lakes and Peaks",
                   "bn": "প্রণালী, খাল, হ্রদ ও শৃঙ্গ",
                   "hi": "Straits, Canals, Lakes and Peaks"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "west_bengal_geography",
+                "name": {
+                  "en": "Geography of West Bengal",
+                  "bn": "পশ্চিমবঙ্গের ভূগোল",
+                  "hi": "Geography of West Bengal"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "transport_population",
+                "name": {
+                  "en": "Transport and Population",
+                  "bn": "পরিবহণ ও জনসংখ্যা",
+                  "hi": "Transport and Population"
                 },
                 "syllabusStatus": "UNVERIFIED"
               }
@@ -3744,6 +3950,16 @@ export const catalogFixture = [
         },
         "topics": [
           {
+            "code": "sentence_basics",
+            "name": {
+              "en": "Sentence Basics",
+              "bn": "বাক্যের গঠন (Sentence Basics)",
+              "hi": "वाक्य की बनावट (Sentence Basics)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "parts_of_speech",
             "name": {
               "en": "Parts of Speech",
@@ -3769,66 +3985,6 @@ export const catalogFixture = [
               "en": "Tenses",
               "bn": "কাল (Tenses)",
               "hi": "काल (Tenses)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "voice",
-            "name": {
-              "en": "Active & Passive Voice",
-              "bn": "বাচ্য (Active & Passive Voice)",
-              "hi": "वाच्य (Active & Passive Voice)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "narration",
-            "name": {
-              "en": "Direct & Indirect Speech",
-              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
-              "hi": "कथन (Direct & Indirect Speech)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "modals_conditionals",
-            "name": {
-              "en": "Modals & Conditionals",
-              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
-              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "reading_comprehension",
-            "name": {
-              "en": "Reading Comprehension",
-              "bn": "পাঠ বোধগম্যতা",
-              "hi": "पठन बोध"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "error_spotting",
-            "name": {
-              "en": "Error Spotting",
-              "bn": "ভুল শনাক্তকরণ",
-              "hi": "त्रुटि पहचान"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "sentence_improvement",
-            "name": {
-              "en": "Sentence Improvement",
-              "bn": "বাক্য সংশোধন",
-              "hi": "वाक्य सुधार"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -3997,11 +4153,101 @@ export const catalogFixture = [
             ]
           },
           {
+            "code": "prepositions",
+            "name": {
+              "en": "Prepositions",
+              "bn": "প্রিপোজিশন (Prepositions)",
+              "hi": "पूर्वसर्ग (Prepositions)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "voice",
+            "name": {
+              "en": "Active & Passive Voice",
+              "bn": "বাচ্য (Active & Passive Voice)",
+              "hi": "वाच्य (Active & Passive Voice)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "narration",
+            "name": {
+              "en": "Direct & Indirect Speech",
+              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
+              "hi": "कथन (Direct & Indirect Speech)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "modals_conditionals",
+            "name": {
+              "en": "Modals & Conditionals",
+              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
+              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "question_tags",
+            "name": {
+              "en": "Question Tags",
+              "bn": "কোয়েশ্চেন ট্যাগ (Question Tags)",
+              "hi": "क्वेश्चन टैग (Question Tags)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "reading_comprehension",
+            "name": {
+              "en": "Reading Comprehension",
+              "bn": "পাঠ বোধগম্যতা",
+              "hi": "पठन बोध"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "error_spotting",
+            "name": {
+              "en": "Error Spotting",
+              "bn": "ভুল শনাক্তকরণ",
+              "hi": "त्रुटि पहचान"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "sentence_improvement",
+            "name": {
+              "en": "Sentence Improvement",
+              "bn": "বাক্য সংশোধন",
+              "hi": "वाक्य सुधार"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "fill_blanks",
             "name": {
               "en": "Fill in the Blanks",
               "bn": "শূন্যস্থান পূরণ",
               "hi": "रिक्त स्थान भरें"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "spelling",
+            "name": {
+              "en": "Spelling",
+              "bn": "বানান (Spelling)",
+              "hi": "वर्तनी (Spelling)"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -4121,6 +4367,15 @@ export const catalogFixture = [
             "syllabusStatus": "SYLLABUS",
             "subtopics": [
               {
+                "code": "prehistoric",
+                "name": {
+                  "en": "Prehistoric India",
+                  "bn": "প্রাগৈতিহাসিক ভারত",
+                  "hi": "Prehistoric India"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "ivc",
                 "name": {
                   "en": "Indus Valley Civilisation",
@@ -4166,6 +4421,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "post_maurya_sangam",
+                "name": {
+                  "en": "Post-Mauryan India and the Sangam Age",
+                  "bn": "মৌর্য-পরবর্তী ভারত ও সঙ্গম যুগ",
+                  "hi": "Post-Mauryan India and the Sangam Age"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "early_medieval",
                 "name": {
                   "en": "Early Medieval Kingdoms",
@@ -4180,6 +4444,15 @@ export const catalogFixture = [
                   "en": "Marathas",
                   "bn": "মারাঠা",
                   "hi": "Marathas"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "regional_18c",
+                "name": {
+                  "en": "18th-century Regional Powers",
+                  "bn": "অষ্টাদশ শতকের আঞ্চলিক শক্তি",
+                  "hi": "18th-century Regional Powers"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -4229,6 +4502,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "peasant_tribal",
+                "name": {
+                  "en": "Peasant and Tribal Movements",
+                  "bn": "কৃষক ও উপজাতি বিদ্রোহ",
+                  "hi": "Peasant and Tribal Movements"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "revolt_1857",
                 "name": {
                   "en": "Revolt of 1857",
@@ -4252,6 +4534,15 @@ export const catalogFixture = [
                   "en": "Indian National Congress",
                   "bn": "ভারতীয় জাতীয় কংগ্রেস",
                   "hi": "Indian National Congress"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "revolutionaries",
+                "name": {
+                  "en": "Revolutionary Movements",
+                  "bn": "বিপ্লবী আন্দোলন",
+                  "hi": "Revolutionary Movements"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -4389,6 +4680,24 @@ export const catalogFixture = [
                   "en": "Straits, Canals, Lakes and Peaks",
                   "bn": "প্রণালী, খাল, হ্রদ ও শৃঙ্গ",
                   "hi": "Straits, Canals, Lakes and Peaks"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "west_bengal_geography",
+                "name": {
+                  "en": "Geography of West Bengal",
+                  "bn": "পশ্চিমবঙ্গের ভূগোল",
+                  "hi": "Geography of West Bengal"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "transport_population",
+                "name": {
+                  "en": "Transport and Population",
+                  "bn": "পরিবহণ ও জনসংখ্যা",
+                  "hi": "Transport and Population"
                 },
                 "syllabusStatus": "UNVERIFIED"
               }
@@ -6210,6 +6519,16 @@ export const catalogFixture = [
         },
         "topics": [
           {
+            "code": "sentence_basics",
+            "name": {
+              "en": "Sentence Basics",
+              "bn": "বাক্যের গঠন (Sentence Basics)",
+              "hi": "वाक्य की बनावट (Sentence Basics)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "parts_of_speech",
             "name": {
               "en": "Parts of Speech",
@@ -6235,66 +6554,6 @@ export const catalogFixture = [
               "en": "Tenses",
               "bn": "কাল (Tenses)",
               "hi": "काल (Tenses)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "voice",
-            "name": {
-              "en": "Active & Passive Voice",
-              "bn": "বাচ্য (Active & Passive Voice)",
-              "hi": "वाच्य (Active & Passive Voice)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "narration",
-            "name": {
-              "en": "Direct & Indirect Speech",
-              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
-              "hi": "कथन (Direct & Indirect Speech)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "modals_conditionals",
-            "name": {
-              "en": "Modals & Conditionals",
-              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
-              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "reading_comprehension",
-            "name": {
-              "en": "Reading Comprehension",
-              "bn": "পাঠ বোধগম্যতা",
-              "hi": "पठन बोध"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "error_spotting",
-            "name": {
-              "en": "Error Spotting",
-              "bn": "ভুল শনাক্তকরণ",
-              "hi": "त्रुटि पहचान"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "sentence_improvement",
-            "name": {
-              "en": "Sentence Improvement",
-              "bn": "বাক্য সংশোধন",
-              "hi": "वाक्य सुधार"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -6463,11 +6722,101 @@ export const catalogFixture = [
             ]
           },
           {
+            "code": "prepositions",
+            "name": {
+              "en": "Prepositions",
+              "bn": "প্রিপোজিশন (Prepositions)",
+              "hi": "पूर्वसर्ग (Prepositions)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "voice",
+            "name": {
+              "en": "Active & Passive Voice",
+              "bn": "বাচ্য (Active & Passive Voice)",
+              "hi": "वाच्य (Active & Passive Voice)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "narration",
+            "name": {
+              "en": "Direct & Indirect Speech",
+              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
+              "hi": "कथन (Direct & Indirect Speech)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "modals_conditionals",
+            "name": {
+              "en": "Modals & Conditionals",
+              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
+              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "question_tags",
+            "name": {
+              "en": "Question Tags",
+              "bn": "কোয়েশ্চেন ট্যাগ (Question Tags)",
+              "hi": "क्वेश्चन टैग (Question Tags)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "reading_comprehension",
+            "name": {
+              "en": "Reading Comprehension",
+              "bn": "পাঠ বোধগম্যতা",
+              "hi": "पठन बोध"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "error_spotting",
+            "name": {
+              "en": "Error Spotting",
+              "bn": "ভুল শনাক্তকরণ",
+              "hi": "त्रुटि पहचान"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "sentence_improvement",
+            "name": {
+              "en": "Sentence Improvement",
+              "bn": "বাক্য সংশোধন",
+              "hi": "वाक्य सुधार"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "fill_blanks",
             "name": {
               "en": "Fill in the Blanks",
               "bn": "শূন্যস্থান পূরণ",
               "hi": "रिक्त स्थान भरें"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "spelling",
+            "name": {
+              "en": "Spelling",
+              "bn": "বানান (Spelling)",
+              "hi": "वर्तनी (Spelling)"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -6587,6 +6936,15 @@ export const catalogFixture = [
             "syllabusStatus": "UNVERIFIED",
             "subtopics": [
               {
+                "code": "prehistoric",
+                "name": {
+                  "en": "Prehistoric India",
+                  "bn": "প্রাগৈতিহাসিক ভারত",
+                  "hi": "Prehistoric India"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "ivc",
                 "name": {
                   "en": "Indus Valley Civilisation",
@@ -6632,6 +6990,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "post_maurya_sangam",
+                "name": {
+                  "en": "Post-Mauryan India and the Sangam Age",
+                  "bn": "মৌর্য-পরবর্তী ভারত ও সঙ্গম যুগ",
+                  "hi": "Post-Mauryan India and the Sangam Age"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "early_medieval",
                 "name": {
                   "en": "Early Medieval Kingdoms",
@@ -6646,6 +7013,15 @@ export const catalogFixture = [
                   "en": "Marathas",
                   "bn": "মারাঠা",
                   "hi": "Marathas"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "regional_18c",
+                "name": {
+                  "en": "18th-century Regional Powers",
+                  "bn": "অষ্টাদশ শতকের আঞ্চলিক শক্তি",
+                  "hi": "18th-century Regional Powers"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -6695,6 +7071,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "peasant_tribal",
+                "name": {
+                  "en": "Peasant and Tribal Movements",
+                  "bn": "কৃষক ও উপজাতি বিদ্রোহ",
+                  "hi": "Peasant and Tribal Movements"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "revolt_1857",
                 "name": {
                   "en": "Revolt of 1857",
@@ -6718,6 +7103,15 @@ export const catalogFixture = [
                   "en": "Indian National Congress",
                   "bn": "ভারতীয় জাতীয় কংগ্রেস",
                   "hi": "Indian National Congress"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "revolutionaries",
+                "name": {
+                  "en": "Revolutionary Movements",
+                  "bn": "বিপ্লবী আন্দোলন",
+                  "hi": "Revolutionary Movements"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -6855,6 +7249,24 @@ export const catalogFixture = [
                   "en": "Straits, Canals, Lakes and Peaks",
                   "bn": "প্রণালী, খাল, হ্রদ ও শৃঙ্গ",
                   "hi": "Straits, Canals, Lakes and Peaks"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "west_bengal_geography",
+                "name": {
+                  "en": "Geography of West Bengal",
+                  "bn": "পশ্চিমবঙ্গের ভূগোল",
+                  "hi": "Geography of West Bengal"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "transport_population",
+                "name": {
+                  "en": "Transport and Population",
+                  "bn": "পরিবহণ ও জনসংখ্যা",
+                  "hi": "Transport and Population"
                 },
                 "syllabusStatus": "UNVERIFIED"
               }
@@ -7975,6 +8387,16 @@ export const catalogFixture = [
         },
         "topics": [
           {
+            "code": "sentence_basics",
+            "name": {
+              "en": "Sentence Basics",
+              "bn": "বাক্যের গঠন (Sentence Basics)",
+              "hi": "वाक्य की बनावट (Sentence Basics)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "parts_of_speech",
             "name": {
               "en": "Parts of Speech",
@@ -8000,66 +8422,6 @@ export const catalogFixture = [
               "en": "Tenses",
               "bn": "কাল (Tenses)",
               "hi": "काल (Tenses)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "voice",
-            "name": {
-              "en": "Active & Passive Voice",
-              "bn": "বাচ্য (Active & Passive Voice)",
-              "hi": "वाच्य (Active & Passive Voice)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "narration",
-            "name": {
-              "en": "Direct & Indirect Speech",
-              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
-              "hi": "कथन (Direct & Indirect Speech)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "modals_conditionals",
-            "name": {
-              "en": "Modals & Conditionals",
-              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
-              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "reading_comprehension",
-            "name": {
-              "en": "Reading Comprehension",
-              "bn": "পাঠ বোধগম্যতা",
-              "hi": "पठन बोध"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "error_spotting",
-            "name": {
-              "en": "Error Spotting",
-              "bn": "ভুল শনাক্তকরণ",
-              "hi": "त्रुटि पहचान"
-            },
-            "syllabusStatus": "UNVERIFIED",
-            "subtopics": []
-          },
-          {
-            "code": "sentence_improvement",
-            "name": {
-              "en": "Sentence Improvement",
-              "bn": "বাক্য সংশোধন",
-              "hi": "वाक्य सुधार"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -8228,11 +8590,101 @@ export const catalogFixture = [
             ]
           },
           {
+            "code": "prepositions",
+            "name": {
+              "en": "Prepositions",
+              "bn": "প্রিপোজিশন (Prepositions)",
+              "hi": "पूर्वसर्ग (Prepositions)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "voice",
+            "name": {
+              "en": "Active & Passive Voice",
+              "bn": "বাচ্য (Active & Passive Voice)",
+              "hi": "वाच्य (Active & Passive Voice)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "narration",
+            "name": {
+              "en": "Direct & Indirect Speech",
+              "bn": "উক্তি পরিবর্তন (Direct & Indirect Speech)",
+              "hi": "कथन (Direct & Indirect Speech)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "modals_conditionals",
+            "name": {
+              "en": "Modals & Conditionals",
+              "bn": "মোডাল ও শর্তবাচক বাক্য (Modals & Conditionals)",
+              "hi": "मोडल और शर्तवाचक वाक्य (Modals & Conditionals)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "question_tags",
+            "name": {
+              "en": "Question Tags",
+              "bn": "কোয়েশ্চেন ট্যাগ (Question Tags)",
+              "hi": "क्वेश्चन टैग (Question Tags)"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "reading_comprehension",
+            "name": {
+              "en": "Reading Comprehension",
+              "bn": "পাঠ বোধগম্যতা",
+              "hi": "पठन बोध"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "error_spotting",
+            "name": {
+              "en": "Error Spotting",
+              "bn": "ভুল শনাক্তকরণ",
+              "hi": "त्रुटि पहचान"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "sentence_improvement",
+            "name": {
+              "en": "Sentence Improvement",
+              "bn": "বাক্য সংশোধন",
+              "hi": "वाक्य सुधार"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
             "code": "fill_blanks",
             "name": {
               "en": "Fill in the Blanks",
               "bn": "শূন্যস্থান পূরণ",
               "hi": "रिक्त स्थान भरें"
+            },
+            "syllabusStatus": "UNVERIFIED",
+            "subtopics": []
+          },
+          {
+            "code": "spelling",
+            "name": {
+              "en": "Spelling",
+              "bn": "বানান (Spelling)",
+              "hi": "वर्तनी (Spelling)"
             },
             "syllabusStatus": "UNVERIFIED",
             "subtopics": []
@@ -8352,6 +8804,15 @@ export const catalogFixture = [
             "syllabusStatus": "UNVERIFIED",
             "subtopics": [
               {
+                "code": "prehistoric",
+                "name": {
+                  "en": "Prehistoric India",
+                  "bn": "প্রাগৈতিহাসিক ভারত",
+                  "hi": "Prehistoric India"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "ivc",
                 "name": {
                   "en": "Indus Valley Civilisation",
@@ -8397,6 +8858,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "post_maurya_sangam",
+                "name": {
+                  "en": "Post-Mauryan India and the Sangam Age",
+                  "bn": "মৌর্য-পরবর্তী ভারত ও সঙ্গম যুগ",
+                  "hi": "Post-Mauryan India and the Sangam Age"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "early_medieval",
                 "name": {
                   "en": "Early Medieval Kingdoms",
@@ -8411,6 +8881,15 @@ export const catalogFixture = [
                   "en": "Marathas",
                   "bn": "মারাঠা",
                   "hi": "Marathas"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "regional_18c",
+                "name": {
+                  "en": "18th-century Regional Powers",
+                  "bn": "অষ্টাদশ শতকের আঞ্চলিক শক্তি",
+                  "hi": "18th-century Regional Powers"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -8460,6 +8939,15 @@ export const catalogFixture = [
                 "syllabusStatus": "UNVERIFIED"
               },
               {
+                "code": "peasant_tribal",
+                "name": {
+                  "en": "Peasant and Tribal Movements",
+                  "bn": "কৃষক ও উপজাতি বিদ্রোহ",
+                  "hi": "Peasant and Tribal Movements"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
                 "code": "revolt_1857",
                 "name": {
                   "en": "Revolt of 1857",
@@ -8483,6 +8971,15 @@ export const catalogFixture = [
                   "en": "Indian National Congress",
                   "bn": "ভারতীয় জাতীয় কংগ্রেস",
                   "hi": "Indian National Congress"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "revolutionaries",
+                "name": {
+                  "en": "Revolutionary Movements",
+                  "bn": "বিপ্লবী আন্দোলন",
+                  "hi": "Revolutionary Movements"
                 },
                 "syllabusStatus": "UNVERIFIED"
               },
@@ -8620,6 +9117,24 @@ export const catalogFixture = [
                   "en": "Straits, Canals, Lakes and Peaks",
                   "bn": "প্রণালী, খাল, হ্রদ ও শৃঙ্গ",
                   "hi": "Straits, Canals, Lakes and Peaks"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "west_bengal_geography",
+                "name": {
+                  "en": "Geography of West Bengal",
+                  "bn": "পশ্চিমবঙ্গের ভূগোল",
+                  "hi": "Geography of West Bengal"
+                },
+                "syllabusStatus": "UNVERIFIED"
+              },
+              {
+                "code": "transport_population",
+                "name": {
+                  "en": "Transport and Population",
+                  "bn": "পরিবহণ ও জনসংখ্যা",
+                  "hi": "Transport and Population"
                 },
                 "syllabusStatus": "UNVERIFIED"
               }
