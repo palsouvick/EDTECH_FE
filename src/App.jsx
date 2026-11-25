@@ -30,6 +30,9 @@ import MyCoursePage from './pages/MyCoursePage';
 import CourseReaderPage from './pages/CourseReaderPage';
 import MistakesPage from './pages/MistakesPage';
 import StuckProblemsPage from './pages/StuckProblemsPage';
+import MockPapersPage from './pages/MockPapersPage';
+import MockPaperDetailPage from './pages/MockPaperDetailPage';
+import MockPaperAttemptPage from './pages/MockPaperAttemptPage';
 import MasteryPage from './pages/MasteryPage';
 import AnalysisPage from './pages/AnalysisPage';
 import SubjectAnalysisPage from './pages/SubjectAnalysisPage';
@@ -129,6 +132,9 @@ export function AppRoutes() {
       <Route path="/revise" element={<RevisePage />} />
       <Route path="/mistakes" element={<MistakesPage />} />
       <Route path="/math/stuck" element={<StuckProblemsPage />} />
+      <Route path="/mocks" element={<MockPapersPage />} />
+      <Route path="/mocks/:paperId" element={<MockPaperDetailPage />} />
+      <Route path="/mocks/:paperId/attempt/:attemptId" element={<MockPaperAttemptPage />} />
       <Route path="/mastery" element={<MasteryPage />} />
       <Route path="/analysis" element={<AnalysisPage />} />
       <Route path="/analysis/:subject" element={<SubjectAnalysisPage />} />

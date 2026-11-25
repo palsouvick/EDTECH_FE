@@ -8,6 +8,7 @@ import { TARGET_EXAM } from '../../lib/targetExamCopy';
 import { NAV } from '../../lib/homeCopy';
 import { Localized } from '../topic-hub/Localized';
 import { COURSE } from '../../lib/course';
+import { MP } from '../../lib/mockPapersCopy';
 
 /** "/login?next=/exams/ssc" for the page the student is on now. */
 export function loginPath(location, mode = 'login') {
@@ -110,6 +111,10 @@ function AccountControl({ auth, className = '' }) {
           <Link role="menuitem" to="/my-course" className={item} onClick={() => setOpen(false)}>
             <span aria-hidden="true">📚 </span>
             <Localized value={COURSE.title} />
+          </Link>
+          <Link role="menuitem" to="/mocks" className={item} onClick={() => setOpen(false)}>
+            <span aria-hidden="true">📋 </span>
+            <Localized value={MP.menu} />
           </Link>
           {/* Revision is a top-level tab (Phase 12): not repeated here. */}
           <button

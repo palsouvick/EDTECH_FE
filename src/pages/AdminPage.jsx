@@ -7,10 +7,11 @@ import AdminVocabularyReview from './AdminVocabularyReview';
 import AdminGkContent from './AdminGkContent';
 import AdminBooks from './AdminBooks';
 import AdminMathCoverage from './AdminMathCoverage';
+import MockPapersAdmin from '../components/admin/MockPapersAdmin';
 import QuestionEditor from '../components/admin/QuestionEditor';
 
-const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review', 'gk-content', 'books', 'math-coverage'];
-const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review', 'gk-content': 'GK content', 'math-coverage': 'Math coverage' };
+const TABS = ['overview', 'review', 'reports', 'bulk-upload', 'bengali-review', 'gk-content', 'books', 'math-coverage', 'mock-papers'];
+const TAB_LABELS = { 'bulk-upload': 'Bulk upload', 'bengali-review': 'Bengali review', 'gk-content': 'GK content', 'math-coverage': 'Math coverage', 'mock-papers': 'Mock papers' };
 const STATUSES = ['IN_REVIEW', 'DRAFT', 'PUBLISHED', 'ARCHIVED'];
 const btn = 'min-h-9 rounded-lg px-3 text-xs font-semibold';
 const tx = (v) => v?.en || v?.bn || v?.hi || '';
@@ -408,6 +409,7 @@ export default function AdminPage() {
         {tab === 'gk-content' && <AdminGkContent />}
         {tab === 'books' && <AdminBooks />}
         {tab === 'math-coverage' && <AdminMathCoverage />}
+        {tab === 'mock-papers' && <MockPapersAdmin />}
       </main>
     </div>
   );

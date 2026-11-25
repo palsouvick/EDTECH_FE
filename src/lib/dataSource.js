@@ -56,6 +56,10 @@ import { vocabularyFixture } from '../fixtures/vocabulary';
  *   getMistakes({ status, subject?, topic?, offset }) -> mistake notebook page
  *   getStuckProblems()                            -> Math "I'm Stuck": My Stuck Problems (signed-in)
  *   getStuckSummary()                             -> the home card: top gap, most stuck chapters, next action
+ *   listMockPapers() / getMockPaper(paperId) / listMyMockPaperAttempts(paperId) / startMockPaperAttempt(paperId)
+ *   getMockPaperAttempt(attemptId) / submitMockPaperAttempt(attemptId, { answers }) -> Mock Papers (signed-in)
+ *   listAdminMockPapers() / createMockPaper(body) / getAdminMockPaper(paperId) / updateMockPaper(paperId, body)
+ *   publishMockPaper(paperId) / unpublishMockPaper(paperId) / deleteMockPaper(paperId) -> Mock Papers admin
  *   getInsights()                                  -> { mastery, counts, weakPatterns, badges, streak }
  *   getLeaderboard() / setLeaderboardOptIn(optIn)  -> weekly opt-in leaderboard
  *   getChallenge()                                 -> today's daily challenge { day, questions, done }
@@ -175,6 +179,21 @@ export function createHttpDataSource() {
     submitChallenge: ({ answers }) => request('/challenge/today', { method: 'POST', body: { tz: -new Date().getTimezoneOffset(), answers } }),
     getStuckProblems: () => request('/me/stuck'),
     getStuckSummary: () => request('/me/stuck/summary'),
+    // Mock Papers (pasted papers, separate from the main question bank): the
+    // server returns { success: true, data } and request() unwraps to data.
+    listMockPapers: () => request('/mock-papers'),
+    getMockPaper: (paperId) => request(`/mock-papers/${encodeURIComponent(paperId)}`),
+    listMyMockPaperAttempts: (paperId) => request(`/mock-papers/${encodeURIComponent(paperId)}/attempts`),
+    startMockPaperAttempt: (paperId) => request(`/mock-papers/${encodeURIComponent(paperId)}/attempts`, { method: 'POST' }),
+    getMockPaperAttempt: (attemptId) => request(`/mock-papers/attempts/${encodeURIComponent(attemptId)}`),
+    submitMockPaperAttempt: (attemptId, body) => request(`/mock-papers/attempts/${encodeURIComponent(attemptId)}/submit`, { method: 'POST', body }),
+    listAdminMockPapers: () => request('/admin/mock-papers'),
+    createMockPaper: (body) => request('/admin/mock-papers', { method: 'POST', body }),
+    getAdminMockPaper: (paperId) => request(`/admin/mock-papers/${encodeURIComponent(paperId)}`),
+    updateMockPaper: (paperId, body) => request(`/admin/mock-papers/${encodeURIComponent(paperId)}`, { method: 'PUT', body }),
+    publishMockPaper: (paperId) => request(`/admin/mock-papers/${encodeURIComponent(paperId)}/publish`, { method: 'POST' }),
+    unpublishMockPaper: (paperId) => request(`/admin/mock-papers/${encodeURIComponent(paperId)}/unpublish`, { method: 'POST' }),
+    deleteMockPaper: (paperId) => request(`/admin/mock-papers/${encodeURIComponent(paperId)}`, { method: 'DELETE' }),
     getMistakes: ({ status = 'active', subject, topic, offset = 0 } = {}) =>
       request(`/review/mistakes?${new URLSearchParams({ status, offset: String(offset), ...(subject && { subject }), ...(topic && { topic }) })}`),
     listLearnSubjects: () => request('/learn/subjects'),
@@ -592,6 +611,21 @@ export function createFixtureDataSource({ latencyMs = 150 } = {}) {
     // Offline: stuck marks are only kept by the server, so My Stuck Problems starts empty.
     getStuckProblems: () => wait({ total: 0, events: 0, solvedAfterStuck: 0, wrongAfterStuck: 0, leftAfterStuck: 0, reasons: {}, chapters: [], gaps: [], improvement: [], next: null, quizzes: [], items: [], hasMore: false }),
     getStuckSummary: () => wait({ total: 0, topGap: null, mostStuck: [], improvement: [], next: null }),
+    // Offline: no mock papers are bundled, so the list is empty and the
+    // student/admin flows need the server (mirrors the getStuckProblems stub).
+    listMockPapers: () => wait({ papers: [] }),
+    getMockPaper: () => Promise.reject(new ApiError(404, 'PAPER_NOT_FOUND', 'Mock paper not found')),
+    listMyMockPaperAttempts: () => wait({ attempts: [] }),
+    startMockPaperAttempt: learnOffline,
+    getMockPaperAttempt: () => Promise.reject(new ApiError(404, 'ATTEMPT_NOT_FOUND', 'Mock paper attempt not found')),
+    submitMockPaperAttempt: learnOffline,
+    listAdminMockPapers: () => wait({ papers: [] }),
+    createMockPaper: learnOffline,
+    getAdminMockPaper: () => Promise.reject(new ApiError(404, 'PAPER_NOT_FOUND', 'Mock paper not found')),
+    updateMockPaper: learnOffline,
+    publishMockPaper: learnOffline,
+    unpublishMockPaper: learnOffline,
+    deleteMockPaper: learnOffline,
     getInsights: () => wait({ mastery: [], counts: {}, weakPatterns: [], badges: [], allBadges: 9, streak: { days: 0, freezes: 0, protectedDays: [], freezeEvery: 7 } }),
     getLeaderboard: () => wait({ optedIn: false, top: [], me: null, participants: 0 }),
     setLeaderboardOptIn: (optIn) => wait({ optedIn: optIn, top: [], me: null, participants: 0 }),
