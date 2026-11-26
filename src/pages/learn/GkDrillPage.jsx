@@ -24,6 +24,15 @@ function Stat({ icon, value }) {
  * /learn/gk/drill/:id: one confusion drill. Questions from all its facts, mixed, so P and K
  * (or Feluda and Byomkesh) are asked next to each other. Below: links to the topics it draws on.
  */
+/** A section's mixed test (id "mix_<group>"): all drills of that section as one drill, or null. */
+function sectionDrill(list, id) {
+  const g = (list.groups ?? []).find((x) => x.mixId === id);
+  if (!g) return null;
+  const members = list.drills.filter((d) => d.group === g.id);
+  const facts = [...new Map(members.flatMap((d) => d.facts).map((f) => [f.code, f])).values()];
+  return { id, title: g.title, intro: DRILL.mixIntro(members.length), questionCount: g.questionCount, facts };
+}
+
 export default function GkDrillPage() {
   const { id } = useParams();
   const source = useDataSource();
@@ -33,7 +42,7 @@ export default function GkDrillPage() {
 
   useEffect(() => {
     let live = true;
-    source.getGkDrills().then((d) => live && setDrill(d.drills.find((x) => x.id === id) ?? null)).catch(() => live && setDrill(null));
+    source.getGkDrills().then((d) => live && setDrill(d.drills.find((x) => x.id === id) ?? sectionDrill(d, id))).catch(() => live && setDrill(null));
     return () => {
       live = false;
     };

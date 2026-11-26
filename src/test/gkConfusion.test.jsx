@@ -53,6 +53,20 @@ describe('GK confusion drills', () => {
     expect(screen.getByRole('button', { name: /^Start drill/ })).toBeInTheDocument();
   });
 
+  it('a section mixed test opens as one drill made of all the section drills', async () => {
+    const pen = { ...DETECTIVES, id: 'bengali_pen_names', title: t('Bengali pen names', 'বাংলা ছদ্মনাম'), facts: [{ code: 'GK-WBG-240', title: t('Banaphool: Balai Chand Mukhopadhyay', 'বনফুল: বলাইচাঁদ মুখোপাধ্যায়') }] };
+    renderAt('/learn/gk/drill/mix_west_bengal', {
+      getGkDrills: vi.fn(async () => ({
+        drills: [{ ...DETECTIVES, group: 'west_bengal' }, { ...pen, group: 'west_bengal' }],
+        groups: [{ id: 'west_bengal', title: t('West Bengal', 'পশ্চিমবঙ্গ'), mixId: 'mix_west_bengal', drillCount: 2, questionCount: 12 }],
+      })),
+    });
+    expect(await screen.findByRole('heading', { name: /^West Bengal/ })).toBeInTheDocument();
+    expect(screen.getByText(/questions from all 2 drills of this section/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Byomkesh Bakshi: Sharadindu/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Banaphool/ })).toBeInTheDocument();
+  });
+
   it('an unknown drill says so', async () => {
     renderAt('/learn/gk/drill/nope');
     expect(await screen.findByText('This drill is not available yet.')).toBeInTheDocument();

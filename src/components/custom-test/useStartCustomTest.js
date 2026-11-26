@@ -16,8 +16,11 @@ export function useStartCustomTest() {
   const source = useDataSource();
   const navigate = useNavigate();
   return useCallback(
-    async (body) => {
-      const session = await source.createCustomTest(body);
+    async ({ retakeOf, ...body }) => {
+      // retakeOf: the same questions as that submitted test ("Same questions again").
+      const session = retakeOf
+        ? await source.retakeCustomTest(retakeOf, { language: body.language })
+        : await source.createCustomTest(body);
       if (session.custom?.mode === 'practice') {
         navigate(customPracticePath(session.sessionId));
         return session;

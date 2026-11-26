@@ -149,6 +149,9 @@ export default function MockTestEngine({ initialState, source, backTo, restored 
   useEffect(() => {
     const save = () => {
       const st = stateRef.current;
+      // Submitted (or submitting: the delete is on its way): never write the test back, or a
+      // refresh on the result screen would bring it back as a live exam.
+      if (st.phase === 'submitted' || st.phase === 'submitting') return;
       if (pendingMs.current >= 1) {
         try {
           localStorage.setItem(PENDING_KEY(st.sessionId), JSON.stringify({ index: st.current, ms: pendingMs.current }));

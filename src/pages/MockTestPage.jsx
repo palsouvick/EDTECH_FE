@@ -13,10 +13,11 @@ import { LoadError } from './funnel/FunnelLayout';
 
 /**
  * /mock/:sessionId. Recovery order on load (including after an accidental refresh):
- *  1. this device's saved exam (IndexedDB): answers, marks, position; the
- *     timer restores itself from localStorage;
- *  2. otherwise the server session: an ACTIVE test continues with a fresh local
- *     view (e.g. on another device), a SUBMITTED one shows its result.
+ *  1. the server says what the test is: SUBMITTED shows its result, expired/missing
+ *     ends it (and drops this device's stale copy);
+ *  2. while it is ACTIVE, this device's saved exam (IndexedDB) wins: answers, marks,
+ *     position; the timer restores itself from localStorage. No saved exam: a fresh
+ *     local view (e.g. on another device). Server unreachable: the saved exam is used.
  */
 export default function MockTestPage() {
   const { sessionId } = useParams();
@@ -37,9 +38,15 @@ export default function MockTestPage() {
     (async () => {
       if (!/^[a-f\d]{24}$/i.test(sessionId)) return show({ status: 'missing' });
       const saved = await examStore.get(sessionId);
-      if (saved) return show({ status: 'ready', exam: saved, restored: !fresh });
+      // A just-started test is live by definition; skip the round trip.
+      if (saved && fresh) return show({ status: 'ready', exam: saved, restored: false });
       try {
         const s = await source.getMockSession(sessionId);
+        // The local copy is only trusted while the server still has the test live: a test
+        // submitted in another tab or device (or whose local copy outlived its submit) must not
+        // reopen as a live exam, where every "Check answer" fails with SESSION_NOT_ACTIVE.
+        if (s.status !== 'ACTIVE' && saved) await examStore.delete(sessionId);
+        if (saved && s.status === 'ACTIVE') return show({ status: 'ready', exam: saved, restored: true });
         if (s.status === 'SUBMITTED') return show({ status: 'result', result: s });
         const exam = createExamState(s, s.custom
           ? { examName: MOCK.mockTest, custom: true, subject: s.config.subject, topicPath: learnPaths.subject(s.config.subject) }
@@ -47,8 +54,12 @@ export default function MockTestPage() {
         await examStore.put(exam);
         return show({ status: 'ready', exam, restored: true });
       } catch (error) {
-        if (error.status === 404) return show({ status: 'missing' });
-        if (error.code === 'SESSION_EXPIRED') return show({ status: 'expired' });
+        if (error.status === 404 || error.code === 'SESSION_EXPIRED') {
+          if (saved) await examStore.delete(sessionId);
+          return show({ status: error.status === 404 ? 'missing' : 'expired' });
+        }
+        // Offline or server trouble: keep going on this device's copy (refresh recovery).
+        if (saved) return show({ status: 'ready', exam: saved, restored: true });
         return show({ status: 'error', error });
       }
     })();

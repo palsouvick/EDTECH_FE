@@ -265,6 +265,11 @@ export default function CustomTestResult({ sessionId }) {
           <button type="button" disabled={Boolean(busy)} onClick={() => run('again', { subject, preset: 'followup', followUpOf: r.sessionId })} className={`${btn} bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-60`}>
             <Localized value={busy === 'again' ? CT.starting : CT.practiceAgain} />
           </button>
+          {typeof source.retakeCustomTest === 'function' && (
+            <button type="button" disabled={Boolean(busy)} onClick={() => run('retake', { subject, retakeOf: r.sessionId })} className={`${btn} ring-1 ring-indigo-300 text-indigo-700 hover:bg-indigo-50 disabled:opacity-60 dark:text-indigo-300 dark:ring-indigo-700 dark:hover:bg-indigo-950`}>
+              <Localized value={busy === 'retake' ? CT.starting : CT.retakeSame} />
+            </button>
+          )}
           {r.challenge.unlocked && r.custom.preset !== 'pyq' && (
             <button type="button" disabled={Boolean(busy)} onClick={() => run('challenge', { subject, preset: 'challenge', topics: r.custom.topics, mode: r.custom.mode })} className={`${btn} bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:opacity-60`}>
               <Localized value={busy === 'challenge' ? CT.starting : CT.challengePreset} />
@@ -278,6 +283,7 @@ export default function CustomTestResult({ sessionId }) {
           {r.nextTest.harder ? <Localized value={CT.practiceAgainHarder} /> : focusNames.length > 0 && <Localized value={{ en: CT.practiceAgainHint(focusNames.map((n) => n.en).join(', ')).en, bn: CT.practiceAgainHint(focusNames.map((n) => n.bn ?? n.en).join(', ')).bn }} />}
           {r.challenge.unlocked && <> · <Localized value={CT.challengeHint} /></>}
         </p>
+        {typeof source.retakeCustomTest === 'function' && <Localized value={CT.retakeSameHint} as="p" className="mt-1 text-xs text-slate-500 dark:text-slate-400" />}
         {startError && <p role="alert" className="mt-2 text-sm font-semibold text-rose-700 dark:text-rose-300"><Localized value={CT.errors[startError.code] ?? CT.errors.generic} /></p>}
         {r.wrong > 0 && <Localized value={CT.savedToNotebook} as="p" className="mt-2 text-xs text-slate-500 dark:text-slate-400" />}
       </section>

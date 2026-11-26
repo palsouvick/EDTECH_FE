@@ -241,6 +241,8 @@ export const CT = Object.freeze({
   why: t('Why?', 'কেন?'),
   noExplanation: t('No written explanation for this question yet.', 'এই প্রশ্নের লেখা ব্যাখ্যা এখনও নেই।'),
   practiceAgain: t('🔄 Practice again', '🔄 আবার অনুশীলন'),
+  retakeSame: t('🔁 Same questions again', '🔁 একই প্রশ্নে আবার দাও'),
+  retakeSameHint: t('“Same questions again” repeats exactly this test, in a new order, so you can check what you learnt.', '“একই প্রশ্নে আবার দাও” ঠিক এই টেস্টটাই নতুন ক্রমে আবার দেয়, যাতে যা শিখলে তা যাচাই করতে পারো।'),
   practiceAgainHint: (names) => t(`New questions, same chapters, more from: ${names}`, `নতুন প্রশ্ন, একই অধ্যায়, বেশি থাকবে: ${names}`),
   practiceAgainHarder: t('New questions, one level harder', 'নতুন প্রশ্ন, এক ধাপ কঠিন'),
   savedToNotebook: t('Wrong answers were added to your Mistake Notebook for revision.', 'ভুল উত্তরগুলো রিভিশনের জন্য তোমার ভুলের খাতায় যোগ হয়েছে।'),

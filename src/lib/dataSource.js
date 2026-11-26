@@ -131,6 +131,7 @@ export function createHttpDataSource() {
     getCustomTestOptions: (subject, language = 'en') => request(`/custom-tests/options?subject=${subject}&${lang(language)}`),
     previewCustomTest: (body) => request('/custom-tests/preview', { method: 'POST', body }),
     createCustomTest: (body) => request('/custom-tests', { method: 'POST', body }),
+    retakeCustomTest: (sessionId, body) => request(`/custom-tests/${sessionId}/retake`, { method: 'POST', body }),
     checkCustomAnswer: (sessionId, body) => request(`/custom-tests/${sessionId}/check`, { method: 'POST', body }),
     getCustomTestReport: (sessionId) => request(`/custom-tests/${sessionId}/report`),
     getCustomTestHistory: (subject) => request(`/custom-tests/history?subject=${subject}`),
