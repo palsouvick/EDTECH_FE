@@ -6,13 +6,35 @@ import { Localized } from '../topic-hub/Localized';
 
 export const gkDrillPath = (id) => `/learn/gk/drill/${id}`;
 
+/** Attempted / left over the drill's whole question pool, shown only when the API sends it (signed in). */
+function DrillProgress({ attempted, total }) {
+  if (!Number.isFinite(attempted) || !total) return null;
+  const done = Math.min(attempted, total);
+  const pct = Math.round((done / total) * 100);
+  const full = done === total;
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between gap-2 text-xs font-semibold">
+        <Localized value={DRILL.attempted(done, total)} className="text-slate-600 dark:text-slate-300" />
+        <Localized value={DRILL.left(total - done)} className={full ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'} />
+      </div>
+      <div role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} className="mt-1 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+        <div className={`h-full rounded-full transition-[width] ${full ? 'bg-emerald-500' : 'bg-indigo-600 dark:bg-indigo-400'}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function DrillCard({ d }) {
   return (
     <li>
       <Link to={gkDrillPath(d.id)} className="flex h-full flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 hover:ring-indigo-300 dark:bg-slate-900 dark:ring-slate-800 dark:hover:ring-indigo-500/50">
         <Localized value={d.title} className="font-bold text-slate-900 dark:text-white" />
         <Localized value={d.intro} as="span" className="mt-1 text-sm text-slate-600 dark:text-slate-300" />
-        <Localized value={GK.questions(d.questionCount)} as="span" className="mt-auto pt-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300" />
+        <div className="mt-auto pt-2">
+          <Localized value={GK.questions(d.questionCount)} as="span" className="text-xs font-semibold text-indigo-700 dark:text-indigo-300" />
+          <DrillProgress attempted={d.attempted} total={d.poolSize ?? d.questionCount} />
+        </div>
       </Link>
     </li>
   );

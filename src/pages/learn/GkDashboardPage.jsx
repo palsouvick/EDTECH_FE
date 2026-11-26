@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import { useOptionalAuth } from '../../app/AuthContext';
-import { GK } from '../../lib/gkCopy';
+import { DRILL, GK } from '../../lib/gkCopy';
 import { toSlug } from '../../lib/routes';
 import PageShell from '../../components/navigation/PageShell';
 import GkMockDialog from '../../components/gk/GkMockDialog';
@@ -152,6 +152,10 @@ export default function GkDashboardPage() {
       alive = false;
     };
   }, [source, auth?.user, attempt]);
+  // Which tab: chapters (default) or drills; kept in the URL so the drill page's back link returns here.
+  const [params, setParams] = useSearchParams();
+  const view = params.get('view') === 'drills' ? 'drills' : 'chapters';
+  const setView = (v) => setParams(v === 'drills' ? { view: 'drills' } : {}, { replace: true });
   const topicNames = useMemo(
     () => (data ? Object.fromEntries(data.cards.flatMap((c) => c.topics.map((t) => [t, c.title]))) : {}),
     [data],
@@ -176,7 +180,34 @@ export default function GkDashboardPage() {
         <SubjectTabs subject="gs" />
       </div>
       <CustomTestLauncher subject="gs" className="mt-6" />
-      <GkDrills className="mt-8" />
+
+      <div role="tablist" aria-label={DRILL.tabsLabel.en} className="mt-8 flex gap-2 border-b border-slate-200 dark:border-slate-800">
+        {[['chapters', '📚', DRILL.tabChapters], ['drills', '⚡', DRILL.tabDrills]].map(([id, icon, label]) => {
+          const on = view === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`gk-tab-${id}`}
+              aria-selected={on}
+              aria-controls={`gk-panel-${id}`}
+              onClick={() => setView(id)}
+              className={`-mb-px inline-flex min-h-11 items-center gap-2 rounded-t-xl border-b-2 px-4 text-sm font-bold transition ${on ? 'border-indigo-600 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-200' : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`}
+            >
+              <span aria-hidden="true">{icon}</span>
+              <Localized value={label} />
+            </button>
+          );
+        })}
+      </div>
+
+      {view === 'drills' ? (
+        <div role="tabpanel" id="gk-panel-drills" aria-labelledby="gk-tab-drills">
+          <GkDrills className="mt-6" />
+        </div>
+      ) : (
+      <div role="tabpanel" id="gk-panel-chapters" aria-labelledby="gk-tab-chapters">
       <BookEntryCard card="indian_history" onlyIfStarted className="mt-6 block max-w-4xl" />
       <PriorityLegend className="mt-4 max-w-4xl" />
 
@@ -192,6 +223,8 @@ export default function GkDashboardPage() {
           stages={stages}
         />
       ))}
+      </div>
+      )}
 
       {mock && (
         <GkMockDialog open onClose={() => setMock(null)} topics={mock.topics} name={mock.title} topicNames={topicNames} />

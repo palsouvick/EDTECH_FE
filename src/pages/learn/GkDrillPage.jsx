@@ -50,7 +50,7 @@ export default function GkDrillPage() {
 
   return (
     <PageShell className="max-w-4xl pb-16 pt-6 sm:pt-8">
-      <Link to="/learn/gk" className="inline-flex min-h-10 items-center text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">← <Localized value={DRILL.back} className="ml-1" /></Link>
+      <Link to="/learn/gk?view=drills" className="inline-flex min-h-10 items-center text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">← <Localized value={DRILL.back} className="ml-1" /></Link>
       {drill === undefined && <p aria-busy="true" className="mt-4 h-48 animate-pulse rounded-3xl bg-slate-200/60 dark:bg-slate-800" />}
       {drill === null && <Localized value={DRILL.notFound} as="p" className={`${box} mt-4 text-slate-700 dark:text-slate-200`} />}
       {drill && (

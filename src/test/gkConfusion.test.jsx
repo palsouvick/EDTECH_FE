@@ -6,6 +6,7 @@ import { AppRoutes } from '../App';
 import { AuthProvider } from '../app/AuthContext';
 import { DataSourceProvider } from '../app/DataSourceContext';
 import { createFixtureDataSource } from '../lib/dataSource';
+import GkDrills from '../components/gk/GkDrills';
 import { clearResourceCache } from '../hooks/useResource';
 import { languageStore } from '../hooks/useLanguagePreference';
 
@@ -78,6 +79,33 @@ describe('GK confusion drills', () => {
     const back = await screen.findByRole('link', { name: /Back to: Bengali detectives and characters/ });
     expect(back).toHaveAttribute('href', '/learn/gk/drill/bengali_characters');
     expect(screen.getByRole('link', { name: /Back to the chapter/ })).toBeInTheDocument();
+  });
+
+  it('drill cards show attempted / left as a progress bar (only when the API sends it)', async () => {
+    const source = {
+      ...createFixtureDataSource({ latencyMs: 0 }),
+      getGkDrills: vi.fn(async () => ({ drills: [{ ...DETECTIVES, poolSize: 8, attempted: 3 }, { ...DETECTIVES, id: 'done', poolSize: 4, attempted: 4 }, { ...DETECTIVES, id: 'anon' }] })),
+    };
+    render(<DataSourceProvider source={source}><MemoryRouter><GkDrills /></MemoryRouter></DataSourceProvider>);
+    expect(await screen.findByText('3/8 attempted')).toBeInTheDocument();
+    expect(screen.getByText('5 left')).toBeInTheDocument();
+    expect(screen.getByText('All done ✓')).toBeInTheDocument();
+    const bars = screen.getAllByRole('progressbar');
+    expect(bars).toHaveLength(2);
+    expect(bars[0]).toHaveAttribute('aria-valuenow', '3');
+  });
+
+  it('GK page: drills live in their own tab; chapters tab is the default; ?view=drills opens it', async () => {
+    const { user } = renderAt('/learn/gk');
+    expect(await screen.findByRole('tab', { name: /Chapters & books/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('heading', { name: /confusion drills/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: /Confusion drills/ }));
+    expect(await screen.findByRole('heading', { name: /Don't mix them up/ })).toBeInTheDocument();
+  });
+
+  it('the drill page back link returns to the drills tab', async () => {
+    renderAt('/learn/gk/drill/bengali_characters');
+    expect(await screen.findByRole('link', { name: /All GK/ })).toHaveAttribute('href', '/learn/gk?view=drills');
   });
 
   it('an unknown drill says so', async () => {
