@@ -15,6 +15,7 @@ import PracticeArena from '../../components/practice/PracticeArena';
 import GkMockDialog from '../../components/gk/GkMockDialog';
 import YearAtAGlance from '../../components/gk/YearAtAGlance';
 import { Localized } from '../../components/topic-hub/Localized';
+import { StructuredText } from '../../components/topic-hub/StructuredText';
 import { ArrowRightIcon } from '../../components/topic-hub/icons';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { CompletionBar, GK_REVISION_PATH } from './GkDashboardPage';
@@ -116,7 +117,7 @@ export function FactCard({ fact, onChange }) {
         )}
       </div>
       <Localized value={fact.title} as="h3" className="mt-2 text-lg font-bold text-slate-900 dark:text-white" />
-      <Localized value={fact.statement} markdown as="div" className="mt-1 leading-relaxed text-slate-800 dark:text-slate-100" />
+      <StructuredText value={fact.statement} className="mt-1 leading-relaxed text-slate-800 dark:text-slate-100" />
       {fact.pack && (
         <Link to={gkTopicPath(fact.code)} className="mt-3 inline-flex min-h-10 items-center gap-1 rounded-lg bg-indigo-600 px-3 text-sm font-bold text-white hover:bg-indigo-500">
           📚 <Localized value={PACK.openTopic} /> →

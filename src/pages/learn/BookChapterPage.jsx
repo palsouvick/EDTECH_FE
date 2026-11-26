@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import PageShell from '../../components/navigation/PageShell';
 import PracticeArena from '../../components/practice/PracticeArena';
+import SubmitConfirmDialog from '../../components/practice/SubmitConfirmDialog';
 import { Localized, MathMarkdown } from '../../components/topic-hub/Localized';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import useBookProgress from '../../hooks/useBookProgress';
@@ -218,6 +219,7 @@ function PracticePanel({ bookCode, chapter, preview, entry, onResult, onRevise }
   const [run, setRun] = useState(null); // { mode, sections, key }
   const [finished, setFinished] = useState(null);
   const checked = useRef([]);
+  const [confirming, setConfirming] = useState(false);
   const saved = useRef(false);
   const headings = useMemo(() => Object.fromEntries(chapter.sections.map((s) => [s.id, s.heading])), [chapter]);
 
@@ -294,9 +296,20 @@ function PracticePanel({ bookCode, chapter, preview, entry, onResult, onRevise }
               </button>
             }
           />
-          <button type="button" onClick={finish} className="min-h-11 rounded-xl bg-white px-4 text-sm font-bold text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200">
+          {/* Mid-run "finish" ends the set: ask first, so a stray click does not throw the run away. */}
+          <button type="button" onClick={() => setConfirming(true)} className="min-h-11 rounded-xl bg-white px-4 text-sm font-bold text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200">
             <Localized value={BOOK.finish} />
           </button>
+          <SubmitConfirmDialog
+            open={confirming}
+            onClose={() => setConfirming(false)}
+            onConfirm={() => {
+              setConfirming(false);
+              finish();
+            }}
+            total={Math.max(run.mode === 'mini' ? 15 : 20, checked.current.length)}
+            answered={checked.current.length}
+          />
         </div>
       )}
 

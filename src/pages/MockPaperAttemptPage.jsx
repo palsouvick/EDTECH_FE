@@ -117,7 +117,8 @@ export default function MockPaperAttemptPage() {
   if (authStatus === 'ready' && !user) return <Navigate to={loginPath(location)} replace />;
 
   const onSubmitClick = () => {
-    if (unanswered > 0 && !confirming) {
+    // Always ask first, even with every question answered: a stray click must not end the mock.
+    if (!confirming) {
       setConfirming(true);
       return;
     }
@@ -247,11 +248,11 @@ export default function MockPaperAttemptPage() {
           {confirming && (
             <div role="alertdialog" aria-labelledby="mock-confirm-title" className="rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
               <Localized value={MP.confirmTitle} as="p" id="mock-confirm-title" className="font-bold text-amber-900 dark:text-amber-200" />
-              <Localized value={MP.confirmUnanswered(unanswered)} as="p" className="mt-1 text-sm text-amber-800 dark:text-amber-300" />
+              {unanswered > 0 && <Localized value={MP.confirmUnanswered(unanswered)} as="p" className="mt-1 text-sm text-amber-800 dark:text-amber-300" />}
               <Localized value={MP.confirmHint} as="p" className="mt-1 text-sm text-amber-800 dark:text-amber-300" />
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" disabled={submitting} onClick={submit} className={`${btn} bg-rose-600 text-white hover:bg-rose-500`}>
-                  <Localized value={submitting ? MP.submitting : MP.confirmSubmit} />
+                  <Localized value={submitting ? MP.submitting : unanswered > 0 ? MP.confirmSubmit : MP.confirmSubmitAll} />
                 </button>
                 <button type="button" onClick={() => setConfirming(false)} className={`${btn} ring-1 ring-slate-300 dark:text-white`}>
                   <Localized value={MP.backToTest} />

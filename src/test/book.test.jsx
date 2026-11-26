@@ -158,6 +158,8 @@ describe('book pages', () => {
     opts.onChecked({ section: 'decline', isCorrect: false });
     opts.onChecked({ section: 'seals', isCorrect: true });
     await user.click(screen.getAllByRole('button', { name: /Finish and see analysis/ }).at(-1));
+    // Mid-run finish asks first.
+    await user.click(await screen.findByRole('button', { name: /Yes, submit/ }));
     const result = await screen.findByRole('status');
     expect(within(result).getByText('1 of 3 correct')).toBeInTheDocument();
     expect(within(result).getByText(/পতন · ০%/)).toBeInTheDocument();

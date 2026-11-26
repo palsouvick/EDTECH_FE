@@ -67,6 +67,19 @@ describe('GK confusion drills', () => {
     expect(screen.getByRole('link', { name: /Banaphool/ })).toBeInTheDocument();
   });
 
+  it('a topic opened from a drill links back to that drill, and still to its chapter', async () => {
+    const fact = {
+      code: 'GK-WBG-260', topic: 'west_bengal_gk', subtopic: 'literature_culture', title: DETECTIVES.facts[0].title,
+      statement: t('Byomkesh Bakshi was created by Sharadindu Bandyopadhyay.', 'ব্যোমকেশ বক্সীর স্রষ্টা শরদিন্দু বন্দ্যোপাধ্যায়।'),
+      explanation: null, verification: { status: 'VERIFIED' }, bengaliReview: 'PENDING', pack: null, sources: [], milestones: [], questionCount: 0,
+    };
+    const { user } = renderAt('/learn/gk/drill/bengali_characters', { getGkFact: vi.fn(async () => fact) });
+    await user.click(await screen.findByRole('link', { name: /Byomkesh Bakshi: Sharadindu/ }));
+    const back = await screen.findByRole('link', { name: /Back to: Bengali detectives and characters/ });
+    expect(back).toHaveAttribute('href', '/learn/gk/drill/bengali_characters');
+    expect(screen.getByRole('link', { name: /Back to the chapter/ })).toBeInTheDocument();
+  });
+
   it('an unknown drill says so', async () => {
     renderAt('/learn/gk/drill/nope');
     expect(await screen.findByText('This drill is not available yet.')).toBeInTheDocument();

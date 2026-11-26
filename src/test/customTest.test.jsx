@@ -257,7 +257,15 @@ describe('practice runner', () => {
     expect(screen.getByRole('radio', { name: /5$/ })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: /Next question/ }));
     expect(screen.getByText('What is 20% of 50?')).toBeInTheDocument();
+    // A stray click on Finish only asks; "Continue the test" keeps the test running.
     await user.click(screen.getByRole('button', { name: /Finish and see result/ }));
+    expect(await screen.findByText(/1 question is not answered yet/)).toBeInTheDocument();
+    expect(screen.getByTestId('attempted')).toHaveTextContent('1');
+    expect(screen.getByTestId('not-attempted')).toHaveTextContent('1');
+    await user.click(screen.getByRole('button', { name: /Back to test/ }));
+    expect(source.submitMock).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: /Finish and see result/ }));
+    await user.click(await screen.findByRole('button', { name: /Yes, submit/ }));
     await waitFor(() => expect(source.submitMock).toHaveBeenCalled());
     const body = source.submitMock.mock.calls[0][0];
     expect(body.sessionId).toBe(id);
@@ -304,6 +312,7 @@ describe('practice runner', () => {
     await user.click(screen.getByRole('button', { name: /Check answer/ }));
     await screen.findByRole('button', { name: /Next question/ });
     await user.click(screen.getByRole('button', { name: /Finish and see result/ }));
+    await user.click(await screen.findByRole('button', { name: /Yes, submit/ }));
     await waitFor(() => expect(source.submitMock).toHaveBeenCalled());
     const [first, second] = source.submitMock.mock.calls[0][0].responses;
     expect(first.selectedOptionId).toBe('opt_aaaa1');

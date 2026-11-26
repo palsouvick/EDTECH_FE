@@ -121,7 +121,7 @@ function Sections({ file, page, onGo, onChange }) {
               {editing === s.id && (
                 <>
                   <SectionForm file={file} choices={choices} initial={{ subject: s.subject, topic: s.topic || '', label: s.label || '', from: s.from, to: s.to }} onCancel={() => setEditing(null)} onSave={(body) => save(() => courseApi.updateSection(s.id, body))} />
-                  <button type="button" onClick={() => save(() => courseApi.deleteSection(s.id))} className="mt-1 text-xs font-semibold text-rose-700 hover:underline"><Localized value={COURSE.remove} /></button>
+                  <button type="button" onClick={() => window.confirm(`${COURSE.confirmRemoveSection.en}\n${COURSE.confirmRemoveSection.bn}`) && save(() => courseApi.deleteSection(s.id))} className="mt-1 text-xs font-semibold text-rose-700 hover:underline"><Localized value={COURSE.remove} /></button>
                 </>
               )}
             </li>

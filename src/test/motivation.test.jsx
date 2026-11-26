@@ -95,6 +95,8 @@ describe('mastery map, weak patterns, challenge, leaderboard', () => {
     expect(screen.getByText('1 not answered yet')).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /wrong 2/ }));
     await user.click(screen.getByRole('button', { name: /^Submit answers/ }));
+    expect(source.submitChallenge).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole('button', { name: /Yes, submit/ }));
     expect(await screen.findByText('You got 1 of 2 right')).toBeInTheDocument();
     expect(screen.getAllByText('Why.')).toHaveLength(2);
     expect(screen.getByText('Log in to keep your result and earn badges.')).toBeInTheDocument();

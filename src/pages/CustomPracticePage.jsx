@@ -11,6 +11,7 @@ import { PracticeTypeChip } from '../components/analysis/AdaptiveParts';
 import { Localized } from '../components/topic-hub/Localized';
 import CustomTestResult from '../components/custom-test/CustomTestResult';
 import AnswerFeedback from '../components/custom-test/AnswerFeedback';
+import SubmitConfirmDialog from '../components/practice/SubmitConfirmDialog';
 import { LoadError } from './funnel/FunnelLayout';
 
 const btn = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-50';
@@ -148,6 +149,10 @@ export default function CustomPracticePage() {
     }
   };
 
+  const [confirming, setConfirming] = useState(false);
+  // Answered = checked in this visit or before (resumed from the server).
+  const answered = questions.filter((x) => feedback[x.questionId] || view.session?.custom?.checked?.[x.questionId]).length;
+
   const finish = useCallback(async () => {
     note();
     setView((v) => ({ ...v, submitting: true }));
@@ -270,10 +275,26 @@ export default function CustomPracticePage() {
             {feedback[q.questionId] && i < questions.length - 1 && (
               <button type="button" onClick={() => go(i + 1)} className={`${btn} bg-slate-900 text-white dark:bg-white dark:text-slate-900`}><Localized value={CT.nextQuestion} /></button>
             )}
-            <button type="button" onClick={finish} disabled={view.submitting} className={`${btn} ml-auto bg-emerald-600 text-white hover:bg-emerald-500`}>
+            <button type="button" onClick={() => setConfirming(true)} disabled={view.submitting} className={`${btn} ml-auto bg-emerald-600 text-white hover:bg-emerald-500`}>
               <Localized value={view.submitting ? CT.checking : CT.finish} />
             </button>
           </div>
+          {/* Finishing ends the test for good, so it asks first (a stray click must not end it). */}
+          <SubmitConfirmDialog
+            open={confirming}
+            onClose={() => setConfirming(false)}
+            onConfirm={() => {
+              setConfirming(false);
+              finish();
+            }}
+            total={questions.length}
+            answered={answered}
+            onGoToUnanswered={() => {
+              setConfirming(false);
+              const first = questions.findIndex((x) => !(feedback[x.questionId] || view.session?.custom?.checked?.[x.questionId]));
+              if (first >= 0) go(first);
+            }}
+          />
           <Link to={learnPaths.subject(subject)} className="inline-block text-sm text-slate-500 hover:underline"><Localized value={CT.backToLearn} /></Link>
         </div>
       )}

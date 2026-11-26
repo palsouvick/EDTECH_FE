@@ -46,6 +46,8 @@ export const PACK = Object.freeze({
   practiseStart: t('Start practice', 'অনুশীলন শুরু করো'),
   revision: t('Quick revision', 'দ্রুত রিভিশন'),
   backTo: t('Back to the chapter', 'অধ্যায়ে ফিরে যাও'),
+  backToList: t('Back to the list', 'তালিকায় ফিরে যাও'),
+  backToNamed: (title) => ({ en: `Back to: ${title.en ?? title.bn}`, bn: `ফিরে যাও: ${title.bn ?? title.en}` }),
 });
 
 export const GK = Object.freeze({

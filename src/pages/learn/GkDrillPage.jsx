@@ -109,7 +109,7 @@ export default function GkDrillPage() {
             <ol className="mt-3 grid gap-2 sm:grid-cols-2">
               {drill.facts.map((f, i) => (
                 <li key={f.code}>
-                  <Link to={gkTopicPath(f.code)} className="group flex min-h-14 items-center gap-3 rounded-xl p-3 ring-1 ring-slate-200 transition hover:bg-indigo-50 hover:ring-indigo-300 dark:ring-slate-700 dark:hover:bg-indigo-500/10">
+                  <Link to={gkTopicPath(f.code)} state={{ from: { path: `/learn/gk/drill/${id}`, title: drill.title } }} className="group flex min-h-14 items-center gap-3 rounded-xl p-3 ring-1 ring-slate-200 transition hover:bg-indigo-50 hover:ring-indigo-300 dark:ring-slate-700 dark:hover:bg-indigo-500/10">
                     <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-lg bg-indigo-100 text-sm font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
                       <Localized value={{ en: String(i + 1), bn: bnDigits(i + 1) }} />
                     </span>

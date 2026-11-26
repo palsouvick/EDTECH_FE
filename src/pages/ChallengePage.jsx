@@ -8,6 +8,7 @@ import AnswerExplanation from '../components/review/AnswerExplanation';
 import { Localized } from '../components/topic-hub/Localized';
 import { CHALLENGE } from '../lib/motivationCopy';
 import { LoadError } from './funnel/FunnelLayout';
+import SubmitConfirmDialog from '../components/practice/SubmitConfirmDialog';
 
 /** Remembers on this device that today's challenge was played (for signed-out players). */
 export const challengeKey = (day) => `edtech:challenge:${day}`;
@@ -28,6 +29,7 @@ export default function ChallengePage() {
   const [picked, setPicked] = useState({});
   const [outcome, setOutcome] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const startedAt = useRef(Date.now());
 
   useEffect(() => {
@@ -133,11 +135,21 @@ export default function ChallengePage() {
         {questions.length > 0 && !outcome && (
           <div className="flex flex-wrap items-center justify-end gap-3">
             {missing > 0 && <Localized value={CHALLENGE.unanswered(missing)} className="text-sm font-semibold text-slate-500" />}
-            <button type="button" disabled={busy || missing === questions.length} onClick={submit} className="min-h-12 rounded-xl bg-orange-600 px-6 font-bold text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" disabled={busy || missing === questions.length} onClick={() => setConfirming(true)} className="min-h-12 rounded-xl bg-orange-600 px-6 font-bold text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50">
               <Localized value={CHALLENGE.submit} />
             </button>
           </div>
         )}
+        <SubmitConfirmDialog
+          open={confirming}
+          onClose={() => setConfirming(false)}
+          onConfirm={() => {
+            setConfirming(false);
+            submit();
+          }}
+          total={questions.length}
+          answered={questions.length - missing}
+        />
         {outcome && (
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Link to="/revise" className="inline-flex min-h-11 items-center rounded-xl px-5 font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 dark:text-indigo-300 dark:ring-indigo-500/40">

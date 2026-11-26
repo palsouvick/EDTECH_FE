@@ -107,6 +107,7 @@ export const COURSE = Object.freeze({
   goTo: t('Go to page', 'পাতায় যাও'),
   back: t('All my PDFs', 'আমার সব PDF'),
   deleteFile: t('Delete this PDF', 'এই PDF মুছে দাও'),
+  confirmRemoveSection: t('Remove this section from your course? Its notes and marks go with it.', 'এই অংশটি কোর্স থেকে সরাবে? এর নোট ও চিহ্নও মুছে যাবে।'),
   confirmDelete: t('Delete this PDF and its chapters? This cannot be undone.', 'এই PDF আর তার অধ্যায়গুলো মুছে দেবে? এটা ফেরানো যাবে না।'),
   readAgain: t('Read again', 'আবার পড়ো'),
   fromCourse: t('📘 From your course', '📘 তোমার কোর্স থেকে'),

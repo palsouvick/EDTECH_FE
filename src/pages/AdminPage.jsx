@@ -46,7 +46,7 @@ function QuestionCard({ q, onStatus, children }) {
           <>
             <button type="button" className={`${btn} bg-emerald-600 text-white`} disabled={q.status === 'PUBLISHED'} onClick={() => onStatus(q.id, 'PUBLISHED')}>Approve & publish</button>
             <button type="button" className={`${btn} bg-slate-200 text-slate-800`} disabled={q.status === 'DRAFT'} onClick={() => onStatus(q.id, 'DRAFT')}>Back to draft</button>
-            <button type="button" className={`${btn} bg-rose-100 text-rose-800`} disabled={q.status === 'ARCHIVED'} onClick={() => onStatus(q.id, 'ARCHIVED')}>Archive</button>
+            <button type="button" className={`${btn} bg-rose-100 text-rose-800`} disabled={q.status === 'ARCHIVED'} onClick={() => window.confirm('Archive this question? Students will no longer see it.') && onStatus(q.id, 'ARCHIVED')}>Archive</button>
           </>
         )}
         {children}

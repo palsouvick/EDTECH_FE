@@ -176,6 +176,9 @@ describe('Mock Paper attempt page', () => {
     expect(screen.getByText('First question?')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'A. A1' }));
     await user.click(screen.getByRole('button', { name: /Submit/ }));
+    // Even with every question answered, submitting asks first.
+    expect(source.submitMockPaperAttempt).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole('button', { name: /Yes, submit/ }));
     expect(source.submitMockPaperAttempt).toHaveBeenCalledWith('att1', {
       answers: [
         { questionIndex: 1, selected: 1 },

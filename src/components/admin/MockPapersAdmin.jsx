@@ -244,7 +244,7 @@ export default function MockPapersAdmin() {
   };
 
   const publish = async () => {
-    if (!paper) return;
+    if (!paper || !window.confirm(MP.publishConfirm[lang])) return;
     setError('');
     setBusy('publish');
     try {

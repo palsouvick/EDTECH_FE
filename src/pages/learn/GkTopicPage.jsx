@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useDataSource } from '../../app/DataSourceContext';
 import { GK, PACK } from '../../lib/gkCopy';
 import PageShell from '../../components/navigation/PageShell';
 import PracticeArena from '../../components/practice/PracticeArena';
 import PyqBadge from '../../components/practice/PyqBadge';
 import { Localized } from '../../components/topic-hub/Localized';
+import { StructuredText } from '../../components/topic-hub/StructuredText';
 import { CardGridSkeleton, LoadError } from '../funnel/FunnelLayout';
 import { gkCardPath } from './GkDashboardPage';
 import { FactActions, gkTopicPath } from './GkChapterPage';
@@ -49,7 +50,7 @@ function Section({ title, children, tone = box }) {
   );
 }
 
-function RelatedFacts({ codes }) {
+function RelatedFacts({ codes, from }) {
   const source = useDataSource();
   const [facts, setFacts] = useState([]);
   useEffect(() => {
@@ -65,8 +66,8 @@ function RelatedFacts({ codes }) {
       <ul className="space-y-2">
         {facts.map((f) => (
           <li key={f.code} className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
-            <Link to={gkTopicPath(f.code)} className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"><Localized value={f.title} /></Link>
-            <Localized value={f.statement} markdown as="div" className="mt-1 text-sm text-slate-700 dark:text-slate-200" />
+            <Link to={gkTopicPath(f.code)} state={from ? { from } : undefined} className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"><Localized value={f.title} /></Link>
+            <StructuredText value={f.statement} className="mt-1 text-sm text-slate-700 dark:text-slate-200" />
           </li>
         ))}
       </ul>
@@ -141,6 +142,24 @@ function PracticeMcqs({ code, title, count }) {
  * WBPSC past-paper questions → practice MCQs → quick revision. An ordinary fact shows the
  * same page with the sections it has, plus the topics it connects to.
  */
+const backLink = 'inline-flex min-h-10 items-center text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300';
+
+/** "← Back to <drill>" when the topic was opened from a drill, and always "← Back to the chapter". */
+function BackLinks({ from, chapterPath }) {
+  return (
+    <nav aria-label="Back" className="flex flex-wrap items-center gap-x-5 gap-y-1">
+      {from?.path && (
+        <Link to={from.path} className={backLink}>
+          ← <Localized value={from.title ? PACK.backToNamed(from.title) : PACK.backToList} className="ml-1" />
+        </Link>
+      )}
+      <Link to={chapterPath} className={from?.path ? `${backLink} text-slate-600 dark:text-slate-300` : backLink}>
+        ← <Localized value={PACK.backTo} className="ml-1" />
+      </Link>
+    </nav>
+  );
+}
+
 export default function GkTopicPage() {
   const { code } = useParams();
   const source = useDataSource();
@@ -158,6 +177,8 @@ export default function GkTopicPage() {
 
   const fact = state.fact;
   const p = fact?.pack;
+  // Opened from a drill (or a list): that page, so the student can go straight back to it.
+  const from = useLocation().state?.from ?? null;
 
   return (
     <PageShell className="max-w-4xl pb-16 pt-6 sm:pt-8">
@@ -165,9 +186,7 @@ export default function GkTopicPage() {
       {state.status === 'error' && <LoadError error={state.error} onRetry={() => setAttempt((n) => n + 1)} />}
       {fact && (
         <div className="space-y-5">
-          <Link to={gkCardPath(fact.topic)} className="inline-flex min-h-10 items-center text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">
-            ← <Localized value={PACK.backTo} />
-          </Link>
+          <BackLinks from={from} chapterPath={gkCardPath(fact.topic)} />
           <header>
             {p && <Localized value={PACK.topicBadge} className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200" />}
             <Localized value={fact.title} as="h1" className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white" />
@@ -178,7 +197,7 @@ export default function GkTopicPage() {
           </header>
 
           <Section title={PACK.basic}>
-            <Localized value={fact.statement} markdown as="div" className="leading-relaxed text-slate-800 dark:text-slate-100" />
+            <StructuredText value={fact.statement} highlights={fact.highlights ?? { en: [], bn: [] }} className="leading-relaxed text-slate-800 dark:text-slate-100" />
             {fact.explanation && (
               <>
                 <Localized value={PACK.why} as="p" className="mt-3 text-sm font-semibold text-slate-900 dark:text-white" />
@@ -245,13 +264,13 @@ export default function GkTopicPage() {
             </Section>
           )}
 
-          {p?.related.length > 0 && <RelatedFacts codes={p.related} />}
+          {p?.related.length > 0 && <RelatedFacts codes={p.related} from={from} />}
 
           {fact.relatedPacks?.length > 0 && (
             <Section title={PACK.alsoLearn}>
               <ul className="flex flex-wrap gap-2">
                 {fact.relatedPacks.map((r) => (
-                  <li key={r.code}><Link to={gkTopicPath(r.code)} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300">📚 <Localized value={r.title} /></Link></li>
+                  <li key={r.code}><Link to={gkTopicPath(r.code)} state={from ? { from } : undefined} className="inline-flex min-h-10 items-center rounded-lg bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300">📚 <Localized value={r.title} /></Link></li>
                 ))}
               </ul>
             </Section>
